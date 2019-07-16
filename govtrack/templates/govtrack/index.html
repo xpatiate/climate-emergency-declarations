@@ -1,0 +1,33 @@
+{% extends "govtrack/base.html" %}
+{% load humanize %}
+
+{% block title %}Governments that have declared a Climate Emergency{% endblock %}
+
+{% block content %}
+{% if government_list %}
+    <table>
+      <tr>
+        <th class='th-index'>Country</th>
+        <th class='th-index'>Government</th>
+        <th class='th-index'>Date of Declaration</th>
+        <th class='th-index'>Population</th>
+        <!--
+        <th class='th-index'>Is counted?</th>
+        -->
+      </tr>
+    {% for gov in government_list %}
+        <tr>
+        <td class='td-index'><a href="{% url 'country' gov.country_id %}">{{ gov.country.name }}</a></td>
+        <td class='td-index'><a href="{% url 'govt' gov.id %}">{{ gov.name }}</a></td>
+        <td class='td-index'>{{ gov.display_date_declared }}</td>
+        <td class='td-index' align='right'>{{ gov.population | intcomma}}</td>
+        <!--
+        <td class='td-index'>{{ gov.is_counted }}</td>
+        -->
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No governments found.</p>
+{% endif %}
+{% endblock %}

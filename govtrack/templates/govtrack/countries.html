@@ -1,0 +1,24 @@
+{% extends "govtrack/base.html" %}
+
+{% load humanize %}
+
+{% block title %}Countries{% endblock %}
+
+{% block content %}
+{% if country_list %}
+    <table>
+      <tr>
+        <th>Country</th>
+        <th>Population</th>
+      </tr>
+    {% for country in country_list %}
+        <tr>
+        <td><a href="{% url 'country' country.id %}">{{ country.name }}</a></td>
+        <td align='right'>{{ country.population | intcomma }}</td>
+        </tr>
+    {% endfor %}
+    </table>
+{% else %}
+    <p>No countries found.</p>
+{% endif %}
+{% endblock %}

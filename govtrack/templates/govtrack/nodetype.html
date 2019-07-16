@@ -1,0 +1,32 @@
+{% extends "govtrack/base.html" %}
+
+{% block title %}{{ country.name }}{% endblock %}
+
+{% block content %}
+{% if action == 'add' %}
+  <h3>Add a new structure type under {{ parent.name }}</h3>
+{% else %}
+  <h3>Edit {{ nodetype.name }}</h3>
+{% endif %}
+
+<div class='parent-tree'>
+{% for parent in parents_list %}
+    <div class='level_{{ parent.level }}'>&#8866; {{ parent.name }}</div>
+{% endfor %}
+</div>
+
+<form method='POST' action='
+    {% if action == "add" %}
+    {% url 'nodetype_child' parent.id %}'
+    {% else %}
+    {% url 'nodetype_edit' nodetype.id %}'
+    {% endif %}
+    >
+{% csrf_token %}
+{{ form.as_p }}
+<input type='submit' value='save' class='button-save'>
+<br><br>
+<a href='{% url 'country' country.id %}' class='button-cancel'>back to {{ country.name }}</a>
+</form>
+
+{% endblock %}

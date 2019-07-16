@@ -1,0 +1,94 @@
+{% extends "govtrack/base.html" %}
+
+{% load humanize %}
+
+{% block title %}{{ country.name }}{% endblock %}
+
+{% block content %}
+
+<p>Population: {{ country.population | intcomma }}</p>
+
+<div class='parent-tree'>
+{% for struct in structure_list %}
+    <div class='level_{{ struct.level }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
+    {% if user.is_authenticated %}
+      &nbsp;<button class='view-nodetype' id='viewnodetype-{{ struct.id }}'>*</button>
+      <div id='editnodetype-{{ struct.id }}' class='edit-nodetype'>
+      <a href='{% url 'nodetype_edit' struct.id %}'>edit</a> | 
+      {% if struct.num_records == 0 %}<a href='{% url 'nodetype_del' struct.id %}'>delete</a> |{% endif %} 
+      <a href='{% url 'nodetype_child' struct.id %}'>add child</a>
+      </div>
+    {% endif %}
+    </div>
+{% endfor %}
+</div>
+
+<h3>Records</h3>
+<table>
+  <tr>
+    <th></th>
+    <th>Declared?</th>
+    <th>Population</th>
+    <th>Cumulative</th>
+  </tr>
+{% for record in records_list %}
+    <tr>
+    <td>
+    <div class='level_{{ record.level }}'>&#8866;({{ record.nodetype.name }})  <a class='link-{{ record.linkname }}' href='{% url record.linkname record.id %}'>{{ record.name }}</a>
+    {% if user.is_authenticated %}
+      &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
+      <div id='editnode-{{ record.id }}' class='edit-node'>
+      <a href='{% url 'node_edit' record.id %}'>edit</a>
+      {% if record.level > 1 %}
+      | <a href='{% url 'node_del' record.id %}'>delete</a>
+      {% endif %}
+      {% if record.linkname == 'node' %}
+      | <a href='{% url 'node_convert' record.id %}'>convert</a>
+      {% endif %}
+      <br>
+      {% for ctype in record.sub_types %}
+        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }} node</a> | <a href='{% url 'govt_child' record.id ctype.id  %}'>add {{ ctype.name }} govt</a></li>
+      {% endfor %}
+      </div>
+    {% endif %}
+    </div>
+    </td>
+    <td align='right'>{% if record.is_declared %}Yes{% endif %}</td>
+    <td align='right' {% if not record.is_counted %}class='nocount'{% endif%}>
+        {{record.population | intcomma}}
+    </td>
+    <td align='right'>{{record.total_population | intcomma}}</td>
+    </tr>
+{% endfor %}
+  <tr class='total-pop-row'>
+    <td>Total population under declaration:</td>
+    <td></td>
+    <td></td>
+    <td align='right'>{{total_declared_population | intcomma}}</td>
+  </tr>
+</table>
+
+<script type='text/javascript'>
+var showing = {};
+function toggleEditOptions(ev) {
+    el = ev.target
+    console.log(el)
+    editdivid = el.id.replace('view','edit')
+    editdiv = $( '#' + editdivid )
+    if (showing[el.id] == 1) {
+        editdiv.css('display','none')
+        showing[el.id] = 0
+        el.innerHTML = '*'
+    } else {
+        editdiv.css('display','block')
+        showing[el.id] = 1
+        el.innerHTML = '-'
+    }
+}
+$( document ).ready(function() {
+    $( "button.view-nodetype" ).click( toggleEditOptions );
+    $( "button.view-node" ).click( toggleEditOptions );
+});
+</script>
+
+{% endblock %}

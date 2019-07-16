@@ -1,0 +1,52 @@
+{% extends "govtrack/node.html" %}
+{% load humanize %}
+
+{% block heading %}
+{% if action == "add" %}
+<h3>Add a {{ nodetype_name }} Government under {{ parent.name }}</h3>
+{% elif action == "convert" %}
+<h3>Convert the {{ node.name }} Node to a Government</h3>
+{% else %}
+<h3>{{ record.name }}</h3>
+<p><b>Type:</b> {{ record.nodetype.name }}</p>
+{% endif %}
+<!-- load Fengyuan Chen’s Datepicker -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css" integrity="sha256-b88RdwbRJEzRx95nCuuva+hO5ExvXXnpX+78h8DjyOE=" crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js" integrity="sha256-/7FLTdzP6CfC1VBAj/rsp3Rinuuu9leMRGd354hvk0k=" crossorigin="anonymous"></script>
+{% endblock %}
+
+
+{% block formaction %}
+    {% if action == "add" %}
+    {% url 'govt_child' parent.id nodetype_id %}'
+    {% elif action == "convert" %}
+    {% url 'govt_convert' node.id %}'
+    {% else %}
+    {% url 'govt_edit' record.id %}'
+    {% endif %}
+{% endblock %}
+
+{% block formextra %}
+<script>
+  $(function () {
+    $("#id_date_declared").datepicker({
+      format:'yyyy-mm-dd',
+    });
+  });
+</script>
+{% endblock %}
+{% block view %}
+{{ block.super }}
+<p><b>Type:</b> {{ record.nodetype.name }}</p>
+<p><b>Status:</b> {{ record.status }}</p>
+<p><b>Date declared:</b> {{ record.display_date_declared }}</p>
+<p><b>Declaration links:</b> {{ record.declaration_links }}</p>
+{% endblock %}
+
+{% block adminoptions %}
+      <a href='{% url 'govt_edit' record.id %}'>edit</a>
+      {% if record.level > 1 %}
+      | <a href='{% url 'govt_del' record.id %}'>delete</a>
+      {% endif %}
+{% endblock %}
+

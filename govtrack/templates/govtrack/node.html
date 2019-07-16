@@ -1,0 +1,76 @@
+{% extends "govtrack/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ record.country.name }}{% endblock %}
+
+{% block content %}
+
+{% block heading %}
+{% if action == "add" %}
+<h3>Add a {{ nodetype_name }} Node under {{ parent.name }}</h3>
+{% else %}
+<h3>{{ record.name }}</h3>
+<p><b>Type:</b> {{ record.nodetype.name }}</p>
+{% endif %}
+{% endblock %}
+
+<div class='parent-tree'>
+{% for parent in parents_list %}
+    <div class='level_{{ parent.level }}'>&#8866;({{ parent.nodetype.name }}) {{ parent.name }}</div>
+{% endfor %}
+</div>
+
+{% if action %}
+
+<form method='POST' action='
+{% block formaction %}
+    {% if action == "add" %}
+    {% url 'node_child' parent.id nodetype_id %}'
+    {% else %}
+    {% url 'node_edit' record.id %}'
+    {% endif %}
+{% endblock %}
+    '>
+{% csrf_token %}
+{{ form.as_p }} 
+{% block formextra %}{% endblock %}
+<input type='submit' value='save' class='button-save'>
+</form>
+
+{% else %}
+
+{% block view %}
+<p><b>Country:</b> <a href='{% url 'country' record.country.id %}'>{{ record.country.name }}</a></p>
+<p><b>Area:</b> {{ record.area }}</p>
+<p><b>Population:</b> {{ record.population | intcomma }}</p>
+<p><b>Governing?:</b> {{ record.is_governing }}</p>
+<p><b>Description:</b> {{ record.comment_public }}</p>
+<p><b>Reference links:</b> {{ record.reference_links }}</p>
+{% if user.is_authenticated %}
+<p><b>Comments:</b> {{ record.comment_private }}</p>
+{% endif %}
+{% endblock %}
+
+{% if user.is_authenticated %}
+    <div class='edit-node' style="display: block">
+    {% block adminoptions %}
+      <a href='{% url 'node_edit' record.id %}'>edit</a>
+      {% if record.level > 1 %}
+      | <a href='{% url 'node_del' record.id %}'>delete</a>
+      {% endif %}
+      | <a href='{% url 'node_convert' record.id %}'>convert</a>
+    {% endblock %}
+      <br>
+      {% for ctype in record.sub_types %}
+        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }} node</a>
+          | <a href='{% url 'govt_child' record.id ctype.id  %}'>add {{ ctype.name }} govt</a></li> 
+      {% endfor %}
+    </div>
+{% endif %}
+
+{% endif %}
+
+<br><br>
+<a href='{% url 'country' country.id %}' class='button-cancel'>back to {{ country.name }}</a>
+
+{% endblock %}
