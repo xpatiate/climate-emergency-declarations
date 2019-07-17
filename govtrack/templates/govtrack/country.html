@@ -34,7 +34,7 @@
 {% for record in records_list %}
     <tr>
     <td>
-    <div class='level_{{ record.level }}'>&#8866;({{ record.nodetype.name }})  <a class='link-{{ record.linkname }}' href='{% url record.linkname record.id %}'>{{ record.name }}</a>
+    <div class='level_{{ record.level }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
     {% if user.is_authenticated %}
       &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
       <div id='editnode-{{ record.id }}' class='edit-node'>
@@ -42,12 +42,9 @@
       {% if record.level > 1 %}
       | <a href='{% url 'node_del' record.id %}'>delete</a>
       {% endif %}
-      {% if record.linkname == 'node' %}
-      | <a href='{% url 'node_convert' record.id %}'>convert</a>
-      {% endif %}
       <br>
       {% for ctype in record.sub_types %}
-        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }} node</a> | <a href='{% url 'govt_child' record.id ctype.id  %}'>add {{ ctype.name }} govt</a></li>
+        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }} node</a></li>
       {% endfor %}
       </div>
     {% endif %}
