@@ -11,13 +11,9 @@ urlpatterns = [
     path('nodetype/child/<int:parent_id>/', views.nodetype_child, name='nodetype_child'),
     path('nodetype/del/<int:nodetype_id>', views.nodetype_del, name='nodetype_del'),
     path('node/edit/<int:node_id>/', views.node_edit, name='node_edit'),
-    path('node/convert/<int:node_id>/', views.node_convert, name='node_convert'),
+    path('declaration/<int:node_id>/', views.declaration_add, name='declaration_add'),
+    path('declaration/edit/<int:declaration_id>/', views.declaration_edit, name='declaration_edit'),
     path('node/child/<int:parent_id>/<int:nodetype_id>', views.node_child, name='node_child'),
-    path('govt/<int:govt_id>/', views.govt, name='govt'),
-    path('govt/edit/<int:govt_id>/', views.govt_edit, name='govt_edit'),
-    path('govt/child/<int:parent_id>/<int:nodetype_id>', views.govt_child, name='govt_child'),
-    path('govt/convert/<int:node_id>/', views.govt_convert, name='govt_convert'),
     # TODO prevent path-based deletion - integrate into edit path
-    path('govt/del/<int:govt_id>', views.govt_del, name='govt_del'),
     path('node/del/<int:node_id>', views.node_del, name='node_del'),
 ]

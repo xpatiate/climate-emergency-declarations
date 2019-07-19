@@ -1,5 +1,4 @@
 from django.db import models
-from model_utils.managers import InheritanceManager
 
 from django.forms import ModelForm
 import django.forms as forms
@@ -25,6 +24,7 @@ class NodeType(models.Model):
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
     count_population = models.BooleanField(default=True)
+    is_governing = models.BooleanField(default=True)
 
     def fullname(self):
         name = ''
@@ -43,7 +43,7 @@ class NodeType(models.Model):
 
     @property
     def records(self):
-        records = Node.objects.filter(nodetype=self.id).order_by('name')
+        records = Node.objects.filter(nodetype=self.id).order_by('sort_name')
         return records
 
     @property
@@ -71,8 +71,8 @@ class NodeType(models.Model):
 class Node(models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    # should this be a lookup? or better as arbitrary text? or both
-    # -> dropdown of existing areas for country, or add new
+    # Leave this in the model for now, but currently unused - 
+    # nodetype structure should give enough geographical context
     area = models.CharField(max_length=36, blank=True, null=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
     nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
@@ -81,12 +81,20 @@ class Node(models.Model):
     comment_private = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
-    is_governing = models.BooleanField(default=True)
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
 
-    objects = InheritanceManager()
     parentlist = []
+
+    def save(self, *args, **kwargs):
+        if not self.sort_name:
+            self.sort_name = self.name
+        super().save(*args, **kwargs)
+
+    @property
+    def declarations(self):
+        children = Declaration.objects.filter(node=self.id).order_by('date_declared')
+        return children
 
     @property
     def linkname(self):
@@ -97,7 +105,7 @@ class Node(models.Model):
 
     @property
     def children(self):
-        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).select_subclasses().order_by('nodetype__level','name')
+        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype__level','sort_name')
         return children
 
     @property
@@ -111,10 +119,10 @@ class Node(models.Model):
     @property
     def myparent(self):
         #return self.parent
-        return Node.objects.get_subclass(id=self.parent_id)
+        return Node.objects.get(id=self.parent_id)
 
     def get_parent(self, parent_id):
-        parent = Node.objects.get_subclass(id=parent_id)
+        parent = Node.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
             self.parentlist.insert(0, parent.myparent)
             return self.get_parent(parent.parent_id)
@@ -124,7 +132,19 @@ class Node(models.Model):
         return self.nodetype.level
 
     @property
+    def latest_declaration(self):
+        try:
+            return Declaration.objects.filter(node=self.id).latest('date_declared')
+        except Declaration.DoesNotExist as ex:
+            pass
+
+    @property
     def is_declared(self):
+        # Consider a node to be declared based on the status of its most
+        # recent declaration
+        latest = self.latest_declaration
+        if latest:
+            return self.latest_declaration.status == 'D'
         return False
 
     @property
@@ -191,34 +211,45 @@ class Node(models.Model):
     def __str__(self):
         return '%s | %s' % (self.country.name, self.name)
 
-class Government(Node):
+class Declaration(models.Model):
+    node = models.ForeignKey(Node, on_delete=models.CASCADE)
     # status types
     DECLARED = 'D'
     NONDECLARED = 'N'
-    PARTIAL = 'P'
+    REJECTED = 'R'
+    PROVISIONAL = 'P'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
         (NONDECLARED, 'Non-declared'),
-        (PARTIAL, 'In Progress')
+        (REJECTED, 'Rejected'),
+        (PROVISIONAL, 'Provisional')
     ]
+    STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
     status = models.CharField(
         max_length=1,
         choices = STATUS_TYPES,
-        default=NONDECLARED
+        default=DECLARED,
     )
     date_declared = models.DateField('date declared', null=True, blank=True)
     declaration_links = models.TextField(null=True, blank=True)
+    # Should this be a dropdown of defined types?
+    # >> How can we record the different ways that climate emergency declaration
+    # decisions can be made by a particular node eg. by the legislature or the
+    # key administrative decision-maker (collective decision-makers
+    # [councils/parliaments] or individuals in the case of ‘elected “monarchs”
+    # like presidents or governors or perhaps some mayors?
+    declaration_type = models.TextField(null=True, blank=True)
+
+    @property
+    def status_name(self):
+        return self.STATUS_MAP[self.status]
 
     def __str__(self):
-        return '%s | %s' % (self.country.name, self.name)
+        return '%s: %s' % (self.status_name, self.display_date_declared())
 
     @property
     def is_declared(self):
         return self.status == 'D'
-
-    @property
-    def linkname(self):
-        return 'govt'
 
     def display_date_declared(self):
         ddate = self.date_declared
@@ -228,7 +259,7 @@ class Government(Node):
 class NodeTypeForm(ModelForm):
     class Meta:
         model = NodeType
-        fields = ['name','country','level','parent']
+        fields = ['name','country','level','parent', 'is_governing']
         widgets = {
             'country': forms.HiddenInput(),
             'level': forms.HiddenInput(),
@@ -238,21 +269,19 @@ class NodeTypeForm(ModelForm):
 class NodeForm(ModelForm):
     class Meta:
         model = Node
-        fields = ['name','nodetype','country','area','population','parent','is_governing','sort_name','comment_public','comment_private','reference_links']
+        fields = ['name','sort_name','nodetype','country','population','parent','comment_public','comment_private','reference_links']
         widgets = {
             'nodetype': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
             'country': forms.HiddenInput()
         }
 
-class GovtForm(NodeForm):
+class DeclarationForm(NodeForm):
     class Meta:
-        model = Government
-        fields = ['name','nodetype','country','area','population','parent','is_governing', 'sort_name', 'comment_public','comment_private','reference_links', 'status', 'date_declared', 'declaration_links']
+        model = Declaration
+        fields = ['node','status', 'date_declared', 'declaration_links', 'declaration_type']
         widgets = {
-            'nodetype': forms.HiddenInput(),
-            'parent': forms.HiddenInput(),
-            'country': forms.HiddenInput(),
+            'node': forms.HiddenInput(),
         }
 
     date_declared = forms.DateField(input_formats=['%Y-%m-%d'])

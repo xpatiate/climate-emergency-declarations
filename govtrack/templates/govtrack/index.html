@@ -4,7 +4,7 @@
 {% block title %}Governments that have declared a Climate Emergency{% endblock %}
 
 {% block content %}
-{% if government_list %}
+{% if declaration_list %}
     <table>
       <tr>
         <th class='th-index'>Country</th>
@@ -15,19 +15,19 @@
         <th class='th-index'>Is counted?</th>
         -->
       </tr>
-    {% for gov in government_list %}
+    {% for dec in declaration_list %}
         <tr>
-        <td class='td-index'><a href="{% url 'country' gov.country_id %}">{{ gov.country.name }}</a></td>
-        <td class='td-index'><a href="{% url 'govt' gov.id %}">{{ gov.name }}</a></td>
-        <td class='td-index'>{{ gov.display_date_declared }}</td>
-        <td class='td-index' align='right'>{{ gov.population | intcomma}}</td>
+        <td class='td-index'><a href="{% url 'country' dec.node.country_id %}">{{ dec.node.country.name }}</a></td>
+        <td class='td-index'><a href="{% url 'node' dec.node.id %}">{{ dec.node.name }}</a></td>
+        <td class='td-index'>{{ dec.display_date_declared }}</td>
+        <td class='td-index' align='right'>{{ dec.node.population | intcomma}}</td>
         <!--
-        <td class='td-index'>{{ gov.is_counted }}</td>
+        <td class='td-index'>{{ dec.is_counted }}</td>
         -->
         </tr>
     {% endfor %}
     </table>
 {% else %}
-    <p>No governments found.</p>
+    <p>No declarations found.</p>
 {% endif %}
 {% endblock %}
