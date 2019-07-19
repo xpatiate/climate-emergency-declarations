@@ -70,7 +70,7 @@
       <br>
         <li><a href='{% url 'declaration_add' record.id  %}'>add declaration</a>
       {% for ctype in record.sub_types %}
-        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }} node</a>
+        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }}</a>
       {% endfor %}
     </div>
 {% endif %}

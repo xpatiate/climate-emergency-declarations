@@ -44,7 +44,7 @@
       {% endif %}
       <br>
       {% for ctype in record.sub_types %}
-        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }} node</a></li>
+        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }}</a></li>
       {% endfor %}
       </div>
     {% endif %}

@@ -4,6 +4,7 @@ from django.forms import ModelForm
 import django.forms as forms
 
 import logging
+from .utils import make_hierarchy
 
 # Create your models here.
 
@@ -13,8 +14,26 @@ class Country(models.Model):
     population = models.PositiveIntegerField(default=0)
     country_code = models.CharField(max_length=3)
 
-    def __str__(self):
-        return self.name
+    @property
+    def declarations(self):
+        dlist = Declaration.objects.filter(status='D', node__country=self.id).order_by('node__sort_name')
+        return dlist
+
+    @property
+    def declared_population(self):
+        dlist = Declaration.objects.filter(status='D', node__country=self.id).order_by('node__nodetype__level','node__sort_name')
+        nodes = set([d.node for d in dlist])
+        records = make_hierarchy(nodes, set())
+
+        total_pop = 0
+        for item in records:
+            if item.is_counted:
+                total_pop += item.population
+        return total_pop
+            
+
+        def __str__(self):
+            return self.name
 
 
 class NodeType(models.Model):
@@ -67,6 +86,7 @@ class NodeType(models.Model):
 
     def __str__(self):
         return self.fullname()
+
 
 class Node(models.Model):
     name = models.CharField(max_length=64)
@@ -162,9 +182,6 @@ class Node(models.Model):
 
     @property
     def is_counted(self):
-        # should we separate population summary from delcaration status
-        # i.e. do we need to count population regardless of declarations?
-
         logging.debug("should we count item %s?" % self.id)
         # count population if:
             # count setting is true (always count)

@@ -44,9 +44,12 @@
      <div id="content">
          {% block content %}{% endblock %}
      </div>
+
+    {% if user.is_authenticated %}
     <hr>
     <a href='{% url 'index' %}'>home</a>
     | <a href='{% url 'countries' %}'>countries list</a>
+    {% endif %}
 
     </div><!-- /.container -->
 

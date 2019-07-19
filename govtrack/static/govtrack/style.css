@@ -7,7 +7,7 @@ td, th {
   padding-right: 5px;
 }
 .td-index, .th-index {
-  padding: 5px 5px;
+  padding: 5px 10px;
 }
 td.nocount {
     color: #666666;
@@ -16,6 +16,13 @@ td.nocount {
 tr.total-pop-row {
     background-color: #cccccc;
     font-weight: bold;
+}
+tr.country-subhead {
+    background-color: #cccccc;
+    font-weight: bold;
+}
+tr.country-total {
+    background-color: #eeeeee;
 }
 .errorlist {
     background-color: pink;

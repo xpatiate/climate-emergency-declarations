@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404
 
 from .models import Declaration, Country, Node, NodeType, NodeTypeForm, NodeForm, DeclarationForm
+from .utils import make_hierarchy
 
 import logging 
 
@@ -8,8 +9,37 @@ import logging
 
 def index(request):
     # get all governments who have declared
-    dlist = Declaration.objects.filter(status='D').order_by('date_declared')
-    return render(request, 'govtrack/index.html', {'declaration_list': dlist})
+    dlist = Declaration.objects.filter(status='D').order_by('node__country__name','node__sort_name')
+    allcountries = Country.objects.order_by('name')
+    country_list = set([d.node.country.name for d in dlist])
+    print(country_list)
+    countries = []
+    for c in allcountries:
+        dlist = c.declarations
+        if dlist:
+            countries.append(({
+                'name': c.name,
+                'id': c.id,
+                'num_nodes': len(dlist),
+                'declared_population': c.declared_population
+            },
+            dlist))
+    #current_country = ''
+    #for dec in dlist:
+    #    if dec.node.country != current_country:
+    #        current_country = dec.node.country
+    #        current_country_list = []
+    #        countries.append( ({
+    #            'name': current_country.name,
+    #            'id': current_country.id,
+    #            'num_nodes': len(dlist),
+    #            'declared_population': 10000
+    #            },
+    #            current_country_list) )
+    #    current_country_list.append(dec)
+    #print(dlist)
+    print(countries)
+    return render(request, 'govtrack/index.html', {'countries': countries})
 
 
 def node(request, node_id):
@@ -137,18 +167,6 @@ def declaration_edit(request, declaration_id):
             return redirect('node', node_id=dec.node.id)
     # Show form
     return render(request, 'govtrack/declare.html', {'action': 'edit', 'declaration': dec, 'form': form, 'node': dec.node})
-
-def make_hierarchy(itemlist, seen):
-    ordered = []
-    # Items are ordered by level, so all the top-level ones come first
-    for item in itemlist:
-        if not item.id in seen:
-            ordered.append(item)
-            seen.add(item.id)
-        if item.children:
-            kidlist = make_hierarchy( item.children, seen )
-            ordered.extend( kidlist )
-    return ordered
 
 # TODO integrate these into edit path
 # so we can't delete just by sending a POST
