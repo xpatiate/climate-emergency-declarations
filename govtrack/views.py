@@ -8,8 +8,8 @@ import logging
 
 def index(request):
     # get all governments who have declared
-    glist = Declaration.objects.filter(status='D').order_by('date_declared')
-    return render(request, 'govtrack/index.html', {'government_list': glist})
+    dlist = Declaration.objects.filter(status='D').order_by('date_declared')
+    return render(request, 'govtrack/index.html', {'declaration_list': dlist})
 
 
 def node(request, node_id):

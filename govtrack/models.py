@@ -43,7 +43,7 @@ class NodeType(models.Model):
 
     @property
     def records(self):
-        records = Node.objects.filter(nodetype=self.id).order_by('name')
+        records = Node.objects.filter(nodetype=self.id).order_by('sort_name')
         return records
 
     @property
@@ -71,8 +71,8 @@ class NodeType(models.Model):
 class Node(models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    # should this be a lookup? or better as arbitrary text? or both
-    # -> dropdown of existing areas for country, or add new
+    # Leave this in the model for now, but currently unused - 
+    # nodetype structure should give enough geographical context
     area = models.CharField(max_length=36, blank=True, null=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
     nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
@@ -85,6 +85,11 @@ class Node(models.Model):
     count_population = models.SmallIntegerField(default=0)
 
     parentlist = []
+
+    def save(self, *args, **kwargs):
+        if not self.sort_name:
+            self.sort_name = self.name
+        super().save(*args, **kwargs)
 
     @property
     def declarations(self):
@@ -100,7 +105,7 @@ class Node(models.Model):
 
     @property
     def children(self):
-        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype__level','name')
+        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype__level','sort_name')
         return children
 
     @property
@@ -127,7 +132,19 @@ class Node(models.Model):
         return self.nodetype.level
 
     @property
+    def latest_declaration(self):
+        try:
+            return Declaration.objects.filter(node=self.id).latest('date_declared')
+        except Declaration.DoesNotExist as ex:
+            pass
+
+    @property
     def is_declared(self):
+        # Consider a node to be declared based on the status of its most
+        # recent declaration
+        latest = self.latest_declaration
+        if latest:
+            return self.latest_declaration.status == 'D'
         return False
 
     @property
@@ -198,10 +215,12 @@ class Declaration(models.Model):
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
     # status types
     DECLARED = 'D'
+    NONDECLARED = 'N'
     REJECTED = 'R'
     PROVISIONAL = 'P'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
+        (NONDECLARED, 'Non-declared'),
         (REJECTED, 'Rejected'),
         (PROVISIONAL, 'Provisional')
     ]
@@ -250,7 +269,7 @@ class NodeTypeForm(ModelForm):
 class NodeForm(ModelForm):
     class Meta:
         model = Node
-        fields = ['name','nodetype','country','area','population','parent','sort_name','comment_public','comment_private','reference_links']
+        fields = ['name','sort_name','nodetype','country','population','parent','comment_public','comment_private','reference_links']
         widgets = {
             'nodetype': forms.HiddenInput(),
             'parent': forms.HiddenInput(),

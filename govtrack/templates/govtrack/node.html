@@ -41,7 +41,6 @@
 
 {% block view %}
 <p><b>Country:</b> <a href='{% url 'country' record.country.id %}'>{{ record.country.name }}</a></p>
-<p><b>Area:</b> {{ record.area }}</p>
 <p><b>Population:</b> {{ record.population | intcomma }}</p>
 <p><b>Description:</b> {{ record.comment_public }}</p>
 <p><b>Reference links:</b> {{ record.reference_links }}</p>

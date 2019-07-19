@@ -48,7 +48,6 @@
 
 {% block view %}
 <p><b>Country:</b> <a href='{% url 'country' node.country.id %}'>{{ node.country.name }}</a></p>
-<p><b>Area:</b> {{ node.area }}</p>
 <p><b>Population:</b> {{ node.population | intcomma }}</p>
 <p><b>Description:</b> {{ node.comment_public }}</p>
 <p><b>Reference links:</b> {{ node.reference_links }}</p>
