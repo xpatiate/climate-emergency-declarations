@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404
 
-from .models import Declaration, Country, Node, NodeType, NodeTypeForm, NodeForm, DeclarationForm
+from .models import Declaration, Country, Node, NodeType
+from .forms import NodeTypeForm, NodeForm, DeclarationForm
 
 import logging 
 
@@ -30,6 +31,7 @@ def node(request, node_id):
         'record': node,
         'country': node.country,
         'parents_list': node.ancestors,
+        #'supplements_list': node.supplements.all()
     })
 
 def countries(request):
@@ -91,6 +93,8 @@ def node_edit(request, node_id):
     if not node:
         raise Http404("No such node")
     form = NodeForm(instance=node)
+    form.fields['supplements'].queryset = Node.objects.filter(country_id=node.country.id)
+
     # If POST received, save form
     if request.method == 'POST':
         form = NodeForm(request.POST, instance=node)
@@ -104,7 +108,7 @@ def node_edit(request, node_id):
         'country': node.parent.country.id,
         'nodetype': node.nodetype.id
     }
-    return render(request, 'govtrack/node.html', {'action': 'edit', 'record': node, 'form': form, 'country': node.country, 'parents_list': node.ancestors})
+    return render(request, 'govtrack/node.html', {'action': 'edit', 'record': node, 'form': form, 'country': node.country, 'parents_list': node.ancestors, 'supplements_list': node.supplements.all()})
 
 def node_child(request, parent_id, nodetype_id):
     if request.method == 'POST':

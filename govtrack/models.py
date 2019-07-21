@@ -1,8 +1,5 @@
 from django.db import models
 
-from django.forms import ModelForm
-import django.forms as forms
-
 import logging
 
 # Create your models here.
@@ -77,7 +74,7 @@ class NodeType(Hierarchy, models.Model):
 
     @property
     def children(self):
-        children = NodeType.objects.filter(parent=self.id).exclude(pk=self.id).order_by('level','name')
+        children = NodeType.objects.filter(parent=self.id).exclude(pk=self.id).order_by('name')
         return children
 
     @property
@@ -121,6 +118,7 @@ class Node(Hierarchy, models.Model):
     comment_private = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
+    supplements = models.ManyToManyField('self', symmetrical=False, related_name='supplement')
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
 
@@ -145,26 +143,25 @@ class Node(Hierarchy, models.Model):
 
     @property
     def children(self):
-        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype__level','sort_name')
+        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
         return children
 
     @property
     def ancestors(self):
         self.parentlist = [self]
         if (self.id != self.parent_id):
-            self.parentlist.insert(0,self.myparent)
+            self.parentlist.insert(0,self.parent)
         self.get_parent(self.parent.id)
+        for s in self.supplements.all():
+            if s not in self.parentlist:
+                self.parentlist.insert(0,s)
+                self.get_parent(s.id)
         return self.parentlist
-
-    @property
-    def myparent(self):
-        #return self.parent
-        return Node.objects.get(id=self.parent_id)
 
     def get_parent(self, parent_id):
         parent = Node.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
-            self.parentlist.insert(0, parent.myparent)
+            self.parentlist.insert(0, parent.parent)
             return self.get_parent(parent.parent_id)
 
     @property
@@ -247,7 +244,7 @@ class Node(Hierarchy, models.Model):
         return do_count
 
     def __str__(self):
-        return '%s | %s' % (self.country.name, self.name)
+        return '%s | %s' % (self.parent.name, self.name)
 
 class Declaration(models.Model):
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
@@ -294,32 +291,3 @@ class Declaration(models.Model):
         if ddate:
             return ddate.strftime('%d %B, %Y')
 
-class NodeTypeForm(ModelForm):
-    class Meta:
-        model = NodeType
-        fields = ['name','country','level','parent', 'is_governing']
-        widgets = {
-            'country': forms.HiddenInput(),
-            'level': forms.HiddenInput(),
-            'parent': forms.HiddenInput()
-            }
-
-class NodeForm(ModelForm):
-    class Meta:
-        model = Node
-        fields = ['name','sort_name','nodetype','country','population','parent','comment_public','comment_private','reference_links']
-        widgets = {
-            'nodetype': forms.HiddenInput(),
-            'parent': forms.HiddenInput(),
-            'country': forms.HiddenInput()
-        }
-
-class DeclarationForm(NodeForm):
-    class Meta:
-        model = Declaration
-        fields = ['node','status', 'date_declared', 'declaration_links', 'declaration_type']
-        widgets = {
-            'node': forms.HiddenInput(),
-        }
-
-    date_declared = forms.DateField(input_formats=['%Y-%m-%d'])

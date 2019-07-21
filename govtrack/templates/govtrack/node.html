@@ -18,6 +18,9 @@
 {% for parent in parents_list %}
     <div class='level_{{ parent.level }}'>&#8866;({{ parent.nodetype.name }}) {{ parent.name }}</div>
 {% endfor %}
+{% for parent in supplements_list %}
+    <div class='level_{{ parent.level }}'>&#8866;({{ parent.nodetype.name }}) {{ parent.name }}</div>
+{% endfor %}
 </div>
 
 {% if action %}
