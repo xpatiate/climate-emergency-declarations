@@ -4,9 +4,20 @@ from django.forms import ModelForm
 import django.forms as forms
 
 import logging
-from .utils import make_hierarchy
 
 # Create your models here.
+
+class Hierarchy():
+    """Mix-in class to provide tree-related methods."""
+    def build_hierarchy(self, itemlist=None):
+        if itemlist is None:
+            itemlist = []
+        if len(itemlist) == 0:
+            itemlist = [self]
+        for child in self.children:
+            itemlist.append(child)
+            child.build_hierarchy(itemlist) 
+        return itemlist
 
 class Country(models.Model):
     name = models.CharField(max_length=36)
@@ -21,22 +32,31 @@ class Country(models.Model):
 
     @property
     def declared_population(self):
-        dlist = Declaration.objects.filter(status='D', node__country=self.id).order_by('node__nodetype__level','node__sort_name')
-        nodes = set([d.node for d in dlist])
-        records = make_hierarchy(nodes, set())
+        return self.get_root_node().declared_population()
 
-        total_pop = 0
-        for item in records:
-            if item.is_counted:
-                total_pop += item.population
-        return total_pop
-            
+    @property
+    def num_declarations(self):
+        return Declaration.objects.filter(status='D', node__country=self.id).count()
 
-        def __str__(self):
-            return self.name
+    @property
+    def num_nodetypes(self):
+        return NodeType.objects.filter(country=self.id).count()
+
+    @property
+    def num_nodes(self):
+        return Node.objects.filter(country=self.id).count()
+
+    def get_root_nodetype(self):
+        return NodeType.objects.get(country=self.id, level=1)
+
+    def get_root_node(self):
+        return Node.objects.get(country=self.id, nodetype__level=1)
+
+    def __str__(self):
+        return self.name
 
 
-class NodeType(models.Model):
+class NodeType(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     level = models.PositiveSmallIntegerField()
@@ -88,7 +108,7 @@ class NodeType(models.Model):
         return self.fullname()
 
 
-class Node(models.Model):
+class Node(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     # Leave this in the model for now, but currently unused - 
@@ -173,12 +193,13 @@ class Node(models.Model):
         typekids = thistype.children
         return typekids
 
-    def total_population(self):
-        for child in self.children:
-            # is child a node or a govt?
-            # if govt, has it declared?
-            # if not declared, recurse
-            pass
+    def declared_population(self, total=0):
+        if self.is_declared:
+            total += self.population
+        else:
+            for child in self.children:
+                total = child.declared_population(total)
+        return total
 
     @property
     def is_counted(self):
