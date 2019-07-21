@@ -3,6 +3,8 @@ from django.db import models
 from django.forms import ModelForm
 import django.forms as forms
 
+from treebeard.mp_tree import MP_Node
+
 import logging
 from .utils import make_hierarchy
 
@@ -36,12 +38,12 @@ class Country(models.Model):
             return self.name
 
 
-class NodeType(models.Model):
+class NodeType(MP_Node):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     level = models.PositiveSmallIntegerField()
-    parent = models.ForeignKey('self', 
-        on_delete=models.CASCADE)
+#    parent = models.ForeignKey('self', 
+#        on_delete=models.CASCADE)
     count_population = models.BooleanField(default=True)
     is_governing = models.BooleanField(default=True)
 
@@ -66,14 +68,14 @@ class NodeType(models.Model):
         return records
 
     @property
-    def ancestors(self):
+    def not_ancestors(self):
         self.parentlist = [self]
         if (self.id != self.parent_id):
             self.parentlist.insert(0,self.parent)
         self.get_parent(self.parent.id)
         return self.parentlist
 
-    def get_parent(self, parent_id):
+    def not_get_parent(self, parent_id):
         parent = NodeType.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
             self.parentlist.insert(0, parent.parent)
@@ -276,11 +278,12 @@ class Declaration(models.Model):
 class NodeTypeForm(ModelForm):
     class Meta:
         model = NodeType
-        fields = ['name','country','level','parent', 'is_governing']
+        #fields = ['name','country','level','parent', 'is_governing']
+        fields = ['name','country','level', 'is_governing']
         widgets = {
             'country': forms.HiddenInput(),
             'level': forms.HiddenInput(),
-            'parent': forms.HiddenInput()
+            #'parent': forms.HiddenInput()
             }
 
 class NodeForm(ModelForm):
