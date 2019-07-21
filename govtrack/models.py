@@ -99,8 +99,8 @@ class Node(models.Model):
     reference_links = models.TextField(null=True, blank=True)
     comment_public = models.TextField(null=True, blank=True)
     comment_private = models.TextField(null=True, blank=True)
-    parent = models.ForeignKey('self', 
-        on_delete=models.CASCADE)
+    parents = models.ManyToManyField('self', symmetrical=False)
+        #on_delete=models.CASCADE)
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
 
@@ -125,27 +125,60 @@ class Node(models.Model):
 
     @property
     def children(self):
-        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype__level','sort_name')
+        children = Node.objects.filter(parents__id=self.id).exclude(pk=self.id).order_by('nodetype__level','sort_name')
         return children
 
+    """
+    Problem with trying to allow nodes to have multiple parents
+    is that it makes a tree structure very difficult
+    Can't create a simple hierarchy of ancestors
+
+    What if we kept each node with a single main parent
+    but also added an optional extra parent?
+    Like saying "this is my proper place in the tree, but when doing population
+    count, also take this other parent into account"
+    Safe enough to assume there wouldn't be nodes that have more than two parents?
+
+    If we did that how would population counting work?
+    Suppose we are drawing up the England tree and calculating cumulative population
+    Get to Southwest region first, go thru ceremonial counties
+    Bath & North East Somerset:
+        * is declared
+        * main parent is Somerset (ceremonial), not declared
+        * other parent is West England Combined, which is declared but not counted yet
+        * so count West England Combined, not this one
+    Bristol 
+        * is declared
+        * main parent is Southwest Region (ceremonial), not declared
+        * other parent is West England Combined, which is declared and counted 
+        * so do not count this one
+    South Gloucestershire:
+        * is not declared
+        * so no need to check parents
+    West England Combined Authority
+        * is declared
+        * is already counted
+    
+    Another question for Philip: do we store accurate population for each node?
+    Or in some cases should we be calculating population by totalling sub-nodes?
+    
+    
+    """
     @property
     def ancestors(self):
         self.parentlist = [self]
-        if (self.id != self.parent_id):
-            self.parentlist.insert(0,self.myparent)
-        self.get_parent(self.parent.id)
+        for p in self.parents.all():
+            if (self.id != p.id):
+                self.parentlist.insert(0,p)
+                self.get_parent(p.id)
         return self.parentlist
-
-    @property
-    def myparent(self):
-        #return self.parent
-        return Node.objects.get(id=self.parent_id)
 
     def get_parent(self, parent_id):
         parent = Node.objects.get(id=parent_id)
-        if parent.parent_id != parent_id:
-            self.parentlist.insert(0, parent.myparent)
-            return self.get_parent(parent.parent_id)
+        for p in parent.parents.all():
+            if p.id != parent_id:
+                self.parentlist.insert(0, p)
+                self.get_parent(p.id)
 
     @property
     def level(self):
@@ -286,10 +319,10 @@ class NodeTypeForm(ModelForm):
 class NodeForm(ModelForm):
     class Meta:
         model = Node
-        fields = ['name','sort_name','nodetype','country','population','parent','comment_public','comment_private','reference_links']
+        fields = ['name','sort_name','nodetype','country','population','parents','comment_public','comment_private','reference_links']
         widgets = {
             'nodetype': forms.HiddenInput(),
-            'parent': forms.HiddenInput(),
+            #'parents': forms.HiddenInput(),
             'country': forms.HiddenInput()
         }
 

@@ -39,6 +39,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'govtrack.apps.GovtrackConfig',
+    'treebeard',
+    'dag.apps.DagConfig',
+    'tree.apps.TreeConfig',
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,23 @@
+<html>
+<body>
+<h1>{{ head }}</h1>
+<p>
+{{ dump }}
+</p>
+
+{% for item, info in annotated_list %}
+    {% if info.open %}
+        <ul><li>
+    {% else %}
+        </li><li>
+    {% endif %}
+
+    {{ item.name }} {{info}}
+
+    {% for close in info.close %}
+        </li></ul>
+    {% endfor %}
+{% endfor %}
+
+</body>
+</html>

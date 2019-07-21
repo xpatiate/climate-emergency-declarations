@@ -1,1 +1,1 @@
-docker exec -it cegov_db psql -U postgres
+docker exec -it cegov_db_mp psql -U postgres

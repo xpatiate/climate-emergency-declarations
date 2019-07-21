@@ -116,8 +116,8 @@ def node_edit(request, node_id):
     # Show form
     nodedata = {
         'name': '',
-        'parent': node.parent.id,
-        'country': node.parent.country.id,
+        'parents': [node.parents],
+        'country': node.country.id,
         'nodetype': node.nodetype.id
     }
     return render(request, 'govtrack/node.html', {'action': 'edit', 'record': node, 'form': form, 'country': node.country, 'parents_list': node.ancestors})
@@ -129,11 +129,13 @@ def node_child(request, parent_id, nodetype_id):
             form.save()
             country_id = request.POST['country']
             return redirect('country', country_id=country_id)
+        else:
+            print("problem with node_child form: %s" % form.errors)
     parent = get_object_or_404(Node, pk=parent_id)
     nodetype = get_object_or_404(NodeType, pk=nodetype_id)
     nodedata = {
         'name': '',
-        'parent': parent_id,
+        'parents': [parent_id],
         'country': parent.country.id,
         'nodetype': nodetype_id
     }

@@ -6,9 +6,9 @@ volumes:
 services:
   db:
     image: postgres
-    container_name: cegov_db
+    container_name: cegov_db_mp
     environment:
-      - POSTGRES_DB=postgres
+      - POSTGRES_DB=cegovmp
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=s3kr1t
     volumes:
@@ -17,13 +17,13 @@ services:
     build: .
     depends_on:
         - db
-    container_name: cegov_web
+    container_name: cegov_web_mp
     volumes:
       - .:/code
     ports:
       - "8000:8000"
     environment:
-     - DB_NAME=postgres
+     - DB_NAME=cegovmp
      - DB_USER=postgres
      - DB_HOST=db
      - DB_PORT=5432
