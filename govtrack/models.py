@@ -1,12 +1,22 @@
 from django.db import models
-
-from django.forms import ModelForm
-import django.forms as forms
+from django.db.models import Q
 
 import logging
-from .utils import make_hierarchy
 
 # Create your models here.
+
+class Hierarchy():
+    """Mix-in class to provide tree-related methods."""
+    def build_hierarchy(self, itemlist=None):
+        if itemlist is None:
+            itemlist = []
+        if len(itemlist) == 0:
+            itemlist = [self]
+        for child in self.children:
+            child.current_parent = self
+            itemlist.append(child)
+            child.build_hierarchy(itemlist) 
+        return itemlist
 
 class Country(models.Model):
     name = models.CharField(max_length=36)
@@ -21,22 +31,31 @@ class Country(models.Model):
 
     @property
     def declared_population(self):
-        dlist = Declaration.objects.filter(status='D', node__country=self.id).order_by('node__nodetype__level','node__sort_name')
-        nodes = set([d.node for d in dlist])
-        records = make_hierarchy(nodes, set())
+        return self.get_root_node().declared_population()
 
-        total_pop = 0
-        for item in records:
-            if item.is_counted:
-                total_pop += item.population
-        return total_pop
-            
+    @property
+    def num_declarations(self):
+        return Declaration.objects.filter(status='D', node__country=self.id).count()
 
-        def __str__(self):
-            return self.name
+    @property
+    def num_nodetypes(self):
+        return NodeType.objects.filter(country=self.id).count()
+
+    @property
+    def num_nodes(self):
+        return Node.objects.filter(country=self.id).count()
+
+    def get_root_nodetype(self):
+        return NodeType.objects.get(country=self.id, level=1)
+
+    def get_root_node(self):
+        return Node.objects.get(country=self.id, nodetype__level=1)
+
+    def __str__(self):
+        return self.name
 
 
-class NodeType(models.Model):
+class NodeType(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     level = models.PositiveSmallIntegerField()
@@ -44,6 +63,8 @@ class NodeType(models.Model):
         on_delete=models.CASCADE)
     count_population = models.BooleanField(default=True)
     is_governing = models.BooleanField(default=True)
+
+    current_parent = None
 
     def fullname(self):
         name = ''
@@ -57,8 +78,16 @@ class NodeType(models.Model):
 
     @property
     def children(self):
-        children = NodeType.objects.filter(parent=self.id).exclude(pk=self.id).order_by('level','name')
+        children = NodeType.objects.filter(parent=self.id).exclude(pk=self.id).order_by('name')
         return children
+
+    @property
+    def all_children(self):
+        return self.children
+
+    @property
+    def this_parent(self):
+        return self.parent
 
     @property
     def records(self):
@@ -88,7 +117,7 @@ class NodeType(models.Model):
         return self.fullname()
 
 
-class Node(models.Model):
+class Node(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     # Leave this in the model for now, but currently unused - 
@@ -101,10 +130,12 @@ class Node(models.Model):
     comment_private = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
+    supplements = models.ManyToManyField('self', symmetrical=False, related_name='supplement')
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
 
     parentlist = []
+    current_parent = None
 
     def save(self, *args, **kwargs):
         if not self.sort_name:
@@ -124,27 +155,45 @@ class Node(models.Model):
         return '%s (%s)' % (self.name, self.nodetype.name)
 
     @property
+    def num_children(self):
+        return Node.objects.filter(parent=self.id).exclude(pk=self.id).count()
+
+    @property
     def children(self):
-        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype__level','sort_name')
+        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
         return children
+
+    @property
+    def all_children(self):
+        # this alternative method gets *all* children, considering this node
+        # both as prime parent and supplementary parent
+        combined = Node.objects.filter(
+            Q(parent=self.id) | Q(supplements=self.id)
+        ).exclude(pk=self.id).order_by('nodetype','sort_name')
+        return combined
+
+    @property
+    def this_parent(self):
+        if self.current_parent:
+            return self.current_parent
+        return self.parent
 
     @property
     def ancestors(self):
         self.parentlist = [self]
         if (self.id != self.parent_id):
-            self.parentlist.insert(0,self.myparent)
+            self.parentlist.insert(0,self.parent)
         self.get_parent(self.parent.id)
+        for s in self.supplements.all():
+            if s not in self.parentlist:
+                self.parentlist.insert(0,s)
+                self.get_parent(s.id)
         return self.parentlist
-
-    @property
-    def myparent(self):
-        #return self.parent
-        return Node.objects.get(id=self.parent_id)
 
     def get_parent(self, parent_id):
         parent = Node.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
-            self.parentlist.insert(0, parent.myparent)
+            self.parentlist.insert(0, parent.parent)
             return self.get_parent(parent.parent_id)
 
     @property
@@ -173,12 +222,15 @@ class Node(models.Model):
         typekids = thistype.children
         return typekids
 
-    def total_population(self):
-        for child in self.children:
-            # is child a node or a govt?
-            # if govt, has it declared?
-            # if not declared, recurse
-            pass
+    def declared_population(self, total=0):
+        if self.is_counted:
+            logging.debug("%s adding %s to %s" % (self.name,self.population,total))
+            total += self.population
+        else:
+            for child in self.children:
+                total = child.declared_population(total)
+        logging.debug("%s returning total of %s" % (self.name,total))
+        return total
 
     @property
     def is_counted(self):
@@ -226,7 +278,7 @@ class Node(models.Model):
         return do_count
 
     def __str__(self):
-        return '%s | %s' % (self.country.name, self.name)
+        return '%s | %s' % (self.parent.name, self.name)
 
 class Declaration(models.Model):
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
@@ -273,32 +325,3 @@ class Declaration(models.Model):
         if ddate:
             return ddate.strftime('%d %B, %Y')
 
-class NodeTypeForm(ModelForm):
-    class Meta:
-        model = NodeType
-        fields = ['name','country','level','parent', 'is_governing']
-        widgets = {
-            'country': forms.HiddenInput(),
-            'level': forms.HiddenInput(),
-            'parent': forms.HiddenInput()
-            }
-
-class NodeForm(ModelForm):
-    class Meta:
-        model = Node
-        fields = ['name','sort_name','nodetype','country','population','parent','comment_public','comment_private','reference_links']
-        widgets = {
-            'nodetype': forms.HiddenInput(),
-            'parent': forms.HiddenInput(),
-            'country': forms.HiddenInput()
-        }
-
-class DeclarationForm(NodeForm):
-    class Meta:
-        model = Declaration
-        fields = ['node','status', 'date_declared', 'declaration_links', 'declaration_type']
-        widgets = {
-            'node': forms.HiddenInput(),
-        }
-
-    date_declared = forms.DateField(input_formats=['%Y-%m-%d'])

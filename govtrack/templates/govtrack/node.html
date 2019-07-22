@@ -18,6 +18,7 @@
 {% for parent in parents_list %}
     <div class='level_{{ parent.level }}'>&#8866;({{ parent.nodetype.name }}) {{ parent.name }}</div>
 {% endfor %}
+    <div class='level_{{ record.level|add:"1" }}'>&#8866; {{ record.num_children }} children</div>
 </div>
 
 {% if action %}

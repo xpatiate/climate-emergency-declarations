@@ -1,7 +1,7 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404
 
-from .models import Declaration, Country, Node, NodeType, NodeTypeForm, NodeForm, DeclarationForm
-from .utils import make_hierarchy
+from .models import Declaration, Country, Node, NodeType
+from .forms import NodeTypeForm, NodeForm, DeclarationForm
 
 import logging 
 
@@ -10,11 +10,9 @@ import logging
 def index(request):
     # get all governments who have declared
     dlist = Declaration.objects.filter(status='D').order_by('node__country__name','node__sort_name')
-    allcountries = Country.objects.order_by('name')
-    country_list = set([d.node.country.name for d in dlist])
-    print(country_list)
+    country_list = set([d.node.country for d in dlist])
     countries = []
-    for c in allcountries:
+    for c in country_list:
         dlist = c.declarations
         if dlist:
             countries.append(({
@@ -24,21 +22,6 @@ def index(request):
                 'declared_population': c.declared_population
             },
             dlist))
-    #current_country = ''
-    #for dec in dlist:
-    #    if dec.node.country != current_country:
-    #        current_country = dec.node.country
-    #        current_country_list = []
-    #        countries.append( ({
-    #            'name': current_country.name,
-    #            'id': current_country.id,
-    #            'num_nodes': len(dlist),
-    #            'declared_population': 10000
-    #            },
-    #            current_country_list) )
-    #    current_country_list.append(dec)
-    #print(dlist)
-    print(countries)
     return render(request, 'govtrack/index.html', {'countries': countries})
 
 
@@ -52,13 +35,15 @@ def node(request, node_id):
 
 def countries(request):
     clist = Country.objects.order_by('name')
+    for c in clist:
+        c.node_population = c.get_root_node().declared_population()
     return render(request, 'govtrack/countries.html', {'country_list': clist})
 
 def country(request, country_id):
     country = get_object_or_404(Country, pk=country_id)
-    structure = make_hierarchy(NodeType.objects.filter(country=country_id).order_by('level','name'), set())
-    cnodes = Node.objects.filter(country=country_id).order_by('nodetype__level','name')
-    records = make_hierarchy(cnodes, set())
+
+    structure = country.get_root_nodetype().build_hierarchy()
+    records = country.get_root_node().build_hierarchy()
 
     total_pop = 0
     for item in records:
@@ -71,7 +56,7 @@ def country(request, country_id):
         'country': country,
         'structure_list': structure,
         'records_list': records,
-        'total_declared_population': total_pop
+        'total_declared_population': country.get_root_node().declared_population()
         })
 
 
@@ -107,6 +92,8 @@ def node_edit(request, node_id):
     if not node:
         raise Http404("No such node")
     form = NodeForm(instance=node)
+    form.fields['supplements'].queryset = Node.objects.filter(country_id=node.country.id)
+
     # If POST received, save form
     if request.method == 'POST':
         form = NodeForm(request.POST, instance=node)
@@ -120,7 +107,7 @@ def node_edit(request, node_id):
         'country': node.parent.country.id,
         'nodetype': node.nodetype.id
     }
-    return render(request, 'govtrack/node.html', {'action': 'edit', 'record': node, 'form': form, 'country': node.country, 'parents_list': node.ancestors})
+    return render(request, 'govtrack/node.html', {'action': 'edit', 'record': node, 'form': form, 'country': node.country, 'parents_list': node.ancestors, 'supplements_list': node.supplements.all()})
 
 def node_child(request, parent_id, nodetype_id):
     if request.method == 'POST':

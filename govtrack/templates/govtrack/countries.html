@@ -9,12 +9,21 @@
     <table>
       <tr>
         <th>Country</th>
-        <th>Population</th>
+        <th align='right'>Population</th>
+        <th align='right'>Declared</th>
+        <th align='right'>Structures</th>
+        <th align='right'>Records</th>
+        <th align='right'>Declarations</th>
       </tr>
     {% for country in country_list %}
         <tr>
         <td><a href="{% url 'country' country.id %}">{{ country.name }}</a></td>
         <td align='right'>{{ country.population | intcomma }}</td>
+        <td align='right'>{{ country.node_population | intcomma }}</td>
+        <td align='right'>{% if country.num_nodetypes > 1%}{{ country.num_nodetypes }}{% endif %}</td>
+        <td align='right'>{% if country.num_nodes > 1 %}{{ country.num_nodes }}{% endif %}</td>
+        <td align='right'>{% if country.num_declarations %}{{ country.num_declarations }}{% endif %}</td>
+        </td>
         </tr>
     {% endfor %}
     </table>
