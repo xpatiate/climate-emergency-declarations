@@ -92,7 +92,7 @@ def node_edit(request, node_id):
     if not node:
         raise Http404("No such node")
     form = NodeForm(instance=node)
-    form.fields['supplements'].queryset = Node.objects.filter(country_id=node.country.id)
+    form.fields['supplements'].queryset = node.parent.get_supplement_choices()
 
     # If POST received, save form
     if request.method == 'POST':
@@ -126,6 +126,8 @@ def node_child(request, parent_id, nodetype_id):
     }
     records = parent.ancestors
     form = NodeForm(initial=nodedata)
+    form.fields['supplements'].queryset = parent.get_supplement_choices()
+
     return render(request, 'govtrack/node.html', {'action': 'add', 'parent': parent, 'form': form, 'country': parent.country, 'nodetype_name': nodetype.name, 'parents_list': records, 'nodetype_id': nodetype_id})
 
 def declaration_add(request, node_id):

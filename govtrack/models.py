@@ -130,7 +130,9 @@ class Node(Hierarchy, models.Model):
     comment_private = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
-    supplements = models.ManyToManyField('self', symmetrical=False, related_name='supplement')
+    supplements = models.ManyToManyField('self',
+        symmetrical=False, related_name='supplement',
+        null=True, blank=True)
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
 
@@ -277,8 +279,15 @@ class Node(Hierarchy, models.Model):
                 do_count = False
         return do_count
 
+    def get_supplement_choices(self):
+        return Node.objects.filter(
+            country_id=self.country.id,
+            nodetype__level__lte=(self.nodetype.level+1)
+            ).exclude(pk=self.id).order_by('nodetype__level','sort_name')
+
+
     def __str__(self):
-        return '%s | %s' % (self.parent.name, self.name)
+        return self.fullname()
 
 class Declaration(models.Model):
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
