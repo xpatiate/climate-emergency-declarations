@@ -31,7 +31,6 @@ def node(request, node_id):
         'record': node,
         'country': node.country,
         'parents_list': node.ancestors,
-        #'supplements_list': node.supplements.all()
     })
 
 def countries(request):

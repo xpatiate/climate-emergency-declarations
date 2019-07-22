@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 
 import logging
 
@@ -12,6 +13,7 @@ class Hierarchy():
         if len(itemlist) == 0:
             itemlist = [self]
         for child in self.children:
+            child.current_parent = self
             itemlist.append(child)
             child.build_hierarchy(itemlist) 
         return itemlist
@@ -62,6 +64,8 @@ class NodeType(Hierarchy, models.Model):
     count_population = models.BooleanField(default=True)
     is_governing = models.BooleanField(default=True)
 
+    current_parent = None
+
     def fullname(self):
         name = ''
         if (self.level > 1):
@@ -76,6 +80,14 @@ class NodeType(Hierarchy, models.Model):
     def children(self):
         children = NodeType.objects.filter(parent=self.id).exclude(pk=self.id).order_by('name')
         return children
+
+    @property
+    def all_children(self):
+        return self.children
+
+    @property
+    def this_parent(self):
+        return self.parent
 
     @property
     def records(self):
@@ -123,6 +135,7 @@ class Node(Hierarchy, models.Model):
     count_population = models.SmallIntegerField(default=0)
 
     parentlist = []
+    current_parent = None
 
     def save(self, *args, **kwargs):
         if not self.sort_name:
@@ -142,9 +155,28 @@ class Node(Hierarchy, models.Model):
         return '%s (%s)' % (self.name, self.nodetype.name)
 
     @property
+    def num_children(self):
+        return Node.objects.filter(parent=self.id).exclude(pk=self.id).count()
+
+    @property
     def children(self):
         children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
         return children
+
+    @property
+    def all_children(self):
+        # this alternative method gets *all* children, considering this node
+        # both as prime parent and supplementary parent
+        combined = Node.objects.filter(
+            Q(parent=self.id) | Q(supplements=self.id)
+        ).exclude(pk=self.id).order_by('nodetype','sort_name')
+        return combined
+
+    @property
+    def this_parent(self):
+        if self.current_parent:
+            return self.current_parent
+        return self.parent
 
     @property
     def ancestors(self):
@@ -191,11 +223,13 @@ class Node(Hierarchy, models.Model):
         return typekids
 
     def declared_population(self, total=0):
-        if self.is_declared:
+        if self.is_counted:
+            logging.debug("%s adding %s to %s" % (self.name,self.population,total))
             total += self.population
         else:
             for child in self.children:
                 total = child.declared_population(total)
+        logging.debug("%s returning total of %s" % (self.name,total))
         return total
 
     @property

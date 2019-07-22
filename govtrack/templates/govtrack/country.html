@@ -30,6 +30,7 @@
     <th>Declared?</th>
     <th>Population</th>
     <th>Cumulative</th>
+    <!--<th>Parent</th>-->
   </tr>
 {% for record in records_list %}
     <tr>
@@ -55,6 +56,7 @@
         {{record.population | intcomma}}
     </td>
     <td align='right'>{{record.total_population | intcomma}}</td>
+    <!--<td align='right'>{{record.this_parent.name}}</td>-->
     </tr>
 {% endfor %}
   <tr class='total-pop-row'>
