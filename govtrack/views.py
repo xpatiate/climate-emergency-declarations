@@ -1,7 +1,8 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404
+from django.forms import formset_factory
 
-from .models import Declaration, Country, Node, NodeType
-from .forms import NodeTypeForm, NodeForm, DeclarationForm
+from .models import Declaration, Country, Node, NodeType, Link
+from .forms import NodeTypeForm, NodeForm, DeclarationForm, LinkForm
 
 import logging 
 
@@ -63,12 +64,31 @@ def country(request, country_id):
 def nodetype_edit(request, nodetype_id):
     nodetype = get_object_or_404(NodeType, pk=nodetype_id)
     form = NodeTypeForm(instance=nodetype)
+    link_initial = {
+        'content_type': NodeType.content_type_id(),
+        'object_id': nodetype_id,
+    }
     if request.method == 'POST':
         form = NodeTypeForm(request.POST, instance=nodetype)
+        linkform = LinkForm(request.POST, prefix='link', initial=link_initial)
+        if linkform.has_changed() and linkform.is_valid():
+            linkform.save()
+        else:
+            print(linkform)
         if form.is_valid():
             form.save()
         return redirect('country', country_id=nodetype.country.id)
-    return render(request, 'govtrack/nodetype.html', {'action': 'edit', 'nodetype': nodetype, 'form': form, 'country': nodetype.country, 'parents_list': nodetype.ancestors})
+
+    linkform = LinkForm(prefix='link', initial=link_initial)
+    return render(request, 'govtrack/nodetype.html', {
+        'action': 'edit',
+        'nodetype': nodetype,
+        'form': form,
+        'country': nodetype.country,
+        'parents_list': nodetype.ancestors,
+        'links': nodetype.links.all(),
+        'linkform': linkform,
+        })
 
 def nodetype_child(request, parent_id):
     parent = get_object_or_404(NodeType, pk=parent_id)
@@ -168,3 +188,4 @@ def node_del(request, node_id):
     node = Node.objects.get(id=node_id)
     node.delete()
     return redirect('country', country_id=node.country.id)
+

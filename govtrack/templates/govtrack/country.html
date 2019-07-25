@@ -2,11 +2,12 @@
 
 {% load humanize %}
 
-{% block title %}{{ country.name }}{% endblock %}
+{% block title %}{{ country.name }} ({{ country.country_code }}){% endblock %}
 
 {% block content %}
 
 <p>Population: {{ country.population | intcomma }}</p>
+<p>Region: {{ country.region }}</p>
 
 <div class='parent-tree'>
 {% for struct in structure_list %}
