@@ -14,6 +14,9 @@ urlpatterns = [
     path('declaration/<int:node_id>/', views.declaration_add, name='declaration_add'),
     path('declaration/edit/<int:declaration_id>/', views.declaration_edit, name='declaration_edit'),
     path('node/child/<int:parent_id>/<int:nodetype_id>', views.node_child, name='node_child'),
-    # TODO prevent path-based deletion - integrate into edit path
-    path('node/del/<int:node_id>', views.node_del, name='node_del'),
+    # API paths
+    path('api/del/node/<int:node_id>', views.node_del, name='node_del'),
+    path('api/del/nodetype/<int:nodetype_id>', views.nodetype_del, name='nodetype_del'),
+    path('api/del/declaration/<int:declaration_id>', views.declaration_del, name='declaration_del'),
+    path('api/del/link/<int:link_id>', views.link_del, name='link_del'),
 ]

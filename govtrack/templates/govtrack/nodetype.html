@@ -24,10 +24,7 @@
     >
 {% csrf_token %}
 {{ form.as_p }}
-<b>Links</b>
-{% for link in links %}
-<li><a href='{{ link.url }}' target='_new'>{{ link.url }}</a></li>
-{% endfor %}
+{% include 'govtrack/links.html' %}
 {{ linkform.as_p }}
 <input type='submit' value='save' class='button-save'>
 <br><br>

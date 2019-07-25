@@ -1,4 +1,4 @@
-from django.shortcuts import get_object_or_404, render, redirect, Http404
+from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpResponse
 from django.forms import formset_factory
 
 from .models import Declaration, Country, Node, NodeType, Link
@@ -32,6 +32,7 @@ def node(request, node_id):
         'record': node,
         'country': node.country,
         'parents_list': node.ancestors,
+        'links': node.links.all(),
     })
 
 def countries(request):
@@ -57,7 +58,8 @@ def country(request, country_id):
         'country': country,
         'structure_list': structure,
         'records_list': records,
-        'total_declared_population': country.get_root_node().declared_population()
+        'total_declared_population': country.get_root_node().declared_population(),
+        'links': country.links.all(),
         })
 
 
@@ -70,16 +72,14 @@ def nodetype_edit(request, nodetype_id):
     }
     if request.method == 'POST':
         form = NodeTypeForm(request.POST, instance=nodetype)
-        linkform = LinkForm(request.POST, prefix='link', initial=link_initial)
-        if linkform.has_changed() and linkform.is_valid():
-            linkform.save()
-        else:
-            print(linkform)
+        linkform = LinkForm(request.POST, initial=link_initial)
         if form.is_valid():
             form.save()
+            if linkform.has_changed() and linkform.is_valid():
+                linkform.save()
         return redirect('country', country_id=nodetype.country.id)
 
-    linkform = LinkForm(prefix='link', initial=link_initial)
+    linkform = LinkForm(initial=link_initial)
     return render(request, 'govtrack/nodetype.html', {
         'action': 'edit',
         'nodetype': nodetype,
@@ -114,20 +114,39 @@ def node_edit(request, node_id):
     form = NodeForm(instance=node)
     form.fields['supplements'].queryset = node.parent.get_supplement_choices()
 
+    link_initial = {
+        'content_type': Node.content_type_id(),
+        'object_id': node_id,
+    }
+    linkform = LinkForm(initial=link_initial)
     # If POST received, save form
     if request.method == 'POST':
         form = NodeForm(request.POST, instance=node)
+        linkform = LinkForm(request.POST, initial=link_initial)
+        do_redir = False
         if form.is_valid():
+            do_redir=True
             saved = form.save()
-            return redirect('country', country_id=node.country.id)
+            if linkform.has_changed():
+                do_redir=False
+                if linkform.is_valid():
+                    linkform.save()
+                    do_redir=True
+                else:
+                    print("did not save url because %s " % linkform.errors)
+            if do_redir:
+                return redirect('country', country_id=node.country.id)
     # Show form
-    nodedata = {
-        'name': '',
-        'parent': node.parent.id,
-        'country': node.parent.country.id,
-        'nodetype': node.nodetype.id
-    }
-    return render(request, 'govtrack/node.html', {'action': 'edit', 'record': node, 'form': form, 'country': node.country, 'parents_list': node.ancestors, 'supplements_list': node.supplements.all()})
+    return render(request, 'govtrack/node.html', {
+        'action': 'edit',
+        'record': node,
+        'form': form,
+        'links': node.links.all(),
+        'linkform': linkform,
+        'country': node.country,
+        'parents_list': node.ancestors,
+        'supplements_list': node.supplements.all()
+        })
 
 def node_child(request, parent_id, nodetype_id):
     if request.method == 'POST':
@@ -175,17 +194,44 @@ def declaration_edit(request, declaration_id):
             saved = form.save()
             return redirect('node', node_id=dec.node.id)
     # Show form
-    return render(request, 'govtrack/declare.html', {'action': 'edit', 'declaration': dec, 'form': form, 'node': dec.node})
+    return render(request, 'govtrack/declare.html', {
+        'action': 'edit',
+        'declaration': dec,
+        'form': form,
+        'node': dec.node,
+        'links': dec.links.all(),
+        })
 
-# TODO integrate these into edit path
-# so we can't delete just by sending a POST
+# API methods
 def nodetype_del(request, nodetype_id):
-    nodetype = NodeType.objects.get(id=nodetype_id)
-    nodetype.delete()
-    return redirect('country', country_id=nodetype.country.id)
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        nodetype = get_object_or_404(NodeType, pk=nodetype_id)
+        nodetype.delete()
+    return HttpResponse(status=status)
 
 def node_del(request, node_id):
-    node = Node.objects.get(id=node_id)
-    node.delete()
-    return redirect('country', country_id=node.country.id)
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        node = get_object_or_404(Node, pk=node_id)
+        node.delete()
+    return HttpResponse(status=status)
+
+def declaration_del(request, declaration_id):
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        declaration = get_object_or_404(Declaration, pk=declaration_id)
+        declaration.delete()
+    return HttpResponse(status=status)
+
+def link_del(request, link_id):
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        link = get_object_or_404(Link, pk=link_id)
+        link.delete()
+    return HttpResponse(status=status)
 

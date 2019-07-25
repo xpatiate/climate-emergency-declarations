@@ -8,15 +8,21 @@
 
 <p>Population: {{ country.population | intcomma }}</p>
 <p>Region: {{ country.region }}</p>
+{% include 'govtrack/links.html' %}
+
 
 <div class='parent-tree'>
 {% for struct in structure_list %}
-    <div class='level_{{ struct.level }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
+    <div class='level_{{ struct.level }}' id='nodetype-{{ struct.id }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
     {% if user.is_authenticated %}
       &nbsp;<button class='view-nodetype' id='viewnodetype-{{ struct.id }}'>*</button>
       <div id='editnodetype-{{ struct.id }}' class='edit-nodetype'>
       <a href='{% url 'nodetype_edit' struct.id %}'>edit</a> | 
-      {% if struct.num_records == 0 %}<a href='{% url 'nodetype_del' struct.id %}'>delete</a> |{% endif %} 
+      {% if struct.num_records == 0 %}
+        {% with view="nodetype_del" object=struct %}
+        {% include 'govtrack/delete.html' %}
+        {% endwith %}
+        |{% endif %}
       <a href='{% url 'nodetype_child' struct.id %}'>add child</a>
       </div>
     {% endif %}
@@ -36,13 +42,16 @@
 {% for record in records_list %}
     <tr>
     <td>
-    <div class='level_{{ record.level }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
+    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
     {% if user.is_authenticated %}
       &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
       <div id='editnode-{{ record.id }}' class='edit-node'>
       <a href='{% url 'node_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
-      | <a href='{% url 'node_del' record.id %}'>delete</a>
+        |
+        {% with view="node_del" object=record %}
+        {% include 'govtrack/delete.html' %}
+        {% endwith %}
       {% endif %}
       <br>
       {% for ctype in record.sub_types %}
@@ -67,28 +76,5 @@
     <td align='right'>{{total_declared_population | intcomma}}</td>
   </tr>
 </table>
-
-<script type='text/javascript'>
-var showing = {};
-function toggleEditOptions(ev) {
-    el = ev.target
-    console.log(el)
-    editdivid = el.id.replace('view','edit')
-    editdiv = $( '#' + editdivid )
-    if (showing[el.id] == 1) {
-        editdiv.css('display','none')
-        showing[el.id] = 0
-        el.innerHTML = '*'
-    } else {
-        editdiv.css('display','block')
-        showing[el.id] = 1
-        el.innerHTML = '-'
-    }
-}
-$( document ).ready(function() {
-    $( "button.view-nodetype" ).click( toggleEditOptions );
-    $( "button.view-node" ).click( toggleEditOptions );
-});
-</script>
 
 {% endblock %}

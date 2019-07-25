@@ -38,6 +38,10 @@ class Country(models.Model):
     country_code = models.CharField(max_length=3)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
+    @classmethod
+    def content_type_id(cls):
+        return ContentType.objects.get_for_model(cls).pk
+
     @property
     def declarations(self):
         dlist = Declaration.objects.filter(status='D', node__country=self.id).order_by('node__sort_name')
@@ -156,6 +160,10 @@ class Node(Hierarchy, models.Model):
 
     parentlist = []
     current_parent = None
+
+    @classmethod
+    def content_type_id(cls):
+        return ContentType.objects.get_for_model(cls).pk
 
     def save(self, *args, **kwargs):
         if not self.sort_name:
@@ -338,6 +346,10 @@ class Declaration(models.Model):
     # [councils/parliaments] or individuals in the case of ‘elected “monarchs”
     # like presidents or governors or perhaps some mayors?
     declaration_type = models.TextField(blank=True)
+
+    @classmethod
+    def content_type_id(cls):
+        return ContentType.objects.get_for_model(cls).pk
 
     @property
     def status_name(self):

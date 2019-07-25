@@ -42,18 +42,23 @@ tr.country-total {
 .view-node:focus, .view-nodetype:focus {
     outline: 0;
 }
+.react-delete-link {
+    color: orange;
+    font-size: small;
+    display: inline;
+}
 .edit-node a, .edit-nodetype a {
     color: orange;
 }
 .edit-nodetype {
     font-size: small;
     padding-left: 20px;
-    display: none;
+    /*display: none;*/
 }
 .edit-node {
     font-size: small;
     padding-left: 20px;
-    display: none;
+    /*display: none;*/
 }
 .link-node {
 }
