@@ -40,30 +40,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='node',
-            name='area',
-            field=models.CharField(blank=True, default='', max_length=36),
-            preserve_default=False,
-        ),
-        migrations.AlterField(
-            model_name='node',
-            name='comment_private',
-            field=models.TextField(blank=True, default=''),
-            preserve_default=False,
-        ),
-        migrations.AlterField(
-            model_name='node',
-            name='comment_public',
-            field=models.TextField(blank=True, default=''),
-            preserve_default=False,
-        ),
-        migrations.AlterField(
-            model_name='node',
-            name='sort_name',
-            field=models.CharField(blank=True, default='', max_length=64),
-            preserve_default=False,
-        ),
-        migrations.AlterField(
-            model_name='node',
             name='supplements',
             field=models.ManyToManyField(related_name='supplement', to='govtrack.Node'),
         ),

@@ -145,16 +145,16 @@ class Node(Hierarchy, models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     # Leave this in the model for now, but currently unused - 
     # nodetype structure should give enough geographical context
-    area = models.CharField(max_length=36, blank=True)
+    area = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
     nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
-    comment_public = models.TextField(blank=True)
-    comment_private = models.TextField(blank=True)
+    comment_public = models.TextField(null=True, blank=True)
+    comment_private = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
     supplements = models.ManyToManyField('self',
         symmetrical=False, related_name='supplement')
-    sort_name = models.CharField(max_length=64, blank=True)
+    sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
