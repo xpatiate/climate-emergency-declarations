@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('countries/', views.countries, name='countries'),
     path('country/<int:country_id>', views.country, name='country'),
+    path('country/edit/<int:country_id>', views.country, {'action': 'edit'}, name='country_edit'),
     path('node/<int:node_id>/', views.node, name='node'),
     path('nodetype/edit/<int:nodetype_id>/', views.nodetype_edit, name='nodetype_edit'),
     path('nodetype/child/<int:parent_id>/', views.nodetype_child, name='nodetype_child'),

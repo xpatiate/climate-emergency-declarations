@@ -47,23 +47,32 @@ tr.country-total {
     font-size: small;
     display: inline;
 }
-.edit-node a, .edit-nodetype a {
+div.react-delete-link a {
+    color: orange;
+}
+.edit-country a, .edit-node a, .edit-nodetype a {
     color: orange;
 }
 .edit-nodetype {
     font-size: small;
     padding-left: 20px;
-    /*display: none;*/
+    display: none;
 }
 .edit-node {
     font-size: small;
     padding-left: 20px;
-    /*display: none;*/
+    display: none;
 }
 .link-node {
 }
 .link-govt {
     font-weight: bold;
+}
+.declarations {
+    border: 1px solid lightgrey;
+    background: rgb(240,240,240);
+    margin-bottom: 20px;
+    padding: 15px;
 }
 .parent-tree {
     border: 1px solid lightgrey;

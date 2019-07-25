@@ -1,5 +1,6 @@
 {% if links %}
 <b>Links:</b>
+<ul>
 {% for link in links %}
 <li id='link-{{link.id}}'><a href='{{ link.url }}' target='_new'>{{ link.url }}</a>
 {% if user.is_authenticated %}
@@ -9,5 +10,6 @@
 {% endif %}
 </li>
 {% endfor %}
+</ul>
 <br>
 {% endif %}

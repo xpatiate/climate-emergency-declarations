@@ -6,10 +6,23 @@
 
 {% block content %}
 
+{% if action == 'edit' %}
+<form method='POST' action='{% url 'country_edit' country.id %}'>
+{% csrf_token %}
+{{ form.as_p }}
+{% include 'govtrack/links.html' %}
+{{ linkform.as_p }}
+<input type='submit' value='save' class='button-save'>
+<br>
+{% else %}
+{% if user.is_authenticated %}
+    <div id='editcountry-{{ country.id }}' class='edit-country'>
+    <a href='{% url 'country_edit' country.id %}'>edit</a>
+    </div>
+{% endif %}
 <p>Population: {{ country.population | intcomma }}</p>
 <p>Region: {{ country.region }}</p>
 {% include 'govtrack/links.html' %}
-
 
 <div class='parent-tree'>
 {% for struct in structure_list %}
@@ -77,4 +90,28 @@
   </tr>
 </table>
 
+<script type='text/javascript'>
+var showing = {};
+function toggleEditOptions(ev) {
+    el = ev.target
+    console.log(el)
+    editdivid = el.id.replace('view','edit')
+    editdiv = $( '#' + editdivid )
+    if (showing[el.id] == 1) {
+        editdiv.css('display','none')
+        showing[el.id] = 0
+        el.innerHTML = '*'
+    } else {
+        editdiv.css('display','block')
+        showing[el.id] = 1
+        el.innerHTML = '-'
+    }
+}
+$( document ).ready(function() {
+    $( "button.view-nodetype" ).click( toggleEditOptions );
+    $( "button.view-node" ).click( toggleEditOptions );
+});
+</script>
+
+{% endif %}
 {% endblock %}
