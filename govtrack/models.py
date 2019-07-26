@@ -154,8 +154,6 @@ class NodeType(Hierarchy, models.Model):
 class Node(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    # Leave this in the model for now, but currently unused - 
-    # nodetype structure should give enough geographical context
     area = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
     nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)

@@ -24,7 +24,7 @@ class NodeForm(ModelForm):
     supplements = forms.MultipleChoiceField(required=False)
     class Meta:
         model = Node
-        fields = ['name','sort_name','nodetype','country','population','parent','supplements','comment_public','comment_private']
+        fields = ['name','sort_name','nodetype','country','area', 'population','parent','supplements','comment_public','comment_private']
         widgets = {
             'nodetype': forms.HiddenInput(),
             'parent': forms.HiddenInput(),

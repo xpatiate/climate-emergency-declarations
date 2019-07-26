@@ -74,6 +74,10 @@ div.react-delete-link a {
     margin-bottom: 20px;
     padding: 15px;
 }
+.object-view {
+    border: 1px solid lightgrey;
+    padding: 15px;
+}
 .parent-tree {
     border: 1px solid lightgrey;
     background: rgb(240,240,240);

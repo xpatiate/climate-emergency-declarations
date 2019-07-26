@@ -15,14 +15,17 @@
 <input type='submit' value='save' class='button-save'>
 <br>
 {% else %}
-{% if user.is_authenticated %}
-    <div id='editcountry-{{ country.id }}' class='edit-country'>
-    <a href='{% url 'country_edit' country.id %}'>edit</a>
-    </div>
-{% endif %}
-<p>Population: {{ country.population | intcomma }}</p>
-<p>Region: {{ country.region }}</p>
-{% include 'govtrack/links.html' %}
+<div class='object-view'>
+    {% if user.is_authenticated %}
+        <div id='editcountry-{{ country.id }}' class='edit-country'>
+        <a href='{% url 'country_edit' country.id %}'>edit</a>
+        </div>
+    {% endif %}
+    <p>Population: {{ country.population | intcomma }}</p>
+    <p>Region: {{ country.region }}</p>
+    {% include 'govtrack/links.html' %}
+</div>
+<br>
 
 <div class='parent-tree'>
 {% for struct in structure_list %}

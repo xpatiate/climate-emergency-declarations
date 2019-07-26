@@ -191,7 +191,15 @@ def node_child(request, parent_id, nodetype_id):
     form = NodeForm(initial=nodedata)
     form.fields['supplements'].queryset = parent.get_supplement_choices()
 
-    return render(request, 'govtrack/node.html', {'action': 'add', 'parent': parent, 'form': form, 'country': parent.country, 'nodetype_name': nodetype.name, 'parents_list': records, 'nodetype_id': nodetype_id})
+    return render(request, 'govtrack/node.html', {
+        'action': 'add',
+        'parent': parent,
+        'form': form,
+        'country': parent.country,
+        'nodetype_name': nodetype.name,
+        'parents_list': records,
+        'nodetype_id': nodetype_id
+        })
 
 def declaration_add(request, node_id):
     if request.method == 'POST':
