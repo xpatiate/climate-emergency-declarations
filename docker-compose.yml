@@ -31,3 +31,4 @@ services:
      - HTTP_HOST=127.0.0.1,0.0.0.0
      - DEBUG=True
      - ADMIN_PATH=b72c0824
+     - DO_MIGRATE=True

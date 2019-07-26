@@ -9,6 +9,7 @@ ENV DB_HOST=db
 ENV DB_PORT=5432
 ENV DB_PASS=somepass
 ENV ADMIN_PATH=b72c0824
+ENV DO_MIGRATE=False
 
 RUN mkdir /code
 WORKDIR /code
