@@ -5,6 +5,7 @@ from .models import Declaration, Country, Node, NodeType, Link
 from .forms import NodeTypeForm, NodeForm, DeclarationForm, LinkForm, CountryForm
 
 import logging 
+logger = logging.getLogger('govtrack')
 
 # Create your views here.
 
@@ -38,7 +39,7 @@ def node(request, node_id):
 def countries(request):
     clist = Country.objects.order_by('name')
     for c in clist:
-        c.node_population = c.get_root_node().declared_population()
+        c.node_population = c.declared_population
     return render(request, 'govtrack/countries.html', {'country_list': clist})
 
 def country(request, country_id, action='view'):
@@ -63,7 +64,7 @@ def country(request, country_id, action='view'):
                 if linkform.is_valid():
                     linkform.save()
                 else:
-                    print("did not save url because %s " % linkform.errors)
+                    logger.warn("did not save url because %s " % linkform.errors)
                     action='edit'
 
     structure = country.get_root_nodetype().build_hierarchy()
@@ -156,7 +157,7 @@ def node_edit(request, node_id):
                     linkform.save()
                     do_redir=True
                 else:
-                    print("did not save url because %s " % linkform.errors)
+                    logger.warn("did not save url because %s " % linkform.errors)
             if do_redir:
                 return redirect('country', country_id=node.country.id)
     # Show form

@@ -4,6 +4,7 @@ from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelatio
 from django.contrib.contenttypes.models import ContentType
 
 import logging
+logger = logging.getLogger('govtrack')
 
 # Create your models here.
 
@@ -49,7 +50,10 @@ class Country(models.Model):
 
     @property
     def declared_population(self):
-        return self.get_root_node().declared_population()
+        try:
+            return self.get_root_node().declared_population()
+        except AttributeError as ex:
+            return 0
 
     @property
     def num_declarations(self):
@@ -64,10 +68,17 @@ class Country(models.Model):
         return Node.objects.filter(country=self.id).count()
 
     def get_root_nodetype(self):
-        return NodeType.objects.get(country=self.id, level=1)
+        try:
+            return NodeType.objects.get(country=self.id, level=1)
+        except NodeType.DoesNotExist as ex:
+            logger.error("no root nodetype for country %s: %s" % (self.id,self.name))
 
     def get_root_node(self):
-        return Node.objects.get(country=self.id, nodetype__level=1)
+        try:
+            return Node.objects.get(country=self.id, nodetype__level=1)
+        except Node.DoesNotExist as ex:
+            logger.error("no root node for country %s: %s" % (self.id,self.name))
+        return None
 
     def __str__(self):
         return self.name
@@ -252,17 +263,17 @@ class Node(Hierarchy, models.Model):
 
     def declared_population(self, total=0):
         if self.is_counted:
-            logging.debug("%s adding %s to %s" % (self.name,self.population,total))
+            logger.debug("%s adding %s to %s" % (self.name,self.population,total))
             total += self.population
         else:
             for child in self.children:
                 total = child.declared_population(total)
-        logging.debug("%s returning total of %s" % (self.name,total))
+        logger.debug("%s returning total of %s" % (self.name,total))
         return total
 
     @property
     def is_counted(self):
-        logging.debug("should we count item %s?" % self.id)
+        logger.debug("should we count item %s?" % self.id)
         # count population if:
             # count setting is true (always count)
             # OR
@@ -273,35 +284,35 @@ class Node(Hierarchy, models.Model):
                     # none above it have
         do_count = None
         if self.count_population == 1:
-            logging.debug("yes always count %s" % self.id)
+            logger.debug("yes always count %s" % self.id)
             do_count = True
         elif self.count_population == -1:
-            logging.debug("no never count %s" % self.id)
+            logger.debug("no never count %s" % self.id)
             do_count = False
         else:
             # calculate inherited setting
 
             # am I declared? If so, then count, unless a parent has
             if self.is_declared:
-                logging.debug("Item %s has declared, so will count unless parent has" % self.id)
+                logger.debug("Item %s has declared, so will count unless parent has" % self.id)
                 do_count = True
                 # loop through all parents, see if any have declared
                 # get ancestor list, reversed (in asc order) and with self removed
                 rev_ancestors = self.ancestors[:-1]
                 rev_ancestors.reverse()
-                logging.debug('item %s has %s ancestors: %s' % (self.id,len(rev_ancestors), rev_ancestors))
+                logger.debug('item %s has %s ancestors: %s' % (self.id,len(rev_ancestors), rev_ancestors))
                 for parent in rev_ancestors:
-                    logging.debug("item %s checking parent %s for inherited setting: %s" % (self.id,parent.id,parent.is_declared))
+                    logger.debug("item %s checking parent %s for inherited setting: %s" % (self.id,parent.id,parent.is_declared))
                     if parent.is_declared:
-                        logging.debug("item %s has a declared parent, will not count" % self.id)
+                        logger.debug("item %s has a declared parent, will not count" % self.id)
                         do_count = False
                         break
                     # If this parent is not declared, go up another level to next parent
-                logging.debug("item %s finished parent loop, do count is %s" % (self.id,do_count))
+                logger.debug("item %s finished parent loop, do count is %s" % (self.id,do_count))
             else:
                 do_count = False
             if not do_count:
-                logging.debug("No definite value for %s so setting to false" % self.id)
+                logger.debug("No definite value for %s so setting to false" % self.id)
                 do_count = False
         return do_count
 
