@@ -16,6 +16,13 @@
 
   {% load static %}
   <link rel="stylesheet" type="text/css" href="{% static 'govtrack/style.css' %}">
+  {% if 'qa' in request.META.HTTP_HOST %}
+  <style type='text/css'>
+  body {
+    background-image: url("{% static 'govtrack/qa.png' %}");
+  }
+  </style>
+  {% endif %}
 
   <title>ICEF</title>
 </head>
