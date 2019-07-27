@@ -1,5 +1,16 @@
 FROM python:3
 ENV PYTHONUNBUFFERED 1
+
+ENV DEBUG=False
+ENV HTTP_HOST=localhost
+ENV DB_NAME=postgres
+ENV DB_USER=postgres
+ENV DB_HOST=db
+ENV DB_PORT=5432
+ENV DB_PASS=somepass
+ENV ADMIN_PATH=b72c0824
+ENV DO_MIGRATE=False
+
 RUN mkdir /code
 WORKDIR /code
 COPY requirements.txt /code/

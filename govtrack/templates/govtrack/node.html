@@ -1,7 +1,7 @@
 {% extends "govtrack/base.html" %}
 {% load humanize %}
 
-{% block title %}{{ record.country.name }}{% endblock %}
+{% block title %}{{ country.name }} ({{ country.country_code }}){% endblock %}
 
 {% block content %}
 
@@ -45,13 +45,31 @@
 {% else %}
 
 {% block view %}
-<p><b>Country:</b> <a href='{% url 'country' record.country.id %}'>{{ record.country.name }}</a></p>
+<div class='object-view'>
+<p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
 <p><b>Population:</b> {{ record.population | intcomma }}</p>
 <p><b>Description:</b> {{ record.comment_public }}</p>
 {% include 'govtrack/links.html' %}
 {% if user.is_authenticated %}
 <p><b>Comments:</b> {{ record.comment_private }}</p>
 {% endif %}
+{% if user.is_authenticated %}
+    <div class='edit-node' style="display: block">
+    <b>Node Admin</b><br>
+    {% block adminoptions %}
+      <a href='{% url 'node_edit' record.id %}'>edit</a>
+      {% if record.level > 1 %}
+      | <a href='{% url 'node_del' record.id %}'>delete</a>
+      {% endif %}
+    {% endblock %}
+      <br>
+      {% for ctype in record.sub_types %}
+        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }}</a>
+      {% endfor %}
+    </div>
+{% endif %}
+
+</div>
 <br>
 <div class='declarations'>
 <h4>Declarations</h4>
@@ -74,22 +92,6 @@
 </div>
 
 {% endblock %}
-
-{% if user.is_authenticated %}
-    <div class='edit-node' style="display: block">
-    <h4>Node Admin</h4>
-    {% block adminoptions %}
-      <a href='{% url 'node_edit' record.id %}'>edit</a>
-      {% if record.level > 1 %}
-      | <a href='{% url 'node_del' record.id %}'>delete</a>
-      {% endif %}
-    {% endblock %}
-      <br>
-      {% for ctype in record.sub_types %}
-        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }}</a>
-      {% endfor %}
-    </div>
-{% endif %}
 
 {% endif %}
 
