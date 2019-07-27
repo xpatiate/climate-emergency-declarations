@@ -2,20 +2,40 @@
 
 {% load humanize %}
 
-{% block title %}{{ country.name }}{% endblock %}
+{% block title %}{{ country.name }} ({{ country.country_code }}){% endblock %}
 
 {% block content %}
 
+{% if action == 'edit' %}
+<form method='POST' action='{% url 'country_edit' country.id %}'>
+{% csrf_token %}
+{{ form.as_p }}
+{% include 'govtrack/links.html' %}
+{{ linkform.as_p }}
+<input type='submit' value='save' class='button-save'>
+<br>
+{% else %}
+{% if user.is_authenticated %}
+    <div id='editcountry-{{ country.id }}' class='edit-country'>
+    <a href='{% url 'country_edit' country.id %}'>edit</a>
+    </div>
+{% endif %}
 <p>Population: {{ country.population | intcomma }}</p>
+<p>Region: {{ country.region }}</p>
+{% include 'govtrack/links.html' %}
 
 <div class='parent-tree'>
 {% for struct in structure_list %}
-    <div class='level_{{ struct.level }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
+    <div class='level_{{ struct.level }}' id='nodetype-{{ struct.id }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
     {% if user.is_authenticated %}
       &nbsp;<button class='view-nodetype' id='viewnodetype-{{ struct.id }}'>*</button>
       <div id='editnodetype-{{ struct.id }}' class='edit-nodetype'>
       <a href='{% url 'nodetype_edit' struct.id %}'>edit</a> | 
-      {% if struct.num_records == 0 %}<a href='{% url 'nodetype_del' struct.id %}'>delete</a> |{% endif %} 
+      {% if struct.num_records == 0 %}
+        {% with view="nodetype_del" object=struct %}
+        {% include 'govtrack/delete.html' %}
+        {% endwith %}
+        |{% endif %}
       <a href='{% url 'nodetype_child' struct.id %}'>add child</a>
       </div>
     {% endif %}
@@ -35,13 +55,16 @@
 {% for record in records_list %}
     <tr>
     <td>
-    <div class='level_{{ record.level }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
+    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
     {% if user.is_authenticated %}
       &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
       <div id='editnode-{{ record.id }}' class='edit-node'>
       <a href='{% url 'node_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
-      | <a href='{% url 'node_del' record.id %}'>delete</a>
+        |
+        {% with view="node_del" object=record %}
+        {% include 'govtrack/delete.html' %}
+        {% endwith %}
       {% endif %}
       <br>
       {% for ctype in record.sub_types %}
@@ -90,4 +113,5 @@ $( document ).ready(function() {
 });
 </script>
 
+{% endif %}
 {% endblock %}

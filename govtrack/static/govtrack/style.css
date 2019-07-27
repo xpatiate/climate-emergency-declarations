@@ -42,7 +42,15 @@ tr.country-total {
 .view-node:focus, .view-nodetype:focus {
     outline: 0;
 }
-.edit-node a, .edit-nodetype a {
+.react-delete-link {
+    color: orange;
+    font-size: small;
+    display: inline;
+}
+div.react-delete-link a {
+    color: orange;
+}
+.edit-country a, .edit-node a, .edit-nodetype a {
     color: orange;
 }
 .edit-nodetype {
@@ -59,6 +67,12 @@ tr.country-total {
 }
 .link-govt {
     font-weight: bold;
+}
+.declarations {
+    border: 1px solid lightgrey;
+    background: rgb(240,240,240);
+    margin-bottom: 20px;
+    padding: 15px;
 }
 .parent-tree {
     border: 1px solid lightgrey;

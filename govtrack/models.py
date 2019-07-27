@@ -1,5 +1,7 @@
 from django.db import models
 from django.db.models import Q
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
 
 import logging
 
@@ -18,11 +20,27 @@ class Hierarchy():
             child.build_hierarchy(itemlist) 
         return itemlist
 
+class Link(models.Model):
+    url = models.CharField(max_length=1024)
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def html(self):
+        return f"<a href='{self.url}'>{self.url}</a>"
+    def __str__(self):
+        return self.url
+
 class Country(models.Model):
     name = models.CharField(max_length=36)
     region = models.CharField(max_length=36)
     population = models.PositiveIntegerField(default=0)
     country_code = models.CharField(max_length=3)
+    links = GenericRelation(Link, null=True, related_query_name='link')
+
+    @classmethod
+    def content_type_id(cls):
+        return ContentType.objects.get_for_model(cls).pk
 
     @property
     def declarations(self):
@@ -63,8 +81,13 @@ class NodeType(Hierarchy, models.Model):
         on_delete=models.CASCADE)
     count_population = models.BooleanField(default=True)
     is_governing = models.BooleanField(default=True)
+    links = GenericRelation(Link, null=True, blank=True, related_query_name='link')
 
     current_parent = None
+
+    @classmethod
+    def content_type_id(cls):
+        return ContentType.objects.get_for_model(cls).pk
 
     def fullname(self):
         name = ''
@@ -122,22 +145,25 @@ class Node(Hierarchy, models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     # Leave this in the model for now, but currently unused - 
     # nodetype structure should give enough geographical context
-    area = models.CharField(max_length=36, blank=True, null=True)
+    area = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
     nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
-    reference_links = models.TextField(null=True, blank=True)
     comment_public = models.TextField(null=True, blank=True)
     comment_private = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
     supplements = models.ManyToManyField('self',
-        symmetrical=False, related_name='supplement',
-        null=True, blank=True)
+        symmetrical=False, related_name='supplement')
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
+    links = GenericRelation(Link, null=True, related_query_name='link')
 
     parentlist = []
     current_parent = None
+
+    @classmethod
+    def content_type_id(cls):
+        return ContentType.objects.get_for_model(cls).pk
 
     def save(self, *args, **kwargs):
         if not self.sort_name:
@@ -295,11 +321,13 @@ class Declaration(models.Model):
     DECLARED = 'D'
     NONDECLARED = 'N'
     REJECTED = 'R'
+    REVOKED = 'V'
     PROVISIONAL = 'P'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
         (NONDECLARED, 'Non-declared'),
         (REJECTED, 'Rejected'),
+        (REVOKED, 'Revoked'),
         (PROVISIONAL, 'Provisional')
     ]
     STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
@@ -308,15 +336,20 @@ class Declaration(models.Model):
         choices = STATUS_TYPES,
         default=DECLARED,
     )
-    date_declared = models.DateField('date declared', null=True, blank=True)
-    declaration_links = models.TextField(null=True, blank=True)
+    date_declared = models.DateField('date declared')
+    links = GenericRelation(Link, null=True, related_query_name='link')
+ 
     # Should this be a dropdown of defined types?
     # >> How can we record the different ways that climate emergency declaration
     # decisions can be made by a particular node eg. by the legislature or the
     # key administrative decision-maker (collective decision-makers
     # [councils/parliaments] or individuals in the case of ‘elected “monarchs”
     # like presidents or governors or perhaps some mayors?
-    declaration_type = models.TextField(null=True, blank=True)
+    declaration_type = models.TextField(blank=True)
+
+    @classmethod
+    def content_type_id(cls):
+        return ContentType.objects.get_for_model(cls).pk
 
     @property
     def status_name(self):
