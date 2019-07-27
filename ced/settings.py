@@ -131,11 +131,6 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/var/log/django_debug.log',
-        },
         'requests': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
@@ -146,21 +141,34 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filename': '/var/log/django_info.log',
         },
+        'popcount': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/var/log/django_popcount.log',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+        }
     },
     'loggers': {
-        'govtrack': {
-            'handlers': ['file'],
+        'popcount': {
+            'handlers': ['popcount'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': True,
         },
-        'django': {
-            'handlers': ['file'],
+        'govtrack': {
+            'handlers': ['file','console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': True,
         },
         'django.request': {
             'handlers': ['requests'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+            'propagate': True,
+        },
+        'django': {
+            'handlers': ['file'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'DEBUG'),
             'propagate': True,
         },
     },

@@ -52,14 +52,19 @@
     <th></th>
     <th>Declared?</th>
     <th>Population</th>
-    <th>Cumulative</th>
-    <!--<th>Parent</th>-->
+    <!--<th>Cumulative</th>-->
   </tr>
 {% for record in records_list %}
     <tr>
     <td>
-    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
-    {% if user.is_authenticated %}
+    {% if record.is_supplementary %}
+    <div class='supplementary'>
+    {% endif %}
+    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a> {{ record.num_indirect_children }}
+    {% if record.is_supplementary %}
+    </div>
+    {% endif %}
+    {% if not record.is_supplementary and user.is_authenticated %}
       &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
       <div id='editnode-{{ record.id }}' class='edit-node'>
       <a href='{% url 'node_edit' record.id %}'>edit</a>
@@ -81,8 +86,9 @@
     <td align='right' {% if not record.is_counted %}class='nocount'{% endif%}>
         {{record.population | intcomma}}
     </td>
-    <td align='right'>{{record.total_population | intcomma}}</td>
-    <!--<td align='right'>{{record.this_parent.name}}</td>-->
+    <!--<td align='right'>{{record.cumulative_pop | intcomma}}</td>
+    <td align='right'>d: {{record.descendants | length}}</td>
+    <td align='right'>ad: {{record.all_descendants | length}}</td>-->
     </tr>
 {% endfor %}
   <tr class='total-pop-row'>

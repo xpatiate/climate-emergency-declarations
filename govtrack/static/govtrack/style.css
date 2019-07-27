@@ -69,8 +69,9 @@ div.react-delete-link a {
 }
 .link-node {
 }
-.link-govt {
-    font-weight: bold;
+.supplementary {
+    font-style: italic;
+    background-color: rgb(240,240,240);
 }
 .declarations {
     border: 1px solid lightgrey;
