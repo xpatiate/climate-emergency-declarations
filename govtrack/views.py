@@ -136,7 +136,6 @@ def nodetype_child(request, parent_id):
 def node_edit(request, node_id):
     node = get_object_or_404(Node, pk=node_id)
     form = NodeForm(instance=node)
-    form.fields['supplements'].queryset = node.parent.get_supplement_choices()
 
     link_initial = {
         'content_type': Node.content_type_id(),
@@ -160,7 +159,9 @@ def node_edit(request, node_id):
                     logger.warn("did not save url because %s " % linkform.errors)
             if do_redir:
                 return redirect('country', country_id=node.country.id)
+
     # Show form
+    form.fields['supplements'].queryset = node.parent.get_supplement_choices()
     return render(request, 'govtrack/node.html', {
         'action': 'edit',
         'record': node,
@@ -201,6 +202,15 @@ def node_child(request, parent_id, nodetype_id):
         'nodetype_id': nodetype_id
         })
 
+def declaration(request, declaration_id):
+    dec = get_object_or_404(Declaration, pk=declaration_id)
+    return render(request, 'govtrack/declare.html', {
+        'action': 'view',
+        'declaration': dec,
+        'node': dec.node,
+        'links': dec.links.all(),
+        })
+
 def declaration_add(request, node_id):
     if request.method == 'POST':
         form = DeclarationForm(request.POST)
@@ -212,24 +222,45 @@ def declaration_add(request, node_id):
         'node': node_id,
     }
     form = DeclarationForm(initial=decldata)
-    return render(request, 'govtrack/declare.html', {'action': 'add', 'form': form, 'node': node})
+    return render(request, 'govtrack/declare.html', {
+        'action': 'add',
+        'form': form,
+        'node': node
+        })
 
 def declaration_edit(request, declaration_id):
     dec = Declaration.objects.get(id=declaration_id)
     if not dec:
         raise Http404("No such declaration")
     form = DeclarationForm(instance=dec)
+    link_initial = {
+        'content_type': Declaration.content_type_id(),
+        'object_id': declaration_id,
+    }
+    linkform = LinkForm(initial=link_initial)
     # If POST received, save form
     if request.method == 'POST':
         form = DeclarationForm(request.POST, instance=dec)
+        linkform = LinkForm(request.POST, initial=link_initial)
+        do_redir = False
         if form.is_valid():
+            do_redir=True
             saved = form.save()
-            return redirect('node', node_id=dec.node.id)
+            if linkform.has_changed():
+                do_redir=False
+                if linkform.is_valid():
+                    linkform.save()
+                    do_redir=True
+                else:
+                    logger.warn("did not save url because %s " % linkform.errors)
+            if do_redir:
+                return redirect('node', node_id=dec.node.id)
     # Show form
     return render(request, 'govtrack/declare.html', {
         'action': 'edit',
         'declaration': dec,
         'form': form,
+        'linkform': linkform,
         'node': dec.node,
         'links': dec.links.all(),
         })

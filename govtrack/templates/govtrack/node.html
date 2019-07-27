@@ -76,9 +76,10 @@
 <ul>
 {% for dec in record.declarations %}
 <li id='declaration-{{dec.id}}'>{{ dec}}
+    <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
     {% if user.is_authenticated %}
-    <div class='edit-node' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
-    {% with view='node_del' object=dec %}
+    <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
+    {% with view='declaration_del' object=dec %}
         {% include 'govtrack/delete.html' %}
     {% endwith %}
     {% endif %}

@@ -32,6 +32,8 @@
     '>
 {% csrf_token %}
 {{ form.as_p }} 
+{% include 'govtrack/links.html' %}
+{{ linkform.as_p }}
 {% block formextra %}
 <script>
   $(function () {
@@ -50,7 +52,7 @@
 <p><b>Country:</b> <a href='{% url 'country' node.country.id %}'>{{ node.country.name }}</a></p>
 <p><b>Population:</b> {{ node.population | intcomma }}</p>
 <p><b>Description:</b> {{ node.comment_public }}</p>
-<p><b>Reference links:</b> {{ node.reference_links }}</p>
+{% include 'govtrack/links.html' %}
 {% if user.is_authenticated %}
 <p><b>Comments:</b> {{ node.comment_private }}</p>
 {% endif %}

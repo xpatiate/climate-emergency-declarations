@@ -12,7 +12,8 @@ urlpatterns = [
     path('nodetype/child/<int:parent_id>/', views.nodetype_child, name='nodetype_child'),
     path('nodetype/del/<int:nodetype_id>', views.nodetype_del, name='nodetype_del'),
     path('node/edit/<int:node_id>/', views.node_edit, name='node_edit'),
-    path('declaration/<int:node_id>/', views.declaration_add, name='declaration_add'),
+    path('declaration/<int:declaration_id>/', views.declaration, name='declaration'),
+    path('declaration/add/<int:node_id>/', views.declaration_add, name='declaration_add'),
     path('declaration/edit/<int:declaration_id>/', views.declaration_edit, name='declaration_edit'),
     path('node/child/<int:parent_id>/<int:nodetype_id>', views.node_child, name='node_child'),
     # API paths

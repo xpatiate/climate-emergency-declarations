@@ -162,7 +162,8 @@ class Node(Hierarchy, models.Model):
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
     supplements = models.ManyToManyField('self',
-        symmetrical=False, related_name='supplement')
+        symmetrical=False, related_name='supplement',
+        blank=True)
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
     links = GenericRelation(Link, null=True, related_query_name='link')
