@@ -61,10 +61,9 @@ class PopulationCounter():
                 subtotal = node.population
                 # Need to process these subnodes as a tree, not a list
                 for kid in overlap:
-                    #if kid in node.children:
-                    logger.debug("subtracting %s (pop of %s) from subtotal %s" % (kid.population, kid.name, subtotal))
-                    subtotal -= kid.population
-                    logger.debug("subtotal now %s" % subtotal)
+                    if kid in node.all_children:
+                        logger.debug("subtracting %s (pop of %s) from subtotal %s" % (kid.population, kid.name, subtotal))
+                        subtotal -= kid.population
                 logger.debug("total to add for %s is %s" % (node.name, subtotal))
                 self.counted.add(node)
                 self.counted.update(node.all_descendants)
@@ -232,6 +231,7 @@ class Node(Hierarchy, models.Model):
     parentlist = []
     descendant_list = set()
     is_supplementary = False
+    cumulative_pop = 0
 
     @classmethod
     def content_type_id(cls):
@@ -333,6 +333,25 @@ class Node(Hierarchy, models.Model):
     @property
     def num_indirect_descendants(self):
         return (len(self.all_descendants) - len(self.descendants))
+
+    def num_declared_ancestors(self):
+        num_declared = 0
+        for parent in self.ancestors:
+            if parent == self:
+                continue
+            if parent.is_declared:
+                logger.debug("parent %s is declared" % parent.name)
+                num_declared += 1
+        return num_declared
+
+    def contribution(self):
+        node_total = 0
+        logger.debug("num declared ancestors for %s is %s" % (self.name, self.num_declared_ancestors()))
+        if (self.is_declared and self.num_declared_ancestors() == 0):
+            node_total = self.population
+        elif (self.num_declared_ancestors() > 1):
+            node_total = -1 * (self.num_declared_ancestors() - 1) * self.population
+        return node_total
 
     @property
     def level(self):

@@ -52,7 +52,8 @@
     <th></th>
     <th>Declared?</th>
     <th>Population</th>
-    <!--<th>Cumulative</th>-->
+    <th>Contribution</th>
+    <th>Cumulative</th>
   </tr>
 {% for record in records_list %}
     <tr>
@@ -86,16 +87,18 @@
     <td align='right' {% if not record.is_counted %}class='nocount'{% endif%}>
         {{record.population | intcomma}}
     </td>
-    <!--<td align='right'>{{record.cumulative_pop | intcomma}}</td>
-    <td align='right'>d: {{record.descendants | length}}</td>
+    <td align='right'>{{record.contribution | intcomma}}</td>
+    <td align='right'>{{record.cumulative_pop | intcomma}}</td>
+    <!--<td align='right'>d: {{record.descendants | length}}</td>
     <td align='right'>ad: {{record.all_descendants | length}}</td>-->
     </tr>
 {% endfor %}
   <tr class='total-pop-row'>
     <td>Total population under declaration:</td>
     <td></td>
-    <td></td>
     <td align='right'>{{total_declared_population | intcomma}}</td>
+    <td></td>
+    <td align='right'>{{total_pop_by_contribution | intcomma}}</td>
   </tr>
 </table>
 

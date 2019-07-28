@@ -72,13 +72,10 @@ def country(request, country_id, action='view'):
     records = country.get_root_node().build_hierarchy()
     logger.debug("*** done building hierarchy for records")
 
-#    total_pop = 0
-#    logger.debug("*** counting population for each record")
-#    for item in records:
-#        if item.is_counted:
-#            total_pop += item.population
-#        item.cumulative_pop = total_pop
-#    logger.debug("*** done counting population for each record")
+    total_pop = 0
+    for item in records:
+        total_pop += item.contribution()
+        item.cumulative_pop += total_pop
         
     logger.debug("*** counting total declared population")
     total_declared_pop = country.get_root_node().declared_population()
@@ -90,6 +87,7 @@ def country(request, country_id, action='view'):
         'structure_list': structure,
         'records_list': records,
         'total_declared_population': total_declared_pop,
+        'total_pop_by_contribution': total_pop,
         'links': country.links.all(),
         'form': form,
         'linkform': linkform,
