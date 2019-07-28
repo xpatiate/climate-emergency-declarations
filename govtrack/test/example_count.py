@@ -261,7 +261,33 @@ def multi_parents_three():
     print("Via individual nodes: %s" % root.total_node_contributions())
     print()
 
+def uzbekistan():
+    root = Node('UZB', 4, None)
+
+    t1a = root.add_child('1_T1A', 2)
+    t1r = root.add_child('1_T1R', 4)
+
+    t2r1 = t1r.add_child('1_T2R', 1)
+    t2r2 = t1r.add_child('2_T2R', 1)
+    t2r3 = t1r.add_child('3_T2R (overlap)', 1)
+    t2r4 = t1r.add_child('4_T2R (overlap)', 1)
+
+    t2r3.add_parent(t1a)
+    t2r4.add_parent(t1a)
+
+    t1r.declare()
+    t1a.declare()
+
+    print("*** Three-level tree with overlapping nodes modelled on UZB from test data")
+    root.print_tree()
+
+    (total, counted) = root.declared_population()
+    print("Declared population: %s" % total)
+    print("Via individual nodes: %s" % root.total_node_contributions())
+    print()
+
 if __name__ == '__main__':
    simple_tree()
    multi_parents_two()
    multi_parents_three()
+   uzbekistan()

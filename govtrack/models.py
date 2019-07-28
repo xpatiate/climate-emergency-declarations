@@ -61,10 +61,10 @@ class PopulationCounter():
                 subtotal = node.population
                 # Need to process these subnodes as a tree, not a list
                 for kid in overlap:
-                    if kid in node.children:
-                        logger.debug("subtracting %s (pop of %s) from subtotal %s" % (kid.population, kid.name, subtotal))
-                        subtotal -= kid.population
-                        logger.debug("subtotal now %s" % subtotal)
+                    #if kid in node.children:
+                    logger.debug("subtracting %s (pop of %s) from subtotal %s" % (kid.population, kid.name, subtotal))
+                    subtotal -= kid.population
+                    logger.debug("subtotal now %s" % subtotal)
                 logger.debug("total to add for %s is %s" % (node.name, subtotal))
                 self.counted.add(node)
                 self.counted.update(node.all_descendants)
