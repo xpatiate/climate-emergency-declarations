@@ -19,7 +19,11 @@
     <div class='level_{{ parent.level }}'>&#8866;({{ parent.nodetype.name }}) {{ parent.name }}</div>
 {% endfor %}
 {% if action != "add" %}
-    <div class='level_{{ record.level|add:"1" }}'>&#8866; {{ record.num_children }} children</div>
+    <div class='level_{{ record.level|add:"1" }}'>&#8866; {{ record.num_children }} children
+    {% if record.num_supplementary_children %}
+    ({{ record.num_supplementary_children }} supplementary)
+    {% endif %}
+    </div>
 {% endif %}
 </div>
 
@@ -76,9 +80,10 @@
 <ul>
 {% for dec in record.declarations %}
 <li id='declaration-{{dec.id}}'>{{ dec}}
+    <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
     {% if user.is_authenticated %}
-    <div class='edit-node' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
-    {% with view='node_del' object=dec %}
+    <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
+    {% with view='declaration_del' object=dec %}
         {% include 'govtrack/delete.html' %}
     {% endwith %}
     {% endif %}

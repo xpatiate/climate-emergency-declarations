@@ -28,7 +28,8 @@ services:
      - DB_HOST=db
      - DB_PORT=5432
      - DB_PASS=s3kr1t
-     - HTTP_HOST=127.0.0.1,0.0.0.0
+     - HTTP_HOST=127.0.0.1,0.0.0.0,icef.localhost,qa-icef.localhost
      - DEBUG=True
      - ADMIN_PATH=b72c0824
      - DO_MIGRATE=True
+     - DJANGO_LOG_LEVEL=DEBUG

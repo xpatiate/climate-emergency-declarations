@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 
 import logging
 logger = logging.getLogger('govtrack')
+poplog = logging.getLogger('popcount')
 
 # Create your models here.
 
@@ -15,11 +16,74 @@ class Hierarchy():
             itemlist = []
         if len(itemlist) == 0:
             itemlist = [self]
-        for child in self.children:
-            child.current_parent = self
+        for child in self.all_children:
+            # Children that are included here via supplementary relationships 
+            # will have a different node as their 'actual' parent
+            if self != child.parent:
+                child.is_supplementary = True
             itemlist.append(child)
             child.build_hierarchy(itemlist) 
         return itemlist
+
+class PopulationCounter():
+    """Utility class to perform population counting on tree structures."""
+
+    def __init__(self):
+        self.counted = None
+        self.count_all = False
+
+    def declared_population(self, node, total=0):
+        if not self.counted:
+            self.counted = set()
+
+        poplog.debug("%s,%s,%s" % (total,0,node.name))
+        logger.debug("#### COUNTING declared population for %s ####" % node.name)
+        logger.debug("#### total %s, already counted: %s" % (total,self.counted))
+        if node.is_declared:
+            # Check if any descendents are already counted
+            current_desc = node.all_descendants
+            overlap = current_desc.intersection(self.counted)
+            logger.debug("overlap between [%s] and [%s] is [%s]" % (current_desc, self.counted, overlap))
+
+            if not overlap:
+                # Current node is declared and has no overlap:
+                # - Add self and all descendants (inc indirect) to counted
+                self.counted.add(node)
+                self.counted.update(node.all_descendants)
+                # - Count total population
+                logger.debug("%s adding %s to %s" % (node.name,node.population,total))
+                total += node.population
+                poplog.debug("%s,%s,%s" % (node.population,total,node.name))
+            else:
+                # Current node is declared and has overlap
+                # Figure out which overlapping nodes to subtract
+                logger.debug("%s is declared but has overlapping descendants" % node.name)
+                subtotal = node.population
+                # Need to process these subnodes as a tree, not a list
+                for kid in overlap:
+                    if kid in node.all_children:
+                        logger.debug("subtracting %s (pop of %s) from subtotal %s" % (kid.population, kid.name, subtotal))
+                        subtotal -= kid.population
+                logger.debug("total to add for %s is %s" % (node.name, subtotal))
+                self.counted.add(node)
+                self.counted.update(node.all_descendants)
+
+                total += subtotal
+                poplog.debug("%s,%s,%s" % (node.population,total,node.name))
+        else:
+            # Current node is not declared, look at children
+            logger.debug("%s not declared, looking at children" % node.name)
+            for child in node.children:
+                logger.debug("has %s been counted? %s" % (child, self.counted))
+                if child in self.counted:
+                    logger.debug("already counted child %s" % child)
+                    continue
+                total = self.declared_population(child, total)
+                logger.debug("after counting %s, counted set is %s" % (child,self.counted))
+            logger.debug("Children of %s returned %s" % (node.name, total))
+        logger.debug("#### %s returning total of %s ####" % (node.name,total))
+        logger.debug("#### have now counted: %s" % self.counted)
+        return total
 
 class Link(models.Model):
     url = models.CharField(max_length=1024)
@@ -94,7 +158,7 @@ class NodeType(Hierarchy, models.Model):
     is_governing = models.BooleanField(default=True)
     links = GenericRelation(Link, null=True, blank=True, related_query_name='link')
 
-    current_parent = None
+    is_supplementary = False
 
     @classmethod
     def content_type_id(cls):
@@ -118,10 +182,6 @@ class NodeType(Hierarchy, models.Model):
     @property
     def all_children(self):
         return self.children
-
-    @property
-    def this_parent(self):
-        return self.parent
 
     @property
     def records(self):
@@ -162,13 +222,16 @@ class Node(Hierarchy, models.Model):
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
     supplements = models.ManyToManyField('self',
-        symmetrical=False, related_name='supplement')
+        symmetrical=False, related_name='supplement',
+        blank=True)
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     count_population = models.SmallIntegerField(default=0)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
     parentlist = []
-    current_parent = None
+    descendant_list = set()
+    is_supplementary = False
+    cumulative_pop = 0
 
     @classmethod
     def content_type_id(cls):
@@ -201,19 +264,27 @@ class Node(Hierarchy, models.Model):
         return children
 
     @property
+    def indirect_children(self):
+        children = Node.objects.filter(supplements=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
+        return children
+
+    @property
+    def num_indirect_children(self):
+        return Node.objects.filter(supplements=self.id).exclude(pk=self.id).count()
+
+    @property
     def all_children(self):
         # this alternative method gets *all* children, considering this node
         # both as prime parent and supplementary parent
         combined = Node.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
         ).exclude(pk=self.id).order_by('nodetype','sort_name')
+        logger.debug("all_children: node %s has %s direct or indirect children" % (self.name,len(combined)))
         return combined
 
     @property
-    def this_parent(self):
-        if self.current_parent:
-            return self.current_parent
-        return self.parent
+    def num_supplementary_children(self):
+        return Node.objects.filter(supplements=self.id).exclude(pk=self.id).count()
 
     @property
     def ancestors(self):
@@ -232,6 +303,55 @@ class Node(Hierarchy, models.Model):
         if parent.parent_id != parent_id:
             self.parentlist.insert(0, parent.parent)
             return self.get_parent(parent.parent_id)
+
+    def declared_population(self):
+        popcounter = PopulationCounter()
+        return popcounter.declared_population(self)
+
+    @property
+    def descendants(self):
+        self.descendant_list = set()
+        return self.get_descendants( set() )
+
+    def get_descendants(self, desclist):
+        for child in self.children:
+            desclist.add(child)
+            desclist.update(child.get_descendants(desclist))
+        return desclist
+
+    @property
+    def all_descendants(self):
+        self.descendant_list = set()
+        return self.get_all_descendants( set() )
+
+    def get_all_descendants(self, desclist):
+        for child in self.all_children:
+            desclist.add(child)
+            desclist.update(child.get_all_descendants(desclist))
+        return desclist
+
+    @property
+    def num_indirect_descendants(self):
+        return (len(self.all_descendants) - len(self.descendants))
+
+    def num_declared_ancestors(self):
+        num_declared = 0
+        for parent in self.ancestors:
+            if parent == self:
+                continue
+            if parent.is_declared:
+                logger.debug("parent %s is declared" % parent.name)
+                num_declared += 1
+        return num_declared
+
+    def contribution(self):
+        node_total = 0
+        logger.debug("num declared ancestors for %s is %s" % (self.name, self.num_declared_ancestors()))
+        if (self.is_declared and self.num_declared_ancestors() == 0):
+            node_total = self.population
+        elif (self.num_declared_ancestors() > 1):
+            node_total = -1 * (self.num_declared_ancestors() - 1) * self.population
+        return node_total
 
     @property
     def level(self):
@@ -259,19 +379,9 @@ class Node(Hierarchy, models.Model):
         typekids = thistype.children
         return typekids
 
-    def declared_population(self, total=0):
-        if self.is_counted:
-            logger.debug("%s adding %s to %s" % (self.name,self.population,total))
-            total += self.population
-        else:
-            for child in self.children:
-                total = child.declared_population(total)
-        logger.debug("%s returning total of %s" % (self.name,total))
-        return total
-
     @property
     def is_counted(self):
-        logger.debug("should we count item %s?" % self.id)
+        logger.debug("should we count item %s?" % self.name)
         # count population if:
             # count setting is true (always count)
             # OR
@@ -282,35 +392,35 @@ class Node(Hierarchy, models.Model):
                     # none above it have
         do_count = None
         if self.count_population == 1:
-            logger.debug("yes always count %s" % self.id)
+            logger.debug("yes always count %s" % self.name)
             do_count = True
         elif self.count_population == -1:
-            logger.debug("no never count %s" % self.id)
+            logger.debug("no never count %s" % self.name)
             do_count = False
         else:
             # calculate inherited setting
 
             # am I declared? If so, then count, unless a parent has
             if self.is_declared:
-                logger.debug("Item %s has declared, so will count unless parent has" % self.id)
+                logger.debug("Item %s has declared, so will count unless parent has" % self.name)
                 do_count = True
                 # loop through all parents, see if any have declared
                 # get ancestor list, reversed (in asc order) and with self removed
                 rev_ancestors = self.ancestors[:-1]
                 rev_ancestors.reverse()
-                logger.debug('item %s has %s ancestors: %s' % (self.id,len(rev_ancestors), rev_ancestors))
+                logger.debug('item %s has %s ancestors: %s' % (self.name,len(rev_ancestors), rev_ancestors))
                 for parent in rev_ancestors:
-                    logger.debug("item %s checking parent %s for inherited setting: %s" % (self.id,parent.id,parent.is_declared))
+                    logger.debug("item %s checking parent %s for inherited setting: %s" % (self.name,parent.name,parent.is_declared))
                     if parent.is_declared:
-                        logger.debug("item %s has a declared parent, will not count" % self.id)
+                        logger.debug("item %s has a declared parent, will not count" % self.name)
                         do_count = False
                         break
                     # If this parent is not declared, go up another level to next parent
-                logger.debug("item %s finished parent loop, do count is %s" % (self.id,do_count))
+                logger.debug("item %s finished parent loop, do count is %s" % (self.name,do_count))
             else:
                 do_count = False
             if not do_count:
-                logger.debug("No definite value for %s so setting to false" % self.id)
+                logger.debug("No definite value for %s so setting to false" % self.name)
                 do_count = False
         return do_count
 

@@ -27,6 +27,10 @@ tr.country-total {
 .errorlist {
     background-color: pink;
 }
+.declaration-options  {
+    display: inline;
+    font-size: small;
+}
 .view-node, .view-nodetype {
     display: inline;
     background-color: white;
@@ -50,7 +54,7 @@ tr.country-total {
 div.react-delete-link a {
     color: orange;
 }
-.edit-country a, .edit-node a, .edit-nodetype a {
+.edit-country a, .edit-node a, .edit-nodetype a, .edit-dec a {
     color: orange;
 }
 .edit-nodetype {
@@ -65,8 +69,9 @@ div.react-delete-link a {
 }
 .link-node {
 }
-.link-govt {
-    font-weight: bold;
+.supplementary {
+    font-style: italic;
+    background-color: rgb(240,240,240);
 }
 .declarations {
     border: 1px solid lightgrey;
