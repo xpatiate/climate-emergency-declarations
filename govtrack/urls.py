@@ -17,6 +17,7 @@ urlpatterns = [
     path('declaration/edit/<int:declaration_id>/', views.declaration_edit, name='declaration_edit'),
     path('node/child/<int:parent_id>/<int:nodetype_id>', views.node_child, name='node_child'),
     # API paths
+    path('api/country/<int:country_id>/declarations', views.country_declarations, name='country_api'),
     path('api/del/node/<int:node_id>', views.node_del, name='node_del'),
     path('api/del/nodetype/<int:nodetype_id>', views.nodetype_del, name='nodetype_del'),
     path('api/del/declaration/<int:declaration_id>', views.declaration_del, name='declaration_del'),

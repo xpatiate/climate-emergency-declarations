@@ -4,6 +4,7 @@ from django.forms import formset_factory
 from .models import Declaration, Country, Node, NodeType, Link
 from .forms import NodeTypeForm, NodeForm, DeclarationForm, LinkForm, CountryForm
 
+import csv
 import logging 
 logger = logging.getLogger('govtrack')
 
@@ -303,3 +304,13 @@ def link_del(request, link_id):
         link.delete()
     return HttpResponse(status=status)
 
+def country_declarations(request, country_id):
+    country = get_object_or_404(Country, pk=country_id)
+    response = HttpResponse(content_type='text/csv')
+    writer = csv.writer(response)
+    writer.writerow(['Area', 'Location', 'Population', 'Date Declared'])
+    logger.info("writing CSV data for aPI")
+    for dec in country.declarations:
+        writer.writerow([dec.node.name, dec.node.area, dec.node.population, dec.date_declared])
+
+    return response
