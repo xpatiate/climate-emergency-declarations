@@ -61,7 +61,7 @@
     {% if record.is_supplementary %}
     <div class='supplementary'>
     {% endif %}
-    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a> {{ record.num_indirect_children }}
+    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
     {% if record.is_supplementary %}
     </div>
     {% endif %}

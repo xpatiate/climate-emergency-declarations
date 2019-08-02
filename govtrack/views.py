@@ -1,12 +1,15 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpResponse
 from django.forms import formset_factory
+from django.http import HttpResponseBadRequest
 
 from .models import Declaration, Country, Node, NodeType, Link
 from .forms import NodeTypeForm, NodeForm, DeclarationForm, LinkForm, CountryForm
 
 import csv
+import datetime
 import logging 
 logger = logging.getLogger('govtrack')
+DATE_FORMAT='%Y-%m-%d'
 
 # Create your views here.
 
@@ -16,7 +19,7 @@ def index(request):
     country_list = set([d.node.country for d in dlist])
     countries = []
     for c in country_list:
-        dlist = c.declarations
+        dlist = c.declarations()
         if dlist:
             countries.append(({
                 'name': c.name,
@@ -304,13 +307,36 @@ def link_del(request, link_id):
         link.delete()
     return HttpResponse(status=status)
 
-def country_declarations(request, country_id):
-    country = get_object_or_404(Country, pk=country_id)
+def country_declarations(request, country_code):
+    country = Country.find_by_code(country_code)
+    if not country:
+        raise Http404("No country for specified code")
     response = HttpResponse(content_type='text/csv')
     writer = csv.writer(response)
-    writer.writerow(['Area', 'Location', 'Population', 'Date Declared'])
-    logger.info("writing CSV data for aPI")
-    for dec in country.declarations:
-        writer.writerow([dec.node.name, dec.node.area, dec.node.population, dec.date_declared])
+    writer.writerow(['Area', 'Location', 'Population', 'Date Declared', 'Declared Ancestors'])
+    query_args = {
+        'order_by': 'date',
+    }
+
+    before_date = request.GET.get('before')
+    after_date = request.GET.get('after')
+    if before_date:
+        date_obj = None
+        try:
+            date_obj = datetime.datetime.strptime(before_date, DATE_FORMAT)
+        except ValueError as ex:
+           return HttpResponseBadRequest('Bad date format')
+        query_args['before'] = before_date
+    if after_date:
+        date_obj = None
+        try:
+            date_obj = datetime.datetime.strptime(after_date, DATE_FORMAT)
+        except ValueError as ex:
+           return HttpResponseBadRequest('Bad date format')
+        query_args['after'] = after_date
+
+    declist = country.declarations(**query_args)
+    for dec in declist:
+        writer.writerow([dec.node.name, dec.node.area, dec.node.population, dec.date_declared, dec.node.num_declared_ancestors()])
 
     return response

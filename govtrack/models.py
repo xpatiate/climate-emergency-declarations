@@ -3,10 +3,13 @@ from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
+import datetime
 import logging
 logger = logging.getLogger('govtrack')
 poplog = logging.getLogger('popcount')
 
+
+DATE_FORMAT='%Y-%m-%d'
 # Create your models here.
 
 class Hierarchy():
@@ -107,9 +110,43 @@ class Country(models.Model):
     def content_type_id(cls):
         return ContentType.objects.get_for_model(cls).pk
 
-    @property
-    def declarations(self):
-        dlist = Declaration.objects.filter(status='D', node__country=self.id).order_by('node__sort_name')
+    @classmethod
+    def find_by_code(cls, country_code):
+        return Country.objects.get(country_code=country_code)
+
+    def declarations(self, **kwargs):
+        order_by = kwargs.get('order_by')
+        order_name = 'node__sort_name'
+        if order_by == 'date':
+            # XXX ideally pass order_name as well
+            # and allow asc/desc
+            order_by = 'date_declared'
+        else:
+            order_by = order_name
+        filter_args = {
+            'status': 'D',
+            'node__country': self.id
+        }
+        before_date = kwargs.get('before')
+        if before_date:
+            date_obj = None
+            try:
+                date_obj = datetime.datetime.strptime(before_date, DATE_FORMAT)
+            except ValueError as ex:
+                pass
+            if date_obj:
+                filter_args['date_declared__lt']=before_date
+        after_date = kwargs.get('after')
+        if after_date:
+            date_obj = None
+            try:
+                date_obj = datetime.datetime.strptime(after_date, DATE_FORMAT)
+            except ValueError as ex:
+                pass
+            if date_obj:
+                filter_args['date_declared__gt']=after_date
+
+        dlist = Declaration.objects.filter(**filter_args).order_by(order_by)
         return dlist
 
     @property
