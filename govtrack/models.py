@@ -193,6 +193,7 @@ class NodeType(Hierarchy, models.Model):
         on_delete=models.CASCADE)
     count_population = models.BooleanField(default=True)
     is_governing = models.BooleanField(default=True)
+    admin_notes = models.TextField(blank=True)
     links = GenericRelation(Link, null=True, blank=True, related_query_name='link')
 
     is_supplementary = False
@@ -251,18 +252,17 @@ class NodeType(Hierarchy, models.Model):
 class Node(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    area = models.CharField(max_length=36, null=True, blank=True)
+    location = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
     nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
-    comment_public = models.TextField(null=True, blank=True)
-    comment_private = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    admin_notes = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
     supplements = models.ManyToManyField('self',
         symmetrical=False, related_name='supplement',
         blank=True)
     sort_name = models.CharField(max_length=64, null=True, blank=True)
-    count_population = models.SmallIntegerField(default=0)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
     parentlist = []
@@ -391,6 +391,10 @@ class Node(Hierarchy, models.Model):
         return node_total
 
     @property
+    def count_population(self):
+        return self.nodetype.count_population
+
+    @property
     def level(self):
         return self.nodetype.level
 
@@ -475,16 +479,16 @@ class Declaration(models.Model):
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
     # status types
     DECLARED = 'D'
-    NONDECLARED = 'N'
+    INACTIVE = 'N'
     REJECTED = 'R'
     REVOKED = 'V'
-    PROVISIONAL = 'P'
+    PROGRESS = 'P'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
-        (NONDECLARED, 'Non-declared'),
+        (INACTIVE, 'Inactive'),
         (REJECTED, 'Rejected'),
         (REVOKED, 'Revoked'),
-        (PROVISIONAL, 'Provisional')
+        (PROGRESS, 'In Progress')
     ]
     STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
     status = models.CharField(
@@ -495,13 +499,11 @@ class Declaration(models.Model):
     date_declared = models.DateField('date declared')
     links = GenericRelation(Link, null=True, related_query_name='link')
  
-    # Should this be a dropdown of defined types?
-    # >> How can we record the different ways that climate emergency declaration
-    # decisions can be made by a particular node eg. by the legislature or the
-    # key administrative decision-maker (collective decision-makers
-    # [councils/parliaments] or individuals in the case of ‘elected “monarchs”
-    # like presidents or governors or perhaps some mayors?
-    declaration_type = models.TextField(blank=True)
+    declaration_type = models.CharField(max_length=256, blank=True)
+    description_short = models.CharField(max_length=256, blank=True)
+    description_long = models.TextField(blank=True)
+    admin_notes = models.TextField(blank=True)
+    verified = models.BooleanField(default=False)
 
     @classmethod
     def content_type_id(cls):
