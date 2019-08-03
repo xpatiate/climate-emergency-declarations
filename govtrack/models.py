@@ -104,6 +104,8 @@ class Country(models.Model):
     region = models.CharField(max_length=36)
     population = models.PositiveIntegerField(default=0)
     country_code = models.CharField(max_length=3)
+    description = models.TextField(null=True, blank=True)
+    admin_notes = models.TextField(null=True, blank=True)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
     @classmethod
@@ -393,6 +395,11 @@ class Node(Hierarchy, models.Model):
     @property
     def count_population(self):
         return self.nodetype.count_population
+
+    @property
+    def is_governing(self):
+        logger.info("node %s has nodetype %s which is governing? %s" % (self.id, self.nodetype.id, self.nodetype.is_governing))
+        return self.nodetype.is_governing
 
     @property
     def level(self):

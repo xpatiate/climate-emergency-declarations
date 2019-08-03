@@ -7,7 +7,9 @@ from .models import Country, Node, NodeType, Declaration, Link
 class CountryForm(ModelForm):
     class Meta:
         model = Country
-        fields = ['name', 'population']
+        fields = ['name', 'population', 'description', 'admin_notes']
+    description = forms.CharField(widget=forms.Textarea,label='Description', required=False)
+    admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
 
 class NodeTypeForm(ModelForm):
     class Meta:
@@ -29,6 +31,8 @@ class NodeForm(ModelForm):
             'parent': forms.HiddenInput(),
             'country': forms.HiddenInput(),
         }
+    description = forms.CharField(widget=forms.Textarea,label='Description', required=False)
+    admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
 
 
 class DeclarationForm(ModelForm):
@@ -44,9 +48,9 @@ class DeclarationForm(ModelForm):
         input_formats=['%d %b %Y','%Y-%m-%d','%d %B, %Y'],
         widget=forms.DateInput(format='%d %b %Y'),
         )
-    description_short = forms.CharField(widget=forms.Textarea, label='Summary')
-    description_long = forms.CharField(widget=forms.Textarea,label='Details')
-    admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes')
+    description_short = forms.CharField(widget=forms.Textarea, label='Summary', required=False)
+    description_long = forms.CharField(widget=forms.Textarea,label='Details', required=False)
+    admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
 
 
 class LinkForm(ModelForm):
