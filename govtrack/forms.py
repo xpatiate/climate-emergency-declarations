@@ -7,12 +7,14 @@ from .models import Country, Node, NodeType, Declaration, Link
 class CountryForm(ModelForm):
     class Meta:
         model = Country
-        fields = ['name', 'population']
+        fields = ['name', 'population', 'description', 'admin_notes']
+    description = forms.CharField(widget=forms.Textarea,label='Description', required=False)
+    admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
 
 class NodeTypeForm(ModelForm):
     class Meta:
         model = NodeType
-        fields = ['name','country','level','parent', 'is_governing']
+        fields = ['name','country','level','parent', 'is_governing', 'admin_notes']
         widgets = {
             'country': forms.HiddenInput(),
             'level': forms.HiddenInput(),
@@ -23,23 +25,33 @@ class NodeForm(ModelForm):
     
     class Meta:
         model = Node
-        fields = ['name','sort_name','nodetype','country','area', 'population','parent','supplements','comment_public','comment_private']
+        fields = ['name','sort_name','nodetype','country','location', 'population','parent','supplements','description','admin_notes']
         widgets = {
             'nodetype': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
             'country': forms.HiddenInput(),
         }
+    description = forms.CharField(widget=forms.Textarea,label='Description', required=False)
+    admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
 
 
 class DeclarationForm(ModelForm):
     class Meta:
         model = Declaration
-        fields = ['node','status', 'date_declared', 'declaration_type']
+        fields = ['node','status', 'date_declared', 'declaration_type', 'verified',
+            'description_short', 'description_long', 'admin_notes']
         widgets = {
             'node': forms.HiddenInput(),
         }
 
-    date_declared = forms.DateField(input_formats=['%Y-%m-%d'])
+    date_declared = forms.DateField(
+        input_formats=['%d %b %Y','%Y-%m-%d','%d %B, %Y'],
+        widget=forms.DateInput(format='%d %b %Y'),
+        )
+    description_short = forms.CharField(widget=forms.Textarea, label='Summary', required=False)
+    description_long = forms.CharField(widget=forms.Textarea,label='Details', required=False)
+    admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
+
 
 class LinkForm(ModelForm):
     prefix = 'link'

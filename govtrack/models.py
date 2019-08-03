@@ -3,10 +3,13 @@ from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 
+import datetime
 import logging
 logger = logging.getLogger('govtrack')
 poplog = logging.getLogger('popcount')
 
+
+DATE_FORMAT='%Y-%m-%d'
 # Create your models here.
 
 class Hierarchy():
@@ -101,15 +104,51 @@ class Country(models.Model):
     region = models.CharField(max_length=36)
     population = models.PositiveIntegerField(default=0)
     country_code = models.CharField(max_length=3)
+    description = models.TextField(null=True, blank=True)
+    admin_notes = models.TextField(null=True, blank=True)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
     @classmethod
     def content_type_id(cls):
         return ContentType.objects.get_for_model(cls).pk
 
-    @property
-    def declarations(self):
-        dlist = Declaration.objects.filter(status='D', node__country=self.id).order_by('node__sort_name')
+    @classmethod
+    def find_by_code(cls, country_code):
+        return Country.objects.get(country_code=country_code)
+
+    def declarations(self, **kwargs):
+        order_by = kwargs.get('order_by')
+        order_name = 'node__sort_name'
+        if order_by == 'date':
+            # XXX ideally pass order_name as well
+            # and allow asc/desc
+            order_by = 'date_declared'
+        else:
+            order_by = order_name
+        filter_args = {
+            'status': 'D',
+            'node__country': self.id
+        }
+        before_date = kwargs.get('before')
+        if before_date:
+            date_obj = None
+            try:
+                date_obj = datetime.datetime.strptime(before_date, DATE_FORMAT)
+            except ValueError as ex:
+                pass
+            if date_obj:
+                filter_args['date_declared__lt']=before_date
+        after_date = kwargs.get('after')
+        if after_date:
+            date_obj = None
+            try:
+                date_obj = datetime.datetime.strptime(after_date, DATE_FORMAT)
+            except ValueError as ex:
+                pass
+            if date_obj:
+                filter_args['date_declared__gt']=after_date
+
+        dlist = Declaration.objects.filter(**filter_args).order_by(order_by)
         return dlist
 
     @property
@@ -156,6 +195,7 @@ class NodeType(Hierarchy, models.Model):
         on_delete=models.CASCADE)
     count_population = models.BooleanField(default=True)
     is_governing = models.BooleanField(default=True)
+    admin_notes = models.TextField(blank=True)
     links = GenericRelation(Link, null=True, blank=True, related_query_name='link')
 
     is_supplementary = False
@@ -214,18 +254,17 @@ class NodeType(Hierarchy, models.Model):
 class Node(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    area = models.CharField(max_length=36, null=True, blank=True)
+    location = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
     nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
-    comment_public = models.TextField(null=True, blank=True)
-    comment_private = models.TextField(null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    admin_notes = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
     supplements = models.ManyToManyField('self',
         symmetrical=False, related_name='supplement',
         blank=True)
     sort_name = models.CharField(max_length=64, null=True, blank=True)
-    count_population = models.SmallIntegerField(default=0)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
     parentlist = []
@@ -354,6 +393,15 @@ class Node(Hierarchy, models.Model):
         return node_total
 
     @property
+    def count_population(self):
+        return self.nodetype.count_population
+
+    @property
+    def is_governing(self):
+        logger.info("node %s has nodetype %s which is governing? %s" % (self.id, self.nodetype.id, self.nodetype.is_governing))
+        return self.nodetype.is_governing
+
+    @property
     def level(self):
         return self.nodetype.level
 
@@ -438,16 +486,16 @@ class Declaration(models.Model):
     node = models.ForeignKey(Node, on_delete=models.CASCADE)
     # status types
     DECLARED = 'D'
-    NONDECLARED = 'N'
+    INACTIVE = 'N'
     REJECTED = 'R'
     REVOKED = 'V'
-    PROVISIONAL = 'P'
+    PROGRESS = 'P'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
-        (NONDECLARED, 'Non-declared'),
+        (INACTIVE, 'Inactive'),
         (REJECTED, 'Rejected'),
         (REVOKED, 'Revoked'),
-        (PROVISIONAL, 'Provisional')
+        (PROGRESS, 'In Progress')
     ]
     STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
     status = models.CharField(
@@ -458,13 +506,11 @@ class Declaration(models.Model):
     date_declared = models.DateField('date declared')
     links = GenericRelation(Link, null=True, related_query_name='link')
  
-    # Should this be a dropdown of defined types?
-    # >> How can we record the different ways that climate emergency declaration
-    # decisions can be made by a particular node eg. by the legislature or the
-    # key administrative decision-maker (collective decision-makers
-    # [councils/parliaments] or individuals in the case of ‘elected “monarchs”
-    # like presidents or governors or perhaps some mayors?
-    declaration_type = models.TextField(blank=True)
+    declaration_type = models.CharField(max_length=256, blank=True)
+    description_short = models.CharField(max_length=256, blank=True)
+    description_long = models.TextField(blank=True)
+    admin_notes = models.TextField(blank=True)
+    verified = models.BooleanField(default=False)
 
     @classmethod
     def content_type_id(cls):

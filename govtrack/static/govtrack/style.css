@@ -24,9 +24,6 @@ tr.country-subhead {
 tr.country-total {
     background-color: #eeeeee;
 }
-.errorlist {
-    background-color: pink;
-}
 .declaration-options  {
     display: inline;
     font-size: small;
@@ -118,4 +115,25 @@ div.react-delete-link a {
 }
 .level_10 {
   padding-left: 200px;
+}
+
+/* FORMS */
+/* Hide HTML5 Up and Down arrows. */
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.errorlist {
+    background-color: pink;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+textarea#id_description_short {
+    width: 350px;
+    height: 50px;
+}
+input[type='text'] {
+    width: 350px;
 }
