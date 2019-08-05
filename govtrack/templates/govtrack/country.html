@@ -100,28 +100,5 @@
   </tr>
 </table>
 
-<script type='text/javascript'>
-var showing = {};
-function toggleEditOptions(ev) {
-    el = ev.target
-    console.log(el)
-    editdivid = el.id.replace('view','edit')
-    editdiv = $( '#' + editdivid )
-    if (showing[el.id] == 1) {
-        editdiv.css('display','none')
-        showing[el.id] = 0
-        el.innerHTML = '*'
-    } else {
-        editdiv.css('display','block')
-        showing[el.id] = 1
-        el.innerHTML = '-'
-    }
-}
-$( document ).ready(function() {
-    $( "button.view-nodetype" ).click( toggleEditOptions );
-    $( "button.view-node" ).click( toggleEditOptions );
-});
-</script>
-
 {% endif %}
 {% endblock %}

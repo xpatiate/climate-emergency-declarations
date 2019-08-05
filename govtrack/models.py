@@ -318,8 +318,13 @@ class Node(Hierarchy, models.Model):
         combined = Node.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
         ).exclude(pk=self.id).order_by('nodetype','sort_name')
-        logger.debug("all_children: node %s has %s direct or indirect children" % (self.name,len(combined)))
         return combined
+
+    @property
+    def num_all_children(self):
+        return Node.objects.filter(
+            Q(parent=self.id) | Q(supplements=self.id)
+        ).exclude(pk=self.id).count()
 
     @property
     def num_supplementary_children(self):

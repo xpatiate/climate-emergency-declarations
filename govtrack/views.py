@@ -37,10 +37,12 @@ def index(request):
 
 def node(request, node_id):
     node = get_object_or_404(Node, pk=node_id)
+    records = node.build_hierarchy()
     return render(request, 'govtrack/node.html', {
         'record': node,
         'country': node.country,
         'parents_list': node.ancestors,
+        'records_list': records,
         'links': node.links.all(),
     })
 

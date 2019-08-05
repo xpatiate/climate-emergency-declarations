@@ -1,5 +1,24 @@
 "use strict";
 
+var showing = {};
+$( document ).ready(function() {
+    $( "button.view-nodetype" ).click( toggleEditOptions );
+    $( "button.view-node" ).click( toggleEditOptions );
+});
+function toggleEditOptions(ev) {
+    var el = ev.target
+    var editdivid = el.id.replace('view','edit')
+    var editdiv = $( '#' + editdivid )
+    if (showing[el.id] == 1) {
+        editdiv.css('display','none')
+        showing[el.id] = 0
+        el.innerHTML = '*'
+    } else {
+        editdiv.css('display','block')
+        showing[el.id] = 1
+        el.innerHTML = '-'
+    }
+}
 
 /* 
 Process for multiple node creation:
