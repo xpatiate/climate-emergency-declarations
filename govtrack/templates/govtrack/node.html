@@ -67,9 +67,7 @@
       {% endif %}
     {% endblock %}
       <br>
-      {% for ctype in record.sub_types %}
-        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }}</a>
-      {% endfor %}
+    {% include 'govtrack/add-node.html' %}
     </div>
 {% endif %}
 

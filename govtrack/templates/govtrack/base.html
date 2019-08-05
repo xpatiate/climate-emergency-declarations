@@ -15,6 +15,7 @@
     <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
 
   {% load static %}
+  <script type="text/javascript" src="{% static 'govtrack/admin-tools.js' %}"></script>
   <link rel="stylesheet" type="text/css" href="{% static 'govtrack/style.css' %}">
   {% if 'qa' in request.META.HTTP_HOST %}
   <style type='text/css'>

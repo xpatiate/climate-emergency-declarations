@@ -398,7 +398,6 @@ class Node(Hierarchy, models.Model):
 
     @property
     def is_governing(self):
-        logger.info("node %s has nodetype %s which is governing? %s" % (self.id, self.nodetype.id, self.nodetype.is_governing))
         return self.nodetype.is_governing
 
     @property
