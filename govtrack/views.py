@@ -363,9 +363,9 @@ def extract_node_data(request):
         a = td.find('a')
         if a:
             writer.writerow([a.get_text(), a['href']])
-        span = td.find('span')
-        if span:
-            writer.writerow([span.get_text()])
+        else:
+            tdtext = td.get_text()
+            writer.writerow([tdtext])
     return JsonResponse({'nodes': nodestring.getvalue()})
 
 

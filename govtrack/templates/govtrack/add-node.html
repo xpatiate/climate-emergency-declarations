@@ -4,7 +4,6 @@
         <form class='paste-text' id='form_r{{record.id}}c{{ctype.id}}' action='{% url 'node_multi_add' record.id ctype.id %}' method=POST>
         {% csrf_token %}
         <textarea name='node_csv_data' id='text_r{{record.id}}c{{ctype.id}}'></textarea>
-        <!--<input type='button' value='extract' onClick="extractPastedData('text_r{{record.id}}c{{ctype.id}}');">-->
         <input type='submit' value='create' id='button_r{{record.id}}c{{ctype.id}}' class='nodes-create'>
         </form>
       {% endfor %}
