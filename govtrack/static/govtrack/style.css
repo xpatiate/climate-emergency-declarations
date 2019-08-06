@@ -137,3 +137,6 @@ textarea#id_description_short {
 input[type='text'] {
     width: 350px;
 }
+.paste-text {
+    display: none;
+}

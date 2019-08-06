@@ -1,12 +1,16 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpResponse
 from django.forms import formset_factory
-from django.http import HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import Declaration, Country, Node, NodeType, Link
 from .forms import NodeTypeForm, NodeForm, DeclarationForm, LinkForm, CountryForm
 
+from bs4 import BeautifulSoup
 import csv
 import datetime
+import html
+import io
 import logging 
 logger = logging.getLogger('govtrack')
 DATE_FORMAT='%Y-%m-%d'
@@ -33,10 +37,12 @@ def index(request):
 
 def node(request, node_id):
     node = get_object_or_404(Node, pk=node_id)
+    records = node.build_hierarchy()
     return render(request, 'govtrack/node.html', {
         'record': node,
         'country': node.country,
         'parents_list': node.ancestors,
+        'records_list': records,
         'links': node.links.all(),
     })
 
@@ -340,3 +346,61 @@ def country_declarations(request, country_code):
         writer.writerow([dec.node.name, dec.node.location, dec.node.population, dec.date_declared, dec.node.num_declared_ancestors()])
 
     return response
+
+# TODO: add CSRF to AJAX form
+@csrf_exempt
+def extract_node_data(request):
+
+    # get pasted text from POST data
+    node_table = request.POST.get('node_table')
+    node_unescaped = html.unescape(node_table)
+
+    soup = BeautifulSoup( node_unescaped, 'html.parser')
+    nodes = []
+    nodestring = io.StringIO()
+    writer = csv.writer(nodestring)
+    for td in soup.find_all('td'):
+        a = td.find('a')
+        if a:
+            writer.writerow([a.get_text(), a['href']])
+        else:
+            tdtext = td.get_text()
+            writer.writerow([tdtext])
+    return JsonResponse({'nodes': nodestring.getvalue()})
+
+
+# Create multiple nodes at once from CSV-like text
+def add_multi_nodes(request, parent_id, nodetype_id):
+    if request.method == 'POST':
+        node_data = request.POST.get('node_csv_data')
+        nodestring = io.StringIO(node_data)
+        reader = csv.reader(nodestring)
+        parent = Node.objects.get(id=parent_id)
+        for row in reader:
+            newnode_name = row[0]
+            form = NodeForm({
+                'country': parent.country_id,
+                'parent': parent_id,
+                'nodetype': nodetype_id,
+                'name': newnode_name,
+                'sort_name': newnode_name
+            })
+            if form.is_valid():
+                newnode = form.save()
+                logger.info("Created new node %s" % newnode)
+                if len(row) == 2:
+                    newurl = row[1]
+                    link_data = {
+                        'content_type_id': Node.content_type_id(),
+                        'object_id': newnode.id,
+                        'url': newurl,
+                    }
+                    newlink = Link(**link_data)
+                    try:
+                        newlink.full_clean()
+                        newlink.save()
+                        logger.info("Created new link %s" % newlink)
+                    except ValidationError as ex:
+                        logger.error("couldn't save new link: %s" % ex)
+    return redirect('node', node_id=parent_id)
+
