@@ -7,9 +7,9 @@
 
 {% block heading %}
 {% if action == "add" %}
-<h3>Add a Declaration for {{ node.name }}</h3>
+<h3>Add a Declaration Event for {{ node.name }}</h3>
 {% elif action == "edit" %}
-<h3>Edit Declaration for {{ node.name }}</h3>
+<h3>Edit Declaration Event for {{ node.name }}</h3>
 {% else %}
 <h3>{{ node.name }}</h3>
 <p><b>Type:</b> {{ node.nodetype.name }}</p>
@@ -31,9 +31,11 @@
 {% endblock %}
     '>
 {% csrf_token %}
-{{ form.as_p }} 
+<table class='form-table'>
+{{ form.as_table }}
 {% include 'govtrack/links.html' %}
-{{ linkform.as_p }}
+{{ linkform.as_table }}
+</table>
 {% block formextra %}
 <script>
   $(function () {

@@ -39,9 +39,11 @@
 {% endblock %}
     '>
 {% csrf_token %}
-{{ form.as_p }} 
+<table class='form-table'>
+{{ form.as_table }}
 {% include 'govtrack/links.html' %}
-{{ linkform.as_p }} 
+{{ linkform.as_table }}
+</table>
 {% block formextra %}{% endblock %}
 <input type='submit' value='save' class='button-save'>
 </form>

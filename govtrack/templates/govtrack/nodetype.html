@@ -23,9 +23,11 @@
     {% endif %}
     >
 {% csrf_token %}
-{{ form.as_p }}
+<table class='form-table'>
+{{ form.as_table }}
 {% include 'govtrack/links.html' %}
-{{ linkform.as_p }}
+{{ linkform.as_table }}
+</table>
 <input type='submit' value='save' class='button-save'>
 <br><br>
 <a href='{% url 'country' country.id %}' class='button-cancel'>back to {{ country.name }}</a>
