@@ -12,15 +12,13 @@
 <h3>Edit Declaration Event for {{ node.name }}</h3>
 {% else %}
 <h3>{{ node.name }}</h3>
-<p><b>Type:</b> {{ node.nodetype.name }}</p>
 {% endif %}
+{% endblock %}
+
+{% if action != 'view' %}
 <!-- load Fengyuan Chen’s Datepicker -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css" integrity="sha256-b88RdwbRJEzRx95nCuuva+hO5ExvXXnpX+78h8DjyOE=" crossorigin="anonymous" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js" integrity="sha256-/7FLTdzP6CfC1VBAj/rsp3Rinuuu9leMRGd354hvk0k=" crossorigin="anonymous"></script>
-{% endblock %}
-
-{% if action %}
-
 <form method='POST' action='
 {% block formaction %}
     {% if action == 'add' %}
@@ -51,12 +49,14 @@
 {% else %}
 
 {% block view %}
-<p><b>Country:</b> <a href='{% url 'country' node.country.id %}'>{{ node.country.name }}</a></p>
-<p><b>Population:</b> {{ node.population | intcomma }}</p>
-<p><b>Description:</b> {{ node.comment_public }}</p>
+<p class='dec-summary'>{{ declaration.description_short }}</p>
+<p><b>Status:</b> {{ declaration.status_name }} {% if declaration.verified %} (Verified){%endif%}</p>
+<p><b>Date:</b> {{ declaration.display_event_date }}</p>
+<p><b>Type:</b> {{ declaration.declaration_type }}</p>
+<p>{{ declaration.description_long }}</p>
 {% include 'govtrack/links.html' %}
 {% if user.is_authenticated %}
-<p><b>Comments:</b> {{ node.comment_private }}</p>
+<p><b>Comments:</b> {{ declaration.admin_notes }}</p>
 {% endif %}
 {% endblock %}
 

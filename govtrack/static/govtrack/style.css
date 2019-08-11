@@ -76,6 +76,9 @@ div.react-delete-link a {
     margin-bottom: 20px;
     padding: 15px;
 }
+.dec-summary {
+    font-size: 14pt;
+}
 .object-view {
     border: 1px solid lightgrey;
     padding: 15px;
