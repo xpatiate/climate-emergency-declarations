@@ -38,14 +38,14 @@ class NodeForm(ModelForm):
 class DeclarationForm(ModelForm):
     class Meta:
         model = Declaration
-        fields = ['node','status', 'date_declared', 'declaration_type', 'verified',
+        fields = ['node','status', 'event_date', 'declaration_type', 'verified',
             'description_short', 'description_long', 'admin_notes']
         widgets = {
             'node': forms.HiddenInput(),
         }
 
-    date_declared = forms.DateField(
-        input_formats=['%d %b %Y','%Y-%m-%d','%d %B, %Y'],
+    event_date = forms.DateField(
+        input_formats=['%d %b, %Y','%d %b %Y', '%d %B %Y','%Y-%m-%d','%d %B, %Y','%d-%m-%Y'],
         widget=forms.DateInput(format='%d %b %Y'),
         )
     description_short = forms.CharField(widget=forms.Textarea, label='Summary', required=False)

@@ -39,9 +39,11 @@
 {% endblock %}
     '>
 {% csrf_token %}
-{{ form.as_p }} 
+<table class='form-table'>
+{{ form.as_table }}
 {% include 'govtrack/links.html' %}
-{{ linkform.as_p }} 
+{{ linkform.as_table }}
+</table>
 {% block formextra %}{% endblock %}
 <input type='submit' value='save' class='button-save'>
 </form>
@@ -110,7 +112,6 @@
 {% endif %}
 
 </div>
-{% if record.is_governing %}
 <br>
 <div class='declarations'>
 <h4>Declarations</h4>
@@ -132,7 +133,6 @@
 </ul>
 <br>
 </div>
-{% endif %}
 
 {% endblock %}
 

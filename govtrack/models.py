@@ -122,7 +122,7 @@ class Country(models.Model):
         if order_by == 'date':
             # XXX ideally pass order_name as well
             # and allow asc/desc
-            order_by = 'date_declared'
+            order_by = 'event_date'
         else:
             order_by = order_name
         filter_args = {
@@ -137,7 +137,7 @@ class Country(models.Model):
             except ValueError as ex:
                 pass
             if date_obj:
-                filter_args['date_declared__lt']=before_date
+                filter_args['event_date__lt']=before_date
         after_date = kwargs.get('after')
         if after_date:
             date_obj = None
@@ -146,7 +146,7 @@ class Country(models.Model):
             except ValueError as ex:
                 pass
             if date_obj:
-                filter_args['date_declared__gt']=after_date
+                filter_args['event_date__gt']=after_date
 
         dlist = Declaration.objects.filter(**filter_args).order_by(order_by)
         return dlist
@@ -283,7 +283,7 @@ class Node(Hierarchy, models.Model):
 
     @property
     def declarations(self):
-        children = Declaration.objects.filter(node=self.id).order_by('date_declared')
+        children = Declaration.objects.filter(node=self.id).order_by('event_date')
         return children
 
     @property
@@ -412,7 +412,7 @@ class Node(Hierarchy, models.Model):
     @property
     def latest_declaration(self):
         try:
-            return Declaration.objects.filter(node=self.id).latest('date_declared')
+            return Declaration.objects.filter(node=self.id).latest('event_date')
         except Declaration.DoesNotExist as ex:
             pass
 
@@ -494,12 +494,19 @@ class Declaration(models.Model):
     REJECTED = 'R'
     REVOKED = 'V'
     PROGRESS = 'P'
+    # Temporary settings - for now we will use declaration to hold information
+    # on whether applications to list a govt as declared have been accepted or not
+    # Eventually this data should be moved out into a separate 'decision' object
+    LISTING_ACCEPTED = 'L'
+    LISTING_REJECTED = 'J'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
         (INACTIVE, 'Inactive'),
         (REJECTED, 'Rejected'),
         (REVOKED, 'Revoked'),
-        (PROGRESS, 'In Progress')
+        (PROGRESS, 'In Progress'),
+        (LISTING_ACCEPTED, 'Listing Accepted'),
+        (LISTING_REJECTED, 'Listing Rejected'),
     ]
     STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
     status = models.CharField(
@@ -507,7 +514,7 @@ class Declaration(models.Model):
         choices = STATUS_TYPES,
         default=DECLARED,
     )
-    date_declared = models.DateField('date declared')
+    event_date = models.DateField(verbose_name='Event date')
     links = GenericRelation(Link, null=True, related_query_name='link')
  
     declaration_type = models.CharField(max_length=256, blank=True)
@@ -525,14 +532,14 @@ class Declaration(models.Model):
         return self.STATUS_MAP[self.status]
 
     def __str__(self):
-        return '%s: %s' % (self.status_name, self.display_date_declared())
+        return '%s: %s' % (self.status_name, self.display_event_date())
 
     @property
     def is_declared(self):
         return self.status == 'D'
 
-    def display_date_declared(self):
-        ddate = self.date_declared
+    def display_event_date(self):
+        ddate = self.event_date
         if ddate:
             return ddate.strftime('%d %B, %Y')
 
