@@ -193,10 +193,12 @@ class NodeType(Hierarchy, models.Model):
     level = models.PositiveSmallIntegerField()
     parent = models.ForeignKey('self', 
         on_delete=models.CASCADE)
-    count_population = models.BooleanField(default=True)
-    is_governing = models.BooleanField(default=True)
     admin_notes = models.TextField(blank=True)
     links = GenericRelation(Link, null=True, blank=True, related_query_name='link')
+
+    # These two fields currently unused
+    count_population = models.BooleanField(default=True)
+    is_governing = models.BooleanField(default=True)
 
     is_supplementary = False
 
@@ -482,7 +484,6 @@ class Node(Hierarchy, models.Model):
             nodetype__level__lte=(self.nodetype.level+1)
             ).exclude(pk=self.id).order_by('nodetype__level','sort_name')
 
-
     def __str__(self):
         return self.fullname()
 
@@ -494,10 +495,9 @@ class Declaration(models.Model):
     REJECTED = 'R'
     REVOKED = 'V'
     PROGRESS = 'P'
-    # Temporary settings - for now we will use declaration to hold information
-    # on whether applications to list a govt as declared have been accepted or not
+    # Temporary setting - for now we will use declaration to hold information
+    # on decisions to reject listing for a government
     # Eventually this data should be moved out into a separate 'decision' object
-    LISTING_ACCEPTED = 'L'
     LISTING_REJECTED = 'J'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
@@ -505,7 +505,6 @@ class Declaration(models.Model):
         (REJECTED, 'Rejected'),
         (REVOKED, 'Revoked'),
         (PROGRESS, 'In Progress'),
-        (LISTING_ACCEPTED, 'Listing Accepted'),
         (LISTING_REJECTED, 'Listing Rejected'),
     ]
     STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
