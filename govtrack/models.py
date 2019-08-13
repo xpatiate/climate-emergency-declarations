@@ -164,7 +164,7 @@ class Country(models.Model):
 
     @property
     def num_nodetypes(self):
-        return NodeType.objects.filter(country=self.id).count()
+        return Structure.objects.filter(country=self.id).count()
 
     @property
     def num_nodes(self):
@@ -172,8 +172,8 @@ class Country(models.Model):
 
     def get_root_nodetype(self):
         try:
-            return NodeType.objects.get(country=self.id, level=1)
-        except NodeType.DoesNotExist as ex:
+            return Structure.objects.get(country=self.id, level=1)
+        except Structure.DoesNotExist as ex:
             logger.error("no root nodetype for country %s: %s" % (self.id,self.name))
 
     def get_root_node(self):
@@ -187,7 +187,7 @@ class Country(models.Model):
         return self.name
 
 
-class NodeType(Hierarchy, models.Model):
+class Structure(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     level = models.PositiveSmallIntegerField()
@@ -218,7 +218,7 @@ class NodeType(Hierarchy, models.Model):
 
     @property
     def children(self):
-        children = NodeType.objects.filter(parent=self.id).exclude(pk=self.id).order_by('name')
+        children = Structure.objects.filter(parent=self.id).exclude(pk=self.id).order_by('name')
         return children
 
     @property
@@ -239,7 +239,7 @@ class NodeType(Hierarchy, models.Model):
         return self.parentlist
 
     def get_parent(self, parent_id):
-        parent = NodeType.objects.get(id=parent_id)
+        parent = Structure.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
             self.parentlist.insert(0, parent.parent)
             return self.get_parent(parent.parent_id)
@@ -258,7 +258,8 @@ class Node(Hierarchy, models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     location = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
-    nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
+    #nodetype = models.ForeignKey(Structure, on_delete=models.CASCADE)
+    nodetype = models.IntegerField()
     description = models.TextField(null=True, blank=True)
     admin_notes = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
