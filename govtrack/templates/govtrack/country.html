@@ -19,12 +19,20 @@
 {% else %}
 <div class='object-view'>
     {% if user.is_authenticated %}
+    <div class='admin-corner'>
         <div id='editcountry-{{ country.id }}' class='edit-country'>
         <a href='{% url 'country_edit' country.id %}'>edit</a>
         </div>
+     {% if country.admin_notes %}
+       <div class='admin-view'>
+       <p>{{ country.admin_notes }}</p>
+       </div>
+     {% endif %}
+    </div>
     {% endif %}
-    <p>Population: {{ country.population | intcomma }}</p>
-    <p>Region: {{ country.region }}</p>
+    <p><b>Population:</b> {{ country.population | intcomma }}</p>
+    <p><b>Region:</b> {{ country.region }}</p>
+    <p><b>Description:</b> {{ country.description }}</p>
     {% include 'govtrack/links.html' %}
 </div>
 <br>
@@ -48,7 +56,7 @@
 {% endfor %}
 </div>
 
-<h3>Records</h3>
+<h3>Areas</h3>
 <table>
   <tr>
     <th></th>

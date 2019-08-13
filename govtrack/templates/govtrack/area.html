@@ -52,13 +52,31 @@
 
 {% block view %}
 <div class='object-view'>
-<p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
-<p><b>Population:</b> {{ record.population | intcomma }}</p>
-<p><b>Description:</b> {{ record.comment_public }}</p>
-{% include 'govtrack/links.html' %}
 {% if user.is_authenticated %}
-<p><b>Comments:</b> {{ record.comment_private }}</p>
+  <div class='admin-corner'>
+    <div class='edit-area' style="display: block;">
+    {% block adminoptions %}
+      <a href='{% url 'area_edit' record.id %}'>edit</a>
+      {% if record.level > 1 %}
+      | <a href='{% url 'area_del' record.id %}'>delete</a>
+      {% endif %}
+    {% endblock %}
+    <div style='text-align: left'>
+    {% include 'govtrack/add-area.html' %}
+    </div>
+    </div>
+    {% if user.is_authenticated and record.admin_notes %}
+     <div class='admin-view'>
+     <p>{{ record.admin_notes }}</p>
+     </div>
+    {% endif %}
+  </div>
 {% endif %}
+<p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
+<p><b>Location:</b> {{ record.location }}</p>
+<p><b>Population:</b> {{ record.population | intcomma }}</p>
+<p><b>Description:</b> {{ record.description }}</p>
+{% include 'govtrack/links.html' %}
 
 
 {% if record.num_all_children %}
@@ -97,19 +115,6 @@
 {% endif %}
 
 
-{% if user.is_authenticated %}
-    <div class='edit-area' style="display: block">
-    <b>Area Admin</b><br>
-    {% block adminoptions %}
-      <a href='{% url 'area_edit' record.id %}'>edit</a>
-      {% if record.level > 1 %}
-      | <a href='{% url 'area_del' record.id %}'>delete</a>
-      {% endif %}
-    {% endblock %}
-      <br>
-    {% include 'govtrack/add-area.html' %}
-    </div>
-{% endif %}
 
 </div>
 <br>
@@ -128,7 +133,7 @@
 </li>
 {% endfor %}
 {% if user.is_authenticated %}
-    <li><a href='{% url 'declaration_add' record.id  %}'>add declaration</a>
+    <li><a class='edit-dec' href='{% url 'declaration_add' record.id  %}'>add declaration</a>
 {% endif %}
 </ul>
 <br>
