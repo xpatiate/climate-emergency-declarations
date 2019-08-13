@@ -69,7 +69,8 @@
 <p><b>Status:</b> {{ declaration.status_name }} {% if declaration.verified %} (Verified){%endif%}</p>
 <p><b>Date:</b> {{ declaration.display_event_date }}</p>
 <p><b>Type:</b> {{ declaration.declaration_type }}</p>
-<p>{{ declaration.description_long }}</p>
+<div class='description'>{{ declaration.description_long }}</div>
+<br/>
 {% include 'govtrack/links.html' %}
 </div>
 {% endblock %}

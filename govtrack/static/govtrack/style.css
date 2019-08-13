@@ -58,6 +58,8 @@ tr.country-total {
     border: 1px solid lightgrey;
     padding: 15px;
 }
+.description {
+}
 .parent-tree {
     border: 1px solid lightgrey;
     background: rgb(240,240,240);

@@ -32,7 +32,7 @@
     {% endif %}
     <p><b>Population:</b> {{ country.population | intcomma }}</p>
     <p><b>Region:</b> {{ country.region }}</p>
-    <p><b>Description:</b> {{ country.description }}</p>
+    <div class='description'>{{ country.description|default_if_none:'' }}</div>
     {% include 'govtrack/links.html' %}
 </div>
 <br>

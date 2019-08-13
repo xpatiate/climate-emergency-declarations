@@ -75,7 +75,7 @@
 <p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
 <p><b>Location:</b> {{ record.location }}</p>
 <p><b>Population:</b> {{ record.population | intcomma }}</p>
-<p><b>Description:</b> {{ record.description }}</p>
+<div class='description'>{{ record.description|default_if_none:'' }}</div>
 {% include 'govtrack/links.html' %}
 
 
