@@ -2,7 +2,7 @@ from django.forms import ModelForm
 import django.forms as forms
 from django.core.validators import URLValidator
 
-from .models import Country, Node, Structure, Declaration, Link
+from .models import Country, Area, Structure, Declaration, Link
 
 class CountryForm(ModelForm):
     class Meta:
@@ -21,10 +21,10 @@ class StructureForm(ModelForm):
             'parent': forms.HiddenInput()
             }
 
-class NodeForm(ModelForm):
+class AreaForm(ModelForm):
     
     class Meta:
-        model = Node
+        model = Area
         fields = ['name','sort_name','structure','country','location', 'population','parent','supplements','description','admin_notes']
         widgets = {
             'structure': forms.HiddenInput(),
@@ -38,10 +38,10 @@ class NodeForm(ModelForm):
 class DeclarationForm(ModelForm):
     class Meta:
         model = Declaration
-        fields = ['node','status', 'event_date', 'declaration_type', 'verified',
+        fields = ['area','status', 'event_date', 'declaration_type', 'verified',
             'description_short', 'description_long', 'admin_notes']
         widgets = {
-            'node': forms.HiddenInput(),
+            'area': forms.HiddenInput(),
         }
 
     event_date = forms.DateField(

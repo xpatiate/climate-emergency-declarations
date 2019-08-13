@@ -28,7 +28,7 @@ tr.country-total {
     display: inline;
     font-size: small;
 }
-.view-node, .view-structure {
+.view-area, .view-structure {
     display: inline;
     background-color: white;
     border: none;
@@ -40,7 +40,7 @@ tr.country-total {
     background-color: green;
     color: white;
 }
-.view-node:focus, .view-structure:focus {
+.view-area:focus, .view-structure:focus {
     outline: 0;
 }
 .react-delete-link {
@@ -51,7 +51,7 @@ tr.country-total {
 div.react-delete-link a {
     color: orange;
 }
-.edit-country a, .edit-node a, .edit-structure a, .edit-dec a {
+.edit-country a, .edit-area a, .edit-structure a, .edit-dec a {
     color: orange;
 }
 .edit-structure {
@@ -59,12 +59,12 @@ div.react-delete-link a {
     padding-left: 20px;
     display: none;
 }
-.edit-node {
+.edit-area {
     font-size: small;
     padding-left: 20px;
     display: none;
 }
-.link-node {
+.link-area {
 }
 .supplementary {
     font-style: italic;

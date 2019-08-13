@@ -25,13 +25,13 @@
         {% for dec in dlist %}
         <tr>
         <td class='td-index'>
-            <a href="{% url 'node' dec.node.id %}">{{ dec.node.name }}</a>
+            <a href="{% url 'area' dec.area.id %}">{{ dec.area.name }}</a>
         </td>
         <td class='td-index' align='right'>
-            {% if dec.node.is_counted %}
-            {{ dec.node.population | intcomma}}
+            {% if dec.area.is_counted %}
+            {{ dec.area.population | intcomma}}
             {% else %}
-            <i>{{ dec.node.population | intcomma}}</i>
+            <i>{{ dec.area.population | intcomma}}</i>
             {% endif %}
             </td>
         <td class='td-index'>{{ dec.display_event_date }}</td>
@@ -41,7 +41,7 @@
         </tr>
         {% endfor %}
         <tr class='country-total'>
-          <td class='td-index'>Total: {{ country.num_nodes }}</td>
+          <td class='td-index'>Total: {{ country.num_areas }}</td>
           <td class='td-index' align='right'>{{ country.declared_population | intcomma }}</td>
           <td></td>
         </tr>

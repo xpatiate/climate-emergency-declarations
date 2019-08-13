@@ -28,10 +28,10 @@ function Deleter(props) {
         const response = confirm('are you sure?');
         console.log(response);
         if (response) {
-            const nodeid = '#' + props.id;
-            const maindiv = document.querySelector(nodeid);
+            const areaid = '#' + props.id;
+            const maindiv = document.querySelector(areaid);
             maindiv.style.display='none';
-            console.log('making API call for ' + nodeid + ' to ' + props.url);
+            console.log('making API call for ' + areaid + ' to ' + props.url);
             //TODO make this a POST with CSRF
             var oReq = new XMLHttpRequest();
             oReq.open("GET", props.url);

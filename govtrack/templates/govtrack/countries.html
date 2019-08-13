@@ -19,9 +19,9 @@
         <tr>
         <td><a href="{% url 'country' country.id %}">{{ country.name }}</a></td>
         <td align='right'>{{ country.population | intcomma }}</td>
-        <td align='right'>{{ country.node_population | intcomma }}</td>
+        <td align='right'>{{ country.area_population | intcomma }}</td>
         <td align='right'>{% if country.num_structures > 1%}{{ country.num_structures }}{% endif %}</td>
-        <td align='right'>{% if country.num_nodes > 1 %}{{ country.num_nodes }}{% endif %}</td>
+        <td align='right'>{% if country.num_areas > 1 %}{{ country.num_areas }}{% endif %}</td>
         <td align='right'>{% if country.num_declarations %}{{ country.num_declarations }}{% endif %}</td>
         </td>
         </tr>

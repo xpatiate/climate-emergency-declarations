@@ -63,22 +63,22 @@
     {% if record.is_supplementary %}
     <div class='supplementary'>
     {% endif %}
-    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.structure.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
+    <div class='level_{{ record.level }}' id='area-{{ record.id }}'>&#8866;({{ record.structure.name }})  <a class='link-area' href='{% url 'area' record.id %}'>{{ record.name }}</a>
     {% if record.is_supplementary %}
     </div>
     {% endif %}
     {% if not record.is_supplementary and user.is_authenticated %}
-      &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
-      <div id='editnode-{{ record.id }}' class='edit-node'>
-      <a href='{% url 'node_edit' record.id %}'>edit</a>
+      &nbsp;<button class='view-area' id='viewarea-{{ record.id }}'>*</button>
+      <div id='editarea-{{ record.id }}' class='edit-area'>
+      <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
         |
-        {% with view="node_del" object=record %}
+        {% with view="area_del" object=record %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
       {% endif %}
       <br>
-    {% include 'govtrack/add-node.html' %}
+    {% include 'govtrack/add-area.html' %}
       </div>
     {% endif %}
     </div>
