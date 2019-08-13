@@ -201,6 +201,7 @@ def area_child(request, parent_id, structure_id):
         'name': '',
         'parent': parent_id,
         'country': parent.country.id,
+        'location': parent.location,
         'structure': structure_id
     }
     records = parent.ancestors
