@@ -21,7 +21,7 @@ class Hierarchy():
             itemlist = [self]
         for child in self.all_children:
             # Children that are included here via supplementary relationships 
-            # will have a different node as their 'actual' parent
+            # will have a different area as their 'actual' parent
             if self != child.parent:
                 child.is_supplementary = True
             itemlist.append(child)
@@ -35,56 +35,56 @@ class PopulationCounter():
         self.counted = None
         self.count_all = False
 
-    def declared_population(self, node, total=0):
+    def declared_population(self, area, total=0):
         if not self.counted:
             self.counted = set()
 
-        poplog.debug("%s,%s,%s" % (total,0,node.name))
-        logger.debug("#### COUNTING declared population for %s ####" % node.name)
+        poplog.debug("%s,%s,%s" % (total,0,area.name))
+        logger.debug("#### COUNTING declared population for %s ####" % area.name)
         logger.debug("#### total %s, already counted: %s" % (total,self.counted))
-        if node.is_declared:
+        if area.is_declared:
             # Check if any descendents are already counted
-            current_desc = node.all_descendants
+            current_desc = area.all_descendants
             overlap = current_desc.intersection(self.counted)
             logger.debug("overlap between [%s] and [%s] is [%s]" % (current_desc, self.counted, overlap))
 
             if not overlap:
-                # Current node is declared and has no overlap:
+                # Current area is declared and has no overlap:
                 # - Add self and all descendants (inc indirect) to counted
-                self.counted.add(node)
-                self.counted.update(node.all_descendants)
+                self.counted.add(area)
+                self.counted.update(area.all_descendants)
                 # - Count total population
-                logger.debug("%s adding %s to %s" % (node.name,node.population,total))
-                total += node.population
-                poplog.debug("%s,%s,%s" % (node.population,total,node.name))
+                logger.debug("%s adding %s to %s" % (area.name,area.population,total))
+                total += area.population
+                poplog.debug("%s,%s,%s" % (area.population,total,area.name))
             else:
-                # Current node is declared and has overlap
-                # Figure out which overlapping nodes to subtract
-                logger.debug("%s is declared but has overlapping descendants" % node.name)
-                subtotal = node.population
-                # Need to process these subnodes as a tree, not a list
+                # Current area is declared and has overlap
+                # Figure out which overlapping areas to subtract
+                logger.debug("%s is declared but has overlapping descendants" % area.name)
+                subtotal = area.population
+                # Need to process these subareas as a tree, not a list
                 for kid in overlap:
-                    if kid in node.all_children:
+                    if kid in area.all_children:
                         logger.debug("subtracting %s (pop of %s) from subtotal %s" % (kid.population, kid.name, subtotal))
                         subtotal -= kid.population
-                logger.debug("total to add for %s is %s" % (node.name, subtotal))
-                self.counted.add(node)
-                self.counted.update(node.all_descendants)
+                logger.debug("total to add for %s is %s" % (area.name, subtotal))
+                self.counted.add(area)
+                self.counted.update(area.all_descendants)
 
                 total += subtotal
-                poplog.debug("%s,%s,%s" % (node.population,total,node.name))
+                poplog.debug("%s,%s,%s" % (area.population,total,area.name))
         else:
-            # Current node is not declared, look at children
-            logger.debug("%s not declared, looking at children" % node.name)
-            for child in node.children:
+            # Current area is not declared, look at children
+            logger.debug("%s not declared, looking at children" % area.name)
+            for child in area.children:
                 logger.debug("has %s been counted? %s" % (child, self.counted))
                 if child in self.counted:
                     logger.debug("already counted child %s" % child)
                     continue
                 total = self.declared_population(child, total)
                 logger.debug("after counting %s, counted set is %s" % (child,self.counted))
-            logger.debug("Children of %s returned %s" % (node.name, total))
-        logger.debug("#### %s returning total of %s ####" % (node.name,total))
+            logger.debug("Children of %s returned %s" % (area.name, total))
+        logger.debug("#### %s returning total of %s ####" % (area.name,total))
         logger.debug("#### have now counted: %s" % self.counted)
         return total
 
@@ -118,7 +118,7 @@ class Country(models.Model):
 
     def declarations(self, **kwargs):
         order_by = kwargs.get('order_by')
-        order_name = 'node__sort_name'
+        order_name = 'area__sort_name'
         if order_by == 'date':
             # XXX ideally pass order_name as well
             # and allow asc/desc
@@ -127,7 +127,7 @@ class Country(models.Model):
             order_by = order_name
         filter_args = {
             'status': 'D',
-            'node__country': self.id
+            'area__country': self.id
         }
         before_date = kwargs.get('before')
         if before_date:
@@ -154,40 +154,40 @@ class Country(models.Model):
     @property
     def declared_population(self):
         try:
-            return self.get_root_node().declared_population()
+            return self.get_root_area().declared_population()
         except AttributeError as ex:
             return 0
 
     @property
     def num_declarations(self):
-        return Declaration.objects.filter(status='D', node__country=self.id).count()
+        return Declaration.objects.filter(status='D', area__country=self.id).count()
 
     @property
-    def num_nodetypes(self):
-        return NodeType.objects.filter(country=self.id).count()
+    def num_structures(self):
+        return Structure.objects.filter(country=self.id).count()
 
     @property
-    def num_nodes(self):
-        return Node.objects.filter(country=self.id).count()
+    def num_areas(self):
+        return Area.objects.filter(country=self.id).count()
 
-    def get_root_nodetype(self):
+    def get_root_structure(self):
         try:
-            return NodeType.objects.get(country=self.id, level=1)
-        except NodeType.DoesNotExist as ex:
-            logger.error("no root nodetype for country %s: %s" % (self.id,self.name))
+            return Structure.objects.get(country=self.id, level=1)
+        except Structure.DoesNotExist as ex:
+            logger.error("no root structure for country %s: %s" % (self.id,self.name))
 
-    def get_root_node(self):
+    def get_root_area(self):
         try:
-            return Node.objects.get(country=self.id, nodetype__level=1)
-        except Node.DoesNotExist as ex:
-            logger.error("no root node for country %s: %s" % (self.id,self.name))
+            return Area.objects.get(country=self.id, structure__level=1)
+        except Area.DoesNotExist as ex:
+            logger.error("no root area for country %s: %s" % (self.id,self.name))
         return None
 
     def __str__(self):
         return self.name
 
 
-class NodeType(Hierarchy, models.Model):
+class Structure(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     level = models.PositiveSmallIntegerField()
@@ -218,7 +218,7 @@ class NodeType(Hierarchy, models.Model):
 
     @property
     def children(self):
-        children = NodeType.objects.filter(parent=self.id).exclude(pk=self.id).order_by('name')
+        children = Structure.objects.filter(parent=self.id).exclude(pk=self.id).order_by('name')
         return children
 
     @property
@@ -227,7 +227,7 @@ class NodeType(Hierarchy, models.Model):
 
     @property
     def records(self):
-        records = Node.objects.filter(nodetype=self.id).order_by('sort_name')
+        records = Area.objects.filter(structure=self.id).order_by('sort_name')
         return records
 
     @property
@@ -239,26 +239,26 @@ class NodeType(Hierarchy, models.Model):
         return self.parentlist
 
     def get_parent(self, parent_id):
-        parent = NodeType.objects.get(id=parent_id)
+        parent = Structure.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
             self.parentlist.insert(0, parent.parent)
             return self.get_parent(parent.parent_id)
     
     @property
     def num_records(self):
-        num_records = Node.objects.filter(nodetype=self.id).count()
+        num_records = Area.objects.filter(structure=self.id).count()
         return num_records
 
     def __str__(self):
         return self.fullname()
 
 
-class Node(Hierarchy, models.Model):
+class Area(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     location = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
-    nodetype = models.ForeignKey(NodeType, on_delete=models.CASCADE)
+    structure = models.ForeignKey(Structure, on_delete=models.CASCADE)
     description = models.TextField(null=True, blank=True)
     admin_notes = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
@@ -285,52 +285,52 @@ class Node(Hierarchy, models.Model):
 
     @property
     def declarations(self):
-        children = Declaration.objects.filter(node=self.id).order_by('event_date')
+        children = Declaration.objects.filter(area=self.id).order_by('event_date')
         return children
 
     @property
     def linkname(self):
-        return 'node'
+        return 'area'
 
     def fullname(self):
-        return '%s (%s)' % (self.name, self.nodetype.name)
+        return '%s (%s)' % (self.name, self.structure.name)
 
     @property
     def num_children(self):
-        return Node.objects.filter(parent=self.id).exclude(pk=self.id).count()
+        return Area.objects.filter(parent=self.id).exclude(pk=self.id).count()
 
     @property
     def children(self):
-        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
+        children = Area.objects.filter(parent=self.id).exclude(pk=self.id).order_by('structure','sort_name')
         return children
 
     @property
     def indirect_children(self):
-        children = Node.objects.filter(supplements=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
+        children = Area.objects.filter(supplements=self.id).exclude(pk=self.id).order_by('structure','sort_name')
         return children
 
     @property
     def num_indirect_children(self):
-        return Node.objects.filter(supplements=self.id).exclude(pk=self.id).count()
+        return Area.objects.filter(supplements=self.id).exclude(pk=self.id).count()
 
     @property
     def all_children(self):
-        # this alternative method gets *all* children, considering this node
+        # this alternative method gets *all* children, considering this area
         # both as prime parent and supplementary parent
-        combined = Node.objects.filter(
+        combined = Area.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
-        ).exclude(pk=self.id).order_by('nodetype','sort_name')
+        ).exclude(pk=self.id).order_by('structure','sort_name')
         return combined
 
     @property
     def num_all_children(self):
-        return Node.objects.filter(
+        return Area.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
         ).exclude(pk=self.id).count()
 
     @property
     def num_supplementary_children(self):
-        return Node.objects.filter(supplements=self.id).exclude(pk=self.id).count()
+        return Area.objects.filter(supplements=self.id).exclude(pk=self.id).count()
 
     @property
     def ancestors(self):
@@ -345,7 +345,7 @@ class Node(Hierarchy, models.Model):
         return self.parentlist
 
     def get_parent(self, parent_id):
-        parent = Node.objects.get(id=parent_id)
+        parent = Area.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
             self.parentlist.insert(0, parent.parent)
             return self.get_parent(parent.parent_id)
@@ -391,36 +391,36 @@ class Node(Hierarchy, models.Model):
         return num_declared
 
     def contribution(self):
-        node_total = 0
+        area_total = 0
         logger.debug("num declared ancestors for %s is %s" % (self.name, self.num_declared_ancestors()))
         if (self.is_declared and self.num_declared_ancestors() == 0):
-            node_total = self.population
+            area_total = self.population
         elif (self.num_declared_ancestors() > 1):
-            node_total = -1 * (self.num_declared_ancestors() - 1) * self.population
-        return node_total
+            area_total = -1 * (self.num_declared_ancestors() - 1) * self.population
+        return area_total
 
     @property
     def count_population(self):
-        return self.nodetype.count_population
+        return self.structure.count_population
 
     @property
     def is_governing(self):
-        return self.nodetype.is_governing
+        return self.structure.is_governing
 
     @property
     def level(self):
-        return self.nodetype.level
+        return self.structure.level
 
     @property
     def latest_declaration(self):
         try:
-            return Declaration.objects.filter(node=self.id).latest('event_date')
+            return Declaration.objects.filter(area=self.id).latest('event_date')
         except Declaration.DoesNotExist as ex:
             pass
 
     @property
     def is_declared(self):
-        # Consider a node to be declared based on the status of its most
+        # Consider an area to be declared based on the status of its most
         # recent declaration
         latest = self.latest_declaration
         if latest:
@@ -429,7 +429,7 @@ class Node(Hierarchy, models.Model):
 
     @property
     def sub_types(self):
-        thistype = self.nodetype
+        thistype = self.structure
         typekids = thistype.children
         return typekids
 
@@ -479,16 +479,16 @@ class Node(Hierarchy, models.Model):
         return do_count
 
     def get_supplement_choices(self):
-        return Node.objects.filter(
+        return Area.objects.filter(
             country_id=self.country.id,
-            nodetype__level__lte=(self.nodetype.level+1)
-            ).exclude(pk=self.id).order_by('nodetype__level','sort_name')
+            structure__level__lte=(self.structure.level+1)
+            ).exclude(pk=self.id).order_by('structure__level','sort_name')
 
     def __str__(self):
         return self.fullname()
 
 class Declaration(models.Model):
-    node = models.ForeignKey(Node, on_delete=models.CASCADE)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE)
     # status types
     DECLARED = 'D'
     INACTIVE = 'N'

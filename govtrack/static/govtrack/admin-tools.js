@@ -2,8 +2,8 @@
 
 var showing = {};
 $( document ).ready(function() {
-    $( "button.view-nodetype" ).click( toggleEditOptions );
-    $( "button.view-node" ).click( toggleEditOptions );
+    $( "button.view-structure" ).click( toggleEditOptions );
+    $( "button.view-area" ).click( toggleEditOptions );
 });
 function toggleEditOptions(ev) {
     var el = ev.target
@@ -21,7 +21,7 @@ function toggleEditOptions(ev) {
 }
 
 /* 
-Process for multiple node creation:
+Process for multiple area creation:
 
 User clicks "quick add multiple" link, which fires showMultiAddForm()
   -> Display form containing textarea with action specifying IDs
@@ -29,10 +29,10 @@ User clicks "quick add multiple" link, which fires showMultiAddForm()
 User pastes HTML into textarea, which fires getPastedHTML()
   -> Extract HTML from clipboard data, or plain text if there is no HTML
   -> If HTML contains a table
-    -> Send HTML to API to extract nodes
+    -> Send HTML to API to extract areas
     -> If API returns a good response, replace textarea contents with API response
 User clicks 'create' button, form submits - no JS nivolved
-  -> Submit form to API which parses textarea data and creates nodes
+  -> Submit form to API which parses textarea data and creates areas
 */
     
     function getPastedHTML(e) {
@@ -50,9 +50,9 @@ User clicks 'create' button, form submits - no JS nivolved
         target.html(pastedText)
         // If pastedText looks like HTML and contains a <table>,
         // call extractPastedData
-        var dom_nodes = $($.parseHTML(pastedText))
-        var table_node = dom_nodes.closest('table');
-        if (table_node.length) {
+        var dom_areas = $($.parseHTML(pastedText))
+        var table_area = dom_areas.closest('table');
+        if (table_area.length) {
           extractPastedData(target)
         }
         // otherwise we just leave the pasted text in the textarea
@@ -67,17 +67,17 @@ User clicks 'create' button, form submits - no JS nivolved
         return false;
     }
 
-    // After HTML text is pasted, send it to the API to extract the nodes and URLs
+    // After HTML text is pasted, send it to the API to extract the areas and URLs
     // Replace the textarea contents with the API response
     function extractPastedData(target) {
         var pastedText = target.html()
-        jQuery.ajax('/cegov/api/extract_nodes', {
+        jQuery.ajax('/cegov/api/extract_areas', {
             'method': 'POST',
             'data': {
-                'node_table': pastedText,
+                'area_table': pastedText,
             },
             'success': function(response) {
-                target.html(response['nodes'])
+                target.html(response['areas'])
             }
         });
     }

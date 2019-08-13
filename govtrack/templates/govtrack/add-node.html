@@ -1,9 +1,0 @@
-      {% for ctype in record.sub_types %}
-        <a name='#{{record.id}}{{ ctype.id}}'></a>
-        <li><a href='{% url 'node_child' record.id ctype.id  %}'>add {{ ctype.name }}</a> or <a onClick="showMultiAddForm('form_r{{record.id}}c{{ctype.id}}');">quick add multiple</a></li>
-        <form class='paste-text' id='form_r{{record.id}}c{{ctype.id}}' action='{% url 'node_multi_add' record.id ctype.id %}' method=POST>
-        {% csrf_token %}
-        <textarea name='node_csv_data' id='text_r{{record.id}}c{{ctype.id}}'></textarea>
-        <input type='submit' value='create' id='button_r{{record.id}}c{{ctype.id}}' class='nodes-create'>
-        </form>
-      {% endfor %}

@@ -1,17 +1,17 @@
 {% extends "govtrack/base.html" %}
 {% load humanize %}
 
-{% block title %}{{ node.country.name }}{% endblock %}
+{% block title %}{{ area.country.name }}{% endblock %}
 
 {% block content %}
 
 {% block heading %}
 {% if action == "add" %}
-<h3>Add a Declaration Event for {{ node.name }}</h3>
+<h3>Add a Declaration Event for {{ area.name }}</h3>
 {% elif action == "edit" %}
-<h3>Edit Declaration Event for {{ node.name }}</h3>
+<h3>Edit Declaration Event for {{ area.name }}</h3>
 {% else %}
-<h3>{{ node.name }}</h3>
+<h3>{{ area.name }}</h3>
 {% endif %}
 {% endblock %}
 
@@ -22,7 +22,7 @@
 <form method='POST' action='
 {% block formaction %}
     {% if action == 'add' %}
-    {% url 'declaration_add' node.id %}'
+    {% url 'declaration_add' area.id %}'
     {% else %}
     {% url 'declaration_edit' declaration.id %}'
     {% endif %}
@@ -66,6 +66,6 @@
 {% endif %}
 
 <br><br>
-<a href='{% url 'node' node.id %}' class='button-cancel'>back to {{ node.name }}</a>
+<a href='{% url 'area' area.id %}' class='button-cancel'>back to {{ area.name }}</a>
 
 {% endblock %}

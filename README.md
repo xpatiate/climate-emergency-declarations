@@ -31,8 +31,8 @@ Run `bin/web-shell.sh` to open a shell in the web container. You can now interac
 
 Load seed data into the database by running the following commands in the web container:
  * `python manage.py loaddata countries`
- * `python manage.py loaddata nodetypes`
- * `python manage.py loaddata nodes`
+ * `python manage.py loaddata structures`
+ * `python manage.py loaddata areas`
 
 The "countries list" on your local site should now be populated.
 

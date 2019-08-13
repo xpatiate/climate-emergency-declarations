@@ -7,16 +7,16 @@
 
 {% block heading %}
 {% if action == "add" %}
-<h3>Add a {{ nodetype_name }} Node under {{ parent.name }}</h3>
+<h3>Add an {{ structure_name }} Area under {{ parent.name }}</h3>
 {% else %}
 <h3>{{ record.name }}</h3>
-<p><b>Type:</b> {{ record.nodetype.name }}</p>
+<p><b>Type:</b> {{ record.structure.name }}</p>
 {% endif %}
 {% endblock %}
 
 <div class='parent-tree'>
 {% for parent in parents_list %}
-    <div class='level_{{ parent.level }}'>&#8866;({{ parent.nodetype.name }}) {{ parent.name }}</div>
+    <div class='level_{{ parent.level }}'>&#8866;({{ parent.structure.name }}) {{ parent.name }}</div>
 {% endfor %}
 {% if action != "add" %}
     <div class='level_{{ record.level|add:"1" }}'>&#8866; {{ record.num_children }} children
@@ -32,9 +32,9 @@
 <form method='POST' action='
 {% block formaction %}
     {% if action == "add" %}
-    {% url 'node_child' parent.id nodetype_id %}'
+    {% url 'area_child' parent.id structure_id %}'
     {% else %}
-    {% url 'node_edit' record.id %}'
+    {% url 'area_edit' record.id %}'
     {% endif %}
 {% endblock %}
     '>
@@ -70,22 +70,22 @@
     {% if record.is_supplementary %}
     <div class='supplementary'>
     {% endif %}
-    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
+    <div class='level_{{ record.level }}' id='area-{{ record.id }}'>&#8866;({{ record.structure.name }})  <a class='link-area' href='{% url 'area' record.id %}'>{{ record.name }}</a>
     {% if record.is_supplementary %}
     </div>
     {% endif %}
     {% if not record.is_supplementary and user.is_authenticated %}
-      &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
-      <div id='editnode-{{ record.id }}' class='edit-node'>
-      <a href='{% url 'node_edit' record.id %}'>edit</a>
+      &nbsp;<button class='view-area' id='viewarea-{{ record.id }}'>*</button>
+      <div id='editarea-{{ record.id }}' class='edit-area'>
+      <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
         |
-        {% with view="node_del" object=record %}
+        {% with view="area_del" object=record %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
       {% endif %}
       <br>
-    {% include 'govtrack/add-node.html' %}
+    {% include 'govtrack/add-area.html' %}
       </div>
     {% endif %}
     </div>
@@ -98,16 +98,16 @@
 
 
 {% if user.is_authenticated %}
-    <div class='edit-node' style="display: block">
-    <b>Node Admin</b><br>
+    <div class='edit-area' style="display: block">
+    <b>Area Admin</b><br>
     {% block adminoptions %}
-      <a href='{% url 'node_edit' record.id %}'>edit</a>
+      <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
-      | <a href='{% url 'node_del' record.id %}'>delete</a>
+      | <a href='{% url 'area_del' record.id %}'>delete</a>
       {% endif %}
     {% endblock %}
       <br>
-    {% include 'govtrack/add-node.html' %}
+    {% include 'govtrack/add-area.html' %}
     </div>
 {% endif %}
 

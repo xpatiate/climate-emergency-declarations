@@ -2,7 +2,7 @@ from django.forms import ModelForm
 import django.forms as forms
 from django.core.validators import URLValidator
 
-from .models import Country, Node, NodeType, Declaration, Link
+from .models import Country, Area, Structure, Declaration, Link
 
 class CountryForm(ModelForm):
     class Meta:
@@ -11,9 +11,9 @@ class CountryForm(ModelForm):
     description = forms.CharField(widget=forms.Textarea,label='Description', required=False)
     admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
 
-class NodeTypeForm(ModelForm):
+class StructureForm(ModelForm):
     class Meta:
-        model = NodeType
+        model = Structure
         fields = ['name','country','level','parent', 'admin_notes']
         widgets = {
             'country': forms.HiddenInput(),
@@ -21,13 +21,13 @@ class NodeTypeForm(ModelForm):
             'parent': forms.HiddenInput()
             }
 
-class NodeForm(ModelForm):
+class AreaForm(ModelForm):
     
     class Meta:
-        model = Node
-        fields = ['name','sort_name','nodetype','country','location', 'population','parent','supplements','description','admin_notes']
+        model = Area
+        fields = ['name','sort_name','structure','country','location', 'population','parent','supplements','description','admin_notes']
         widgets = {
-            'nodetype': forms.HiddenInput(),
+            'structure': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
             'country': forms.HiddenInput(),
         }
@@ -38,10 +38,10 @@ class NodeForm(ModelForm):
 class DeclarationForm(ModelForm):
     class Meta:
         model = Declaration
-        fields = ['node','status', 'event_date', 'declaration_type', 'verified',
+        fields = ['area','status', 'event_date', 'declaration_type', 'verified',
             'description_short', 'description_long', 'admin_notes']
         widgets = {
-            'node': forms.HiddenInput(),
+            'area': forms.HiddenInput(),
         }
 
     event_date = forms.DateField(

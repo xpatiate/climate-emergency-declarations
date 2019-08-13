@@ -31,17 +31,17 @@
 
 <div class='parent-tree'>
 {% for struct in structure_list %}
-    <div class='level_{{ struct.level }}' id='nodetype-{{ struct.id }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
+    <div class='level_{{ struct.level }}' id='structure-{{ struct.id }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
     {% if user.is_authenticated %}
-      &nbsp;<button class='view-nodetype' id='viewnodetype-{{ struct.id }}'>*</button>
-      <div id='editnodetype-{{ struct.id }}' class='edit-nodetype'>
-      <a href='{% url 'nodetype_edit' struct.id %}'>edit</a> | 
+      &nbsp;<button class='view-structure' id='viewstructure-{{ struct.id }}'>*</button>
+      <div id='editstructure-{{ struct.id }}' class='edit-structure'>
+      <a href='{% url 'structure_edit' struct.id %}'>edit</a> | 
       {% if struct.num_records == 0 %}
-        {% with view="nodetype_del" object=struct %}
+        {% with view="structure_del" object=struct %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
         |{% endif %}
-      <a href='{% url 'nodetype_child' struct.id %}'>add child</a>
+      <a href='{% url 'structure_child' struct.id %}'>add child</a>
       </div>
     {% endif %}
     </div>
@@ -63,22 +63,22 @@
     {% if record.is_supplementary %}
     <div class='supplementary'>
     {% endif %}
-    <div class='level_{{ record.level }}' id='node-{{ record.id }}'>&#8866;({{ record.nodetype.name }})  <a class='link-node' href='{% url 'node' record.id %}'>{{ record.name }}</a>
+    <div class='level_{{ record.level }}' id='area-{{ record.id }}'>&#8866;({{ record.structure.name }})  <a class='link-area' href='{% url 'area' record.id %}'>{{ record.name }}</a>
     {% if record.is_supplementary %}
     </div>
     {% endif %}
     {% if not record.is_supplementary and user.is_authenticated %}
-      &nbsp;<button class='view-node' id='viewnode-{{ record.id }}'>*</button>
-      <div id='editnode-{{ record.id }}' class='edit-node'>
-      <a href='{% url 'node_edit' record.id %}'>edit</a>
+      &nbsp;<button class='view-area' id='viewarea-{{ record.id }}'>*</button>
+      <div id='editarea-{{ record.id }}' class='edit-area'>
+      <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
         |
-        {% with view="node_del" object=record %}
+        {% with view="area_del" object=record %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
       {% endif %}
       <br>
-    {% include 'govtrack/add-node.html' %}
+    {% include 'govtrack/add-area.html' %}
       </div>
     {% endif %}
     </div>
