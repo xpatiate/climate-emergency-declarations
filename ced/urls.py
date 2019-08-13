@@ -22,5 +22,6 @@ admin_path = os.environ.get('ADMIN_PATH', 'admin')
 
 urlpatterns = [
     path('%s/' % admin_path, admin.site.urls),
-    path('cegov/', include('govtrack.urls'))
+    path('cegov/', include('govtrack.urls')),
+    path('api/', include('api.urls'))
 ]

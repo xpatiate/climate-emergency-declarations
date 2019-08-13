@@ -5,7 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 
 import datetime
 import logging
-logger = logging.getLogger('govtrack')
+logger = logging.getLogger('cegov')
 poplog = logging.getLogger('popcount')
 
 

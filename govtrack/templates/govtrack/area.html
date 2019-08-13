@@ -62,7 +62,10 @@
       {% endif %}
     {% endblock %}
     <div style='text-align: left'>
-    {% include 'govtrack/add-area.html' %}
+      {% for ctype in record.sub_types %}
+        <a name='#{{record.id}}{{ ctype.id}}'></a>
+        <li><a href='{% url 'area_child' record.id ctype.id  %}'>add {{ ctype.name }}</a></li>
+      {% endfor %}
     </div>
     </div>
     {% if user.is_authenticated and record.admin_notes %}
@@ -73,7 +76,7 @@
   </div>
 {% endif %}
 <p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
-<p><b>Location:</b> {{ record.location }}</p>
+<p><b>Location:</b> {{ record.location|default_if_none:'' }}</p>
 <p><b>Population:</b> {{ record.population | intcomma }}</p>
 <div class='description'>{{ record.description|default_if_none:'' }}</div>
 {% include 'govtrack/links.html' %}
