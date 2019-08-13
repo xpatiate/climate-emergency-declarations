@@ -163,22 +163,22 @@ class Country(models.Model):
         return Declaration.objects.filter(status='D', node__country=self.id).count()
 
     @property
-    def num_nodetypes(self):
+    def num_structures(self):
         return Structure.objects.filter(country=self.id).count()
 
     @property
     def num_nodes(self):
         return Node.objects.filter(country=self.id).count()
 
-    def get_root_nodetype(self):
+    def get_root_structure(self):
         try:
             return Structure.objects.get(country=self.id, level=1)
         except Structure.DoesNotExist as ex:
-            logger.error("no root nodetype for country %s: %s" % (self.id,self.name))
+            logger.error("no root structure for country %s: %s" % (self.id,self.name))
 
     def get_root_node(self):
         try:
-            return Node.objects.get(country=self.id, nodetype__level=1)
+            return Node.objects.get(country=self.id, structure__level=1)
         except Node.DoesNotExist as ex:
             logger.error("no root node for country %s: %s" % (self.id,self.name))
         return None
@@ -227,7 +227,7 @@ class Structure(Hierarchy, models.Model):
 
     @property
     def records(self):
-        records = Node.objects.filter(nodetype=self.id).order_by('sort_name')
+        records = Node.objects.filter(structure=self.id).order_by('sort_name')
         return records
 
     @property
@@ -246,7 +246,7 @@ class Structure(Hierarchy, models.Model):
     
     @property
     def num_records(self):
-        num_records = Node.objects.filter(nodetype=self.id).count()
+        num_records = Node.objects.filter(structure=self.id).count()
         return num_records
 
     def __str__(self):
@@ -258,8 +258,7 @@ class Node(Hierarchy, models.Model):
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     location = models.CharField(max_length=36, null=True, blank=True)
     population = models.PositiveIntegerField(default=0, blank=True, null=True)
-    #nodetype = models.ForeignKey(Structure, on_delete=models.CASCADE)
-    nodetype = models.IntegerField()
+    structure = models.ForeignKey(Structure, on_delete=models.CASCADE)
     description = models.TextField(null=True, blank=True)
     admin_notes = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self', 
@@ -294,7 +293,7 @@ class Node(Hierarchy, models.Model):
         return 'node'
 
     def fullname(self):
-        return '%s (%s)' % (self.name, self.nodetype.name)
+        return '%s (%s)' % (self.name, self.structure.name)
 
     @property
     def num_children(self):
@@ -302,12 +301,12 @@ class Node(Hierarchy, models.Model):
 
     @property
     def children(self):
-        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
+        children = Node.objects.filter(parent=self.id).exclude(pk=self.id).order_by('structure','sort_name')
         return children
 
     @property
     def indirect_children(self):
-        children = Node.objects.filter(supplements=self.id).exclude(pk=self.id).order_by('nodetype','sort_name')
+        children = Node.objects.filter(supplements=self.id).exclude(pk=self.id).order_by('structure','sort_name')
         return children
 
     @property
@@ -320,7 +319,7 @@ class Node(Hierarchy, models.Model):
         # both as prime parent and supplementary parent
         combined = Node.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
-        ).exclude(pk=self.id).order_by('nodetype','sort_name')
+        ).exclude(pk=self.id).order_by('structure','sort_name')
         return combined
 
     @property
@@ -402,15 +401,15 @@ class Node(Hierarchy, models.Model):
 
     @property
     def count_population(self):
-        return self.nodetype.count_population
+        return self.structure.count_population
 
     @property
     def is_governing(self):
-        return self.nodetype.is_governing
+        return self.structure.is_governing
 
     @property
     def level(self):
-        return self.nodetype.level
+        return self.structure.level
 
     @property
     def latest_declaration(self):
@@ -430,7 +429,7 @@ class Node(Hierarchy, models.Model):
 
     @property
     def sub_types(self):
-        thistype = self.nodetype
+        thistype = self.structure
         typekids = thistype.children
         return typekids
 
@@ -482,8 +481,8 @@ class Node(Hierarchy, models.Model):
     def get_supplement_choices(self):
         return Node.objects.filter(
             country_id=self.country.id,
-            nodetype__level__lte=(self.nodetype.level+1)
-            ).exclude(pk=self.id).order_by('nodetype__level','sort_name')
+            structure__level__lte=(self.structure.level+1)
+            ).exclude(pk=self.id).order_by('structure__level','sort_name')
 
     def __str__(self):
         return self.fullname()

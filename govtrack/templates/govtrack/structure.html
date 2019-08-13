@@ -6,7 +6,7 @@
 {% if action == 'add' %}
   <h3>Add a new structure type under {{ parent.name }}</h3>
 {% else %}
-  <h3>Edit {{ nodetype.name }}</h3>
+  <h3>Edit {{ structure.name }}</h3>
 {% endif %}
 
 <div class='parent-tree'>
@@ -17,9 +17,9 @@
 
 <form method='POST' action='
     {% if action == "add" %}
-    {% url 'nodetype_child' parent.id %}'
+    {% url 'structure_child' parent.id %}'
     {% else %}
-    {% url 'nodetype_edit' nodetype.id %}'
+    {% url 'structure_edit' structure.id %}'
     {% endif %}
     >
 {% csrf_token %}

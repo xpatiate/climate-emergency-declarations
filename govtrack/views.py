@@ -3,8 +3,8 @@ from django.forms import formset_factory
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import Declaration, Country, Node, NodeType, Link
-from .forms import NodeTypeForm, NodeForm, DeclarationForm, LinkForm, CountryForm
+from .models import Declaration, Country, Node, Structure, Link
+from .forms import StructureForm, NodeForm, DeclarationForm, LinkForm, CountryForm
 
 from bs4 import BeautifulSoup
 import csv
@@ -77,7 +77,7 @@ def country(request, country_id, action='view'):
                     logger.warn("did not save url because %s " % linkform.errors)
                     action='edit'
 
-    structure = country.get_root_nodetype().build_hierarchy()
+    structure = country.get_root_structure().build_hierarchy()
     logger.debug("*** building hierarchy for records")
     records = country.get_root_node().build_hierarchy()
     logger.debug("*** done building hierarchy for records")
@@ -104,49 +104,49 @@ def country(request, country_id, action='view'):
         })
 
 
-def nodetype_edit(request, nodetype_id):
-    nodetype = get_object_or_404(NodeType, pk=nodetype_id)
-    form = NodeTypeForm(instance=nodetype)
+def structure_edit(request, structure_id):
+    structure = get_object_or_404(Structure, pk=structure_id)
+    form = StructureForm(instance=structure)
     link_initial = {
-        'content_type': NodeType.content_type_id(),
-        'object_id': nodetype_id,
+        'content_type': Structure.content_type_id(),
+        'object_id': structure_id,
     }
     if request.method == 'POST':
-        form = NodeTypeForm(request.POST, instance=nodetype)
+        form = StructureForm(request.POST, instance=structure)
         linkform = LinkForm(request.POST, initial=link_initial)
         if form.is_valid():
             form.save()
             if linkform.has_changed() and linkform.is_valid():
                 linkform.save()
-        return redirect('country', country_id=nodetype.country.id)
+        return redirect('country', country_id=structure.country.id)
 
     linkform = LinkForm(initial=link_initial)
-    return render(request, 'govtrack/nodetype.html', {
+    return render(request, 'govtrack/structure.html', {
         'action': 'edit',
-        'nodetype': nodetype,
+        'structure': structure,
         'form': form,
-        'country': nodetype.country,
-        'parents_list': nodetype.ancestors,
-        'links': nodetype.links.all(),
+        'country': structure.country,
+        'parents_list': structure.ancestors,
+        'links': structure.links.all(),
         'linkform': linkform,
         })
 
-def nodetype_child(request, parent_id):
-    parent = get_object_or_404(NodeType, pk=parent_id)
+def structure_child(request, parent_id):
+    parent = get_object_or_404(Structure, pk=parent_id)
     if request.method == 'POST':
-        form = NodeTypeForm(request.POST)
+        form = StructureForm(request.POST)
         if form.is_valid():
             form.save()
             country_id = request.POST['country']
             return redirect('country', country_id=country_id)
-    nodetypedata = {
+    structuredata = {
         'name': '',
         'parent': parent_id,
         'level': (parent.level+1),
         'country': parent.country.id
     }
-    form = NodeTypeForm(initial=nodetypedata)
-    return render(request, 'govtrack/nodetype.html', {'action': 'add', 'form': form, 'country': parent.country, 'parent': parent, 'parents_list': parent.ancestors})
+    form = StructureForm(initial=structuredata)
+    return render(request, 'govtrack/structure.html', {'action': 'add', 'form': form, 'country': parent.country, 'parent': parent, 'parents_list': parent.ancestors})
 
 def node_edit(request, node_id):
     node = get_object_or_404(Node, pk=node_id)
@@ -188,7 +188,7 @@ def node_edit(request, node_id):
         'supplements_list': node.supplements.all()
         })
 
-def node_child(request, parent_id, nodetype_id):
+def node_child(request, parent_id, structure_id):
     if request.method == 'POST':
         form = NodeForm(request.POST)
         if form.is_valid():
@@ -196,12 +196,12 @@ def node_child(request, parent_id, nodetype_id):
             country_id = request.POST['country']
             return redirect('country', country_id=country_id)
     parent = get_object_or_404(Node, pk=parent_id)
-    nodetype = get_object_or_404(NodeType, pk=nodetype_id)
+    structure = get_object_or_404(Structure, pk=structure_id)
     nodedata = {
         'name': '',
         'parent': parent_id,
         'country': parent.country.id,
-        'nodetype': nodetype_id
+        'structure': structure_id
     }
     records = parent.ancestors
     form = NodeForm(initial=nodedata)
@@ -212,9 +212,9 @@ def node_child(request, parent_id, nodetype_id):
         'parent': parent,
         'form': form,
         'country': parent.country,
-        'nodetype_name': nodetype.name,
+        'structure_name': structure.name,
         'parents_list': records,
-        'nodetype_id': nodetype_id
+        'structure_id': structure_id
         })
 
 def declaration(request, declaration_id):
@@ -281,12 +281,12 @@ def declaration_edit(request, declaration_id):
         })
 
 # API methods
-def nodetype_del(request, nodetype_id):
+def structure_del(request, structure_id):
     status=403
     if request.user.is_authenticated:
         status=200
-        nodetype = get_object_or_404(NodeType, pk=nodetype_id)
-        nodetype.delete()
+        structure = get_object_or_404(Structure, pk=structure_id)
+        structure.delete()
     return HttpResponse(status=status)
 
 def node_del(request, node_id):
@@ -370,7 +370,7 @@ def extract_node_data(request):
 
 
 # Create multiple nodes at once from CSV-like text
-def add_multi_nodes(request, parent_id, nodetype_id):
+def add_multi_nodes(request, parent_id, structure_id):
     if request.method == 'POST':
         node_data = request.POST.get('node_csv_data')
         nodestring = io.StringIO(node_data)
@@ -381,7 +381,7 @@ def add_multi_nodes(request, parent_id, nodetype_id):
             form = NodeForm({
                 'country': parent.country_id,
                 'parent': parent_id,
-                'nodetype': nodetype_id,
+                'structure': structure_id,
                 'name': newnode_name,
                 'sort_name': newnode_name
             })

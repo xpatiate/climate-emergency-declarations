@@ -2,7 +2,7 @@
 
 var showing = {};
 $( document ).ready(function() {
-    $( "button.view-nodetype" ).click( toggleEditOptions );
+    $( "button.view-structure" ).click( toggleEditOptions );
     $( "button.view-node" ).click( toggleEditOptions );
 });
 function toggleEditOptions(ev) {
