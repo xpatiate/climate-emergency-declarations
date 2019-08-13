@@ -14,7 +14,7 @@ class CountryForm(ModelForm):
 class NodeTypeForm(ModelForm):
     class Meta:
         model = NodeType
-        fields = ['name','country','level','parent', 'is_governing', 'admin_notes']
+        fields = ['name','country','level','parent', 'admin_notes']
         widgets = {
             'country': forms.HiddenInput(),
             'level': forms.HiddenInput(),

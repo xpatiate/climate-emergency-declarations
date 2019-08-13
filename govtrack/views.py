@@ -343,7 +343,7 @@ def country_declarations(request, country_code):
 
     declist = country.declarations(**query_args)
     for dec in declist:
-        writer.writerow([dec.node.name, dec.node.location, dec.node.population, dec.date_declared, dec.node.num_declared_ancestors()])
+        writer.writerow([dec.node.name, dec.node.location, dec.node.population, dec.display_event_date(), dec.node.num_declared_ancestors()])
 
     return response
 
