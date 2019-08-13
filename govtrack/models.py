@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+import django.urls
 
 import datetime
 import logging
@@ -412,11 +413,23 @@ class Area(Hierarchy, models.Model):
         return self.structure.level
 
     @property
+    def api_link(self):
+        return django.urls.reverse('area_data', args=[self.id])
+
+    @property
     def latest_declaration(self):
         try:
             return Declaration.objects.filter(area=self.id).latest('event_date')
         except Declaration.DoesNotExist as ex:
             pass
+
+    @property
+    def latest_declaration_date(self):
+        dec = self.latest_declaration
+        decdate = ''
+        if dec:
+            decdate = dec.display_event_date()
+        return decdate
 
     @property
     def is_declared(self):

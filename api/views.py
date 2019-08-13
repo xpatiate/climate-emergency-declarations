@@ -15,37 +15,26 @@ import logging
 logger = logging.getLogger('cegov')
 DATE_FORMAT='%Y-%m-%d'
 
-def structure_del(request, structure_id):
-    status=403
-    if request.user.is_authenticated:
-        status=200
-        structure = get_object_or_404(Structure, pk=structure_id)
-        structure.delete()
-    return HttpResponse(status=status)
+## PUBLIC METHODS ##
 
-def area_del(request, area_id):
-    status=403
-    if request.user.is_authenticated:
-        status=200
-        area = get_object_or_404(Area, pk=area_id)
-        area.delete()
-    return HttpResponse(status=status)
-
-def declaration_del(request, declaration_id):
-    status=403
-    if request.user.is_authenticated:
-        status=200
-        declaration = get_object_or_404(Declaration, pk=declaration_id)
-        declaration.delete()
-    return HttpResponse(status=status)
-
-def link_del(request, link_id):
-    status=403
-    if request.user.is_authenticated:
-        status=200
-        link = get_object_or_404(Link, pk=link_id)
-        link.delete()
-    return HttpResponse(status=status)
+def area_data(request, area_id):
+    area = get_object_or_404(Area, pk=area_id)
+    areadata = [
+        area.name,
+        1,
+        area.location,
+        area.population,
+        area.latest_declaration_date,
+        '', # empty col
+        '', # key contact
+        '', # key document/reference
+        '', # empty col
+        area.contribution()
+    ]
+    response = HttpResponse(content_type='text/csv')
+    writer = csv.writer(response)
+    writer.writerow(areadata)
+    return response
 
 def country_declarations(request, country_code):
     country = Country.find_by_code(country_code)
@@ -81,6 +70,40 @@ def country_declarations(request, country_code):
 
     return response
 
+## ADMIN METHODS ##
+
+def structure_del(request, structure_id):
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        structure = get_object_or_404(Structure, pk=structure_id)
+        structure.delete()
+    return HttpResponse(status=status)
+
+def area_del(request, area_id):
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        area = get_object_or_404(Area, pk=area_id)
+        area.delete()
+    return HttpResponse(status=status)
+
+def declaration_del(request, declaration_id):
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        declaration = get_object_or_404(Declaration, pk=declaration_id)
+        declaration.delete()
+    return HttpResponse(status=status)
+
+def link_del(request, link_id):
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        link = get_object_or_404(Link, pk=link_id)
+        link.delete()
+    return HttpResponse(status=status)
+
 # TODO: add CSRF to AJAX form
 @csrf_exempt
 def extract_area_data(request):
@@ -105,7 +128,7 @@ def extract_area_data(request):
 
 # Create multiple areas at once from CSV-like text
 def add_multi_areas(request, parent_id, structure_id):
-    if request.method == 'POST':
+    if request.method == 'POST' and request.user.is_authenticated:
         area_data = request.POST.get('area_csv_data')
         areastring = io.StringIO(area_data)
         reader = csv.reader(areastring)

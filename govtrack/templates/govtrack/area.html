@@ -55,12 +55,11 @@
 {% if user.is_authenticated %}
   <div class='admin-corner'>
     <div class='edit-area' style="display: block;">
-    {% block adminoptions %}
       <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
       | <a href='{% url 'area_del' record.id %}'>delete</a>
       {% endif %}
-    {% endblock %}
+    <p>API link: <span class='link-api'>{{ area_api_link }}</span></p>
     <div style='text-align: left'>
       {% for ctype in record.sub_types %}
         <a name='#{{record.id}}{{ ctype.id}}'></a>

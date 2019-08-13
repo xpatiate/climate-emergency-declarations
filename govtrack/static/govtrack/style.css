@@ -41,6 +41,9 @@ tr.country-total {
 }
 .link-area {
 }
+.link-api {
+    font-family: monospace;
+}
 .supplementary {
     font-style: italic;
     background-color: rgb(240,240,240);

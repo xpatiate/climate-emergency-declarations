@@ -34,12 +34,14 @@ def index(request):
 def area(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     records = area.build_hierarchy()
+
     return render(request, 'govtrack/area.html', {
         'record': area,
         'country': area.country,
         'parents_list': area.ancestors,
         'records_list': records,
         'links': area.links.all(),
+        'area_api_link': request.build_absolute_uri( area.api_link ),
     })
 
 def countries(request):
@@ -181,7 +183,7 @@ def area_edit(request, area_id):
         'linkform': linkform,
         'country': area.country,
         'parents_list': area.ancestors,
-        'supplements_list': area.supplements.all()
+        'supplements_list': area.supplements.all(),
         })
 
 def area_child(request, parent_id, structure_id):
@@ -210,7 +212,7 @@ def area_child(request, parent_id, structure_id):
         'country': parent.country,
         'structure_name': structure.name,
         'parents_list': records,
-        'structure_id': structure_id
+        'structure_id': structure_id,
         })
 
 def declaration(request, declaration_id):
