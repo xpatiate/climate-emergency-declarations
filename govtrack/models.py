@@ -478,11 +478,15 @@ class Area(Hierarchy, models.Model):
                 do_count = False
         return do_count
 
-    def get_supplement_choices(self):
-        return Area.objects.filter(
+    def get_supplement_choices(self, **kwargs):
+        exclude_list = [self.id]
+        if kwargs.get('exclude'):
+            exclude_list.append(kwargs.get('exclude'))
+        arealist = Area.objects.filter(
             country_id=self.country.id,
             structure__level__lte=(self.structure.level+1)
-            ).exclude(pk=self.id).order_by('structure__level','sort_name')
+            ).exclude(id__in=exclude_list).order_by('structure__level','sort_name')
+        return arealist
 
     def __str__(self):
         return self.fullname()
