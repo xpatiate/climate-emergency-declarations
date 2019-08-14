@@ -69,6 +69,7 @@
     </div>
     {% if user.is_authenticated and record.admin_notes %}
      <div class='admin-view'>
+     <b>Admin Notes</b>
      <p>{{ record.admin_notes }}</p>
      </div>
     {% endif %}
@@ -77,7 +78,7 @@
 <p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
 <p><b>Location:</b> {{ record.location|default_if_none:'' }}</p>
 <p><b>Population:</b> {{ record.population | intcomma }}</p>
-<div class='description'>{{ record.description|default_if_none:'' }}</div>
+<p class='description'><b>Description:</b> {{ record.description|default_if_none:'' }}</p>
 {% include 'govtrack/links.html' %}
 
 

@@ -25,6 +25,7 @@
         </div>
      {% if country.admin_notes %}
        <div class='admin-view'>
+       <b>Admin Notes</b>
        <p>{{ country.admin_notes }}</p>
        </div>
      {% endif %}
@@ -32,7 +33,7 @@
     {% endif %}
     <p><b>Population:</b> {{ country.population | intcomma }}</p>
     <p><b>Region:</b> {{ country.region }}</p>
-    <div class='description'>{{ country.description|default_if_none:'' }}</div>
+    <p class='description'><b>Description:</b> {{ country.description|default_if_none:'' }}</p>
     {% include 'govtrack/links.html' %}
 </div>
 <br>

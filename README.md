@@ -7,9 +7,11 @@ It's using Django with PostgreSQL to maintain a database tracking governments ar
 It's currently under active development and will include:
 
 * a public-facing front page which lists all government declarations of climate emergency
-* a React frontend component on the front page, to allow filter/sort of declaration data
+* a JQuery frontend component on the front page, to allow filter/sort of declaration data
 * admin tools to add and edit declarations
 * logic to calculate overall population figures, incorporating special handling for governments at different hierarchical levels to avoid double-counting
+* an API making declaration data accessible to other services
+* generation of charts and other resources
 
 ## Running for local development and testing
 

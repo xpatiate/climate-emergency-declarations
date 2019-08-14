@@ -60,6 +60,7 @@
     </div>
     {% if user.is_authenticated and declaration.admin_notes %}
      <div class='admin-view'>
+     <b>Admin Notes</b>
      <p>{{ declaration.admin_notes }}</p>
      </div>
     {% endif %}
@@ -69,8 +70,7 @@
 <p><b>Status:</b> {{ declaration.status_name }} {% if declaration.verified %} (Verified){%endif%}</p>
 <p><b>Date:</b> {{ declaration.display_event_date }}</p>
 <p><b>Type:</b> {{ declaration.declaration_type }}</p>
-<div class='description'>{{ declaration.description_long }}</div>
-<br/>
+<p class='description'><b>Description:</b> {{ declaration.description_long }}</p>
 {% include 'govtrack/links.html' %}
 </div>
 {% endblock %}
