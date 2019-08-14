@@ -57,6 +57,7 @@ tr.country-total {
 .object-view {
     border: 1px solid lightgrey;
     padding: 15px;
+    overflow: auto;
 }
 .description {
 }
