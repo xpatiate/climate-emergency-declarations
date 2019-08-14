@@ -78,9 +78,7 @@ def country(request, country_id, action='view'):
                     action='edit'
 
     structure = country.get_root_structure().build_hierarchy()
-    logger.debug("*** building hierarchy for records")
     records = country.get_root_area().build_hierarchy()
-    logger.debug("*** done building hierarchy for records")
 
     total_pop = 0
     item_seen = set()
@@ -92,10 +90,9 @@ def country(request, country_id, action='view'):
             item_seen.add(item)
         else:
             item.cumulative_pop = total_pop
+            item.show_contribution = 0
 
-    logger.debug("*** counting total declared population")
     total_declared_pop = country.get_root_area().declared_population()
-    logger.debug("*** done counting total declared population")
 
     return render(request, 'govtrack/country.html', {
         'action': action,

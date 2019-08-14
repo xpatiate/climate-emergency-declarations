@@ -93,7 +93,7 @@
     </div>
     </td>
     <td align='right'>{% if record.is_declared %}Yes{% endif %}</td>
-    <td align='right' {% if not record.is_counted %}class='nocount'{% endif%}>
+    <td align='right'>
         {{record.population | intcomma}}
     </td>
     <td align='right'>{{record.show_contribution | intcomma}}</td>
