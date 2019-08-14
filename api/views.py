@@ -42,6 +42,7 @@ def country_population(request, country_code):
         raise Http404("No country for specified code")
     return HttpResponse(str(country.declared_population), content_type='text/plain')
 
+# unused
 def country_declarations(request, country_code):
     country = Country.find_by_code(country_code)
     if not country:

@@ -14,12 +14,13 @@ logger = logging.getLogger('cegov')
 # Create your views here.
 
 def index(request):
-    # get all governments who have declared
+    # first get all countries with active declarations
     dlist = Declaration.objects.filter(status='D').order_by('area__country__name','area__sort_name')
     country_list = set([d.area.country for d in dlist])
     countries = []
+    # now get the actual declarations for each country
     for c in country_list:
-        dlist = c.declarations()
+        dlist = c.active_declarations()
         if dlist:
             countries.append(({
                 'name': c.name,
@@ -86,7 +87,7 @@ def country(request, country_id, action='view'):
         item.cumulative_pop += total_pop
         
     logger.debug("*** counting total declared population")
-    total_declared_pop = country.declared_population()
+    total_declared_pop = country.declared_population
     logger.debug("*** done counting total declared population")
 
     return render(request, 'govtrack/country.html', {
@@ -226,16 +227,16 @@ def declaration(request, declaration_id):
         })
 
 def declaration_add(request, area_id):
-    if request.method == 'POST':
-        form = DeclarationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('area', area_id=area_id)
     area = get_object_or_404(Area, pk=area_id)
     decldata = {
         'area': area_id,
     }
     form = DeclarationForm(initial=decldata)
+    if request.method == 'POST':
+        form = DeclarationForm(request.POST, initial=decldata)
+        if form.is_valid():
+            form.save()
+            return redirect('area', area_id=area_id)
     return render(request, 'govtrack/declare.html', {
         'action': 'add',
         'form': form,

@@ -117,6 +117,23 @@ class Country(models.Model):
     def find_by_code(cls, country_code):
         return Country.objects.get(country_code=country_code)
 
+    def active_declarations(self, **kwargs):
+        """Return a list of declarations for a country which are active
+        at a specified (or current) date."""
+
+        as_at_date = kwargs.get('date', datetime.date.today())
+        filter_args = {
+            'status': 'D',
+            'area__country': self.id,
+            'event_date__lt': as_at_date,
+        }
+        dlist = Declaration.objects.filter(**filter_args).order_by('event_date')
+        active = []
+        for dec in dlist:
+            if dec.is_active_at_date(as_at_date):
+                active.append(dec)
+        return active
+
     def declarations(self, **kwargs):
         order_by = kwargs.get('order_by')
         order_name = 'area__sort_name'
@@ -153,15 +170,15 @@ class Country(models.Model):
         return dlist
 
     @property
+    def num_declarations(self):
+        return Declaration.objects.filter(status='D', area__country=self.id).count()
+
+    @property
     def declared_population(self):
         try:
             return self.get_root_area().declared_population()
         except AttributeError as ex:
             return 0
-
-    @property
-    def num_declarations(self):
-        return Declaration.objects.filter(status='D', area__country=self.id).count()
 
     @property
     def num_structures(self):
@@ -414,7 +431,7 @@ class Area(Hierarchy, models.Model):
 
     @property
     def api_link(self):
-        return django.urls.reverse('area_data', args=[self.id])
+        return django.urls.reverse('api_area_data', args=[self.id])
 
     @property
     def latest_declaration(self):
@@ -559,3 +576,17 @@ class Declaration(models.Model):
         if ddate:
             return ddate.strftime('%d %B, %Y')
 
+    def is_currently_active(self):
+        return self.is_active_at_date(datetime.date.today())
+
+    def is_active_at_date(self, date):
+        siblings = Declaration.objects.filter(
+            area = self.area.id,
+            event_date__lt = date,
+            event_date__gt = self.event_date,
+            ).exclude(pk=self.id)
+        for sib in siblings:
+            if sib.status != 'D':
+                logger.info("excluding area %s due to declaration with non-D status %s at date %s" % (sib.area, sib.status, sib.event_date))
+                return False
+        return True
