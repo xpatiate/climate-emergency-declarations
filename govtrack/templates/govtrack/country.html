@@ -96,7 +96,7 @@
     <td align='right' {% if not record.is_counted %}class='nocount'{% endif%}>
         {{record.population | intcomma}}
     </td>
-    <td align='right'>{{record.contribution | intcomma}}</td>
+    <td align='right'>{{record.show_contribution | intcomma}}</td>
     <td align='right'>{{record.cumulative_pop | intcomma}}</td>
     <!--<td align='right'>d: {{record.descendants | length}}</td>
     <td align='right'>ad: {{record.all_descendants | length}}</td>-->

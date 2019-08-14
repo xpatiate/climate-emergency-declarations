@@ -84,8 +84,13 @@ def country(request, country_id, action='view'):
 
     total_pop = 0
     for item in records:
-        total_pop += item.contribution()
-        item.cumulative_pop += total_pop
+        if item.is_supplementary:
+            item.cumulative_pop = total_pop
+            item.show_contribution = 0
+        else:
+            total_pop += item.contribution()
+            item.show_contribution = item.contribution()
+            item.cumulative_pop += total_pop
         
     logger.debug("*** counting total declared population")
     total_declared_pop = country.get_root_area().declared_population()
