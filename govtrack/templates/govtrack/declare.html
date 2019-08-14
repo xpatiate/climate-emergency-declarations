@@ -49,15 +49,30 @@
 {% else %}
 
 {% block view %}
+<div class='object-view'>
+{% if user.is_authenticated %}
+    <div class='admin-corner'>
+    <div class='edit-dec' style="display: block;">
+    <a href='{% url 'declaration_edit' declaration.id %}'>edit</a>
+    {% with view='declaration_del' object=declaration %}
+        {% include 'govtrack/delete.html' %}
+    {% endwith %}
+    </div>
+    {% if user.is_authenticated and declaration.admin_notes %}
+     <div class='admin-view'>
+     <b>Admin Notes</b>
+     <p>{{ declaration.admin_notes }}</p>
+     </div>
+    {% endif %}
+    </div>
+{% endif %}
 <p class='dec-summary'>{{ declaration.description_short }}</p>
 <p><b>Status:</b> {{ declaration.status_name }} {% if declaration.verified %} (Verified){%endif%}</p>
 <p><b>Date:</b> {{ declaration.display_event_date }}</p>
 <p><b>Type:</b> {{ declaration.declaration_type }}</p>
-<p>{{ declaration.description_long }}</p>
+<p class='description'><b>Description:</b> {{ declaration.description_long }}</p>
 {% include 'govtrack/links.html' %}
-{% if user.is_authenticated %}
-<p><b>Comments:</b> {{ declaration.admin_notes }}</p>
-{% endif %}
+</div>
 {% endblock %}
 
 {% if user.is_authenticated %}
