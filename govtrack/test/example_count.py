@@ -9,6 +9,7 @@ if len(sys.argv) > 1:
     loglevel=logging.DEBUG
 logging.basicConfig(level=loglevel)
 
+
 class Node:
     """Define a node in a tree structure, generally a government of some kind.
     Each node has name, population and a flag indicating whether it has made a
@@ -156,18 +157,44 @@ class Node:
         return node_total
 
     def print_tree(self, level=1):
+        if level == 1:
+            Node.print_row('','Name','D','Popn','Contrib', 'Ancestors','Descendants')
         Node.print_node(self, level)
         level += 1
         for child in self.children:
             Node.print_tree(child, level)
 
+    NAME_COL=24
+    POP_COL=4
+    POP_CON=7
+    ANC_COL=10
+    DEC_COL=12
     @staticmethod
     def print_node(node, level):
         dashes = '-' * level
-        decl = ''
+        decl = ' '
         if node.is_declared:
             decl = '*'
-        print("%s %s (%s) %s [%s-%s]" % (dashes, node.name, node.population, decl, len(node.ancestors()),len(node.descendants()) ))
+        Node.print_row(
+            dashes,
+            node.name,
+            decl,
+            node.population,
+            node.contribution(),
+            len(node.ancestors()),
+            len(node.descendants())
+            )
+
+    @staticmethod
+    def print_row(dashes, name, declared, popn, contrib, anc, dec):
+        name_len = Node.NAME_COL - len(dashes)
+        format_name = ('{: <%d}' % name_len).format(name)
+        format_pop = ('{: >%d}' % Node.POP_COL).format(popn)
+        format_con = ('{: >%d}' % Node.POP_CON).format(contrib)
+        format_anc = ('{: >%d}' % Node.ANC_COL).format(anc)
+        format_dec = ('{: >%d}' % Node.DEC_COL).format(dec)
+        print("%s %s%s %s\t%s\t%s %s" % (dashes, format_name, declared, format_pop, format_con, format_anc, format_dec))
+
 
 
 def simple_tree():
@@ -288,6 +315,9 @@ def uzbekistan():
 
 if __name__ == '__main__':
    simple_tree()
+   print()
    multi_parents_two()
+   print()
    multi_parents_three()
+   print()
    uzbekistan()
