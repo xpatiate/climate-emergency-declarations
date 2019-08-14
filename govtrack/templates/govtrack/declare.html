@@ -54,7 +54,7 @@
     <div class='admin-corner'>
     <div class='edit-dec' style="display: block;">
     <a href='{% url 'declaration_edit' declaration.id %}'>edit</a>
-    {% with view='declaration_del' object=declaration %}
+    {% with view='api_declaration_del' object=declaration %}
         {% include 'govtrack/delete.html' %}
     {% endwith %}
     </div>

@@ -57,9 +57,9 @@
     <div class='edit-area' style="display: block;">
       <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
-      | <a href='{% url 'area_del' record.id %}'>delete</a>
+      | <a href='{% url 'api_area_del' record.id %}'>delete</a>
       {% endif %}
-    <p>API link: <span class='link-api'>{{ area_api_link }}</span></p>
+    <p><span class='link-api'><a href='{{ area_api_link }}'>API link</a></span></p>
     <div style='text-align: left'>
       {% for ctype in record.sub_types %}
         <a name='#{{record.id}}{{ ctype.id}}'></a>
@@ -101,7 +101,7 @@
       <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
         |
-        {% with view="area_del" object=record %}
+        {% with view="api_area_del" object=record %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
       {% endif %}
@@ -129,7 +129,7 @@
     <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
     {% if user.is_authenticated %}
     <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
-    {% with view='declaration_del' object=dec %}
+    {% with view='api_declaration_del' object=dec %}
         {% include 'govtrack/delete.html' %}
     {% endwith %}
     {% endif %}

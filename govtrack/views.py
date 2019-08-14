@@ -86,7 +86,7 @@ def country(request, country_id, action='view'):
         item.cumulative_pop += total_pop
         
     logger.debug("*** counting total declared population")
-    total_declared_pop = country.get_root_area().declared_population()
+    total_declared_pop = country.declared_population()
     logger.debug("*** done counting total declared population")
 
     return render(request, 'govtrack/country.html', {

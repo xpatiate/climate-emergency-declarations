@@ -36,6 +36,12 @@ def area_data(request, area_id):
     writer.writerow(areadata)
     return response
 
+def country_population(request, country_code):
+    country = Country.find_by_code(country_code)
+    if not country:
+        raise Http404("No country for specified code")
+    return HttpResponse(str(country.declared_population), content_type='text/plain')
+
 def country_declarations(request, country_code):
     country = Country.find_by_code(country_code)
     if not country:

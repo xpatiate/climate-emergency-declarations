@@ -46,7 +46,7 @@
       <div id='editstructure-{{ struct.id }}' class='edit-structure'>
       <a href='{% url 'structure_edit' struct.id %}'>edit</a> | 
       {% if struct.num_records == 0 %}
-        {% with view="structure_del" object=struct %}
+        {% with view="api_structure_del" object=struct %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
         |{% endif %}
@@ -82,7 +82,7 @@
       <a href='{% url 'area_edit' record.id %}'>edit</a>
       {% if record.level > 1 %}
         |
-        {% with view="area_del" object=record %}
+        {% with view="api_area_del" object=record %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
       {% endif %}
