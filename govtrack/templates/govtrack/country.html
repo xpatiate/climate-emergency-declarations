@@ -14,7 +14,8 @@
 {% include 'govtrack/links.html' %}
 {{ linkform.as_table }}
 </table>
-<input type='submit' value='save' class='button-save'>
+<input type='submit' name='save' value='save' class='button-save'>
+<input type='submit' value='cancel' class='button-cancel' formnovalidate>
 <br>
 {% else %}
 <div class='object-view'>

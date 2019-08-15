@@ -63,18 +63,20 @@ def country(request, country_id, action='view'):
     
     # If POST received, save form
     if request.method == 'POST':
-        form = CountryForm(request.POST, instance=country)
-        linkform = LinkForm(request.POST, initial=link_initial)
-        do_redir = False
-        if form.is_valid():
-            saved = form.save()
-            action='view'
-            if linkform.has_changed():
-                if linkform.is_valid():
-                    linkform.save()
-                else:
-                    logger.warn("did not save url because %s " % linkform.errors)
-                    action='edit'
+        action='view'
+        if request.POST.get('save'):
+            form = CountryForm(request.POST, instance=country)
+            linkform = LinkForm(request.POST, initial=link_initial)
+            do_redir = False
+            if form.is_valid():
+                saved = form.save()
+                action='view'
+                if linkform.has_changed():
+                    if linkform.is_valid():
+                        linkform.save()
+                    else:
+                        logger.warn("did not save url because %s " % linkform.errors)
+                        action='edit'
 
     structure = country.get_root_structure().build_hierarchy()
     records = country.get_root_area().build_hierarchy()
@@ -114,13 +116,17 @@ def structure_edit(request, structure_id):
         'object_id': structure_id,
     }
     if request.method == 'POST':
-        form = StructureForm(request.POST, instance=structure)
-        linkform = LinkForm(request.POST, initial=link_initial)
-        if form.is_valid():
-            form.save()
-            if linkform.has_changed() and linkform.is_valid():
-                linkform.save()
-        return redirect('country', country_id=structure.country.id)
+        do_redir = True
+        if request.POST.get('save'):
+            do_redir = False
+            form = StructureForm(request.POST, instance=structure)
+            linkform = LinkForm(request.POST, initial=link_initial)
+            if form.is_valid():
+                form.save()
+                if linkform.has_changed() and linkform.is_valid():
+                    linkform.save()
+        if do_redir:
+            return redirect('country', country_id=structure.country.id)
 
     linkform = LinkForm(initial=link_initial)
     return render(request, 'govtrack/structure.html', {
@@ -135,11 +141,15 @@ def structure_edit(request, structure_id):
 
 def structure_child(request, parent_id):
     parent = get_object_or_404(Structure, pk=parent_id)
+    country_id = parent.country.id
     if request.method == 'POST':
-        form = StructureForm(request.POST)
-        if form.is_valid():
-            form.save()
-            country_id = request.POST['country']
+        do_redir = True
+        if request.POST.get('save'):
+            do_redir = False
+            form = StructureForm(request.POST)
+            if form.is_valid():
+                form.save()
+        if do_redir:
             return redirect('country', country_id=country_id)
     structuredata = {
         'name': '',
@@ -193,10 +203,18 @@ def area_edit(request, area_id):
 
 def area_child(request, parent_id, structure_id):
     if request.method == 'POST':
-        form = AreaForm(request.POST)
-        if form.is_valid():
-            area = form.save()
-            return redirect('area', area_id=area.id)
+        do_redir = True
+        if request.POST.get('save'):
+            do_redir = False
+            form = AreaForm(request.POST)
+            if form.is_valid():
+                area = form.save()
+                do_redir = True
+                area_id = area.id
+        else:
+            area_id = parent_id
+        if do_redir:
+            return redirect('area', area_id=area_id)
     parent = get_object_or_404(Area, pk=parent_id)
     structure = get_object_or_404(Structure, pk=structure_id)
     areadata = {
@@ -236,9 +254,14 @@ def declaration_add(request, area_id):
     }
     form = DeclarationForm(initial=decldata)
     if request.method == 'POST':
-        form = DeclarationForm(request.POST, initial=decldata)
-        if form.is_valid():
-            form.save()
+        do_redir = True
+        if request.POST.get('save'):
+            do_redir = False
+            form = DeclarationForm(request.POST, initial=decldata)
+            if form.is_valid():
+                do_redir = True
+                form.save()
+        if do_redir:
             return redirect('area', area_id=area_id)
     return render(request, 'govtrack/declare.html', {
         'action': 'add',
@@ -258,21 +281,23 @@ def declaration_edit(request, declaration_id):
     linkform = LinkForm(initial=link_initial)
     # If POST received, save form
     if request.method == 'POST':
-        form = DeclarationForm(request.POST, instance=dec)
-        linkform = LinkForm(request.POST, initial=link_initial)
-        do_redir = False
-        if form.is_valid():
-            do_redir=True
-            saved = form.save()
-            if linkform.has_changed():
-                do_redir=False
-                if linkform.is_valid():
-                    linkform.save()
-                    do_redir=True
-                else:
-                    logger.warn("did not save url because %s " % linkform.errors)
-            if do_redir:
-                return redirect('area', area_id=dec.area.id)
+        do_redir = True
+        if request.POST.get('save'):
+            form = DeclarationForm(request.POST, instance=dec)
+            linkform = LinkForm(request.POST, initial=link_initial)
+            do_redir = False
+            if form.is_valid():
+                do_redir=True
+                saved = form.save()
+                if linkform.has_changed():
+                    do_redir=False
+                    if linkform.is_valid():
+                        linkform.save()
+                        do_redir=True
+                    else:
+                        logger.warn("did not save url because %s " % linkform.errors)
+        if do_redir:
+            return redirect('area', area_id=dec.area.id)
     # Show form
     return render(request, 'govtrack/declare.html', {
         'action': 'edit',

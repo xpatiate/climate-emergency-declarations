@@ -47,7 +47,7 @@
 </table>
 {% block formextra %}{% endblock %}
 <input type='submit' name='save' value='save' class='button-save'>
-<input type='submit' name='cancel' value='cancel' class='button-cancel'>
+<input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
 </form>
 
 {% else %}
@@ -147,7 +147,8 @@
 {% endif %}
 
 {% if area.id != area.parent.id %}
-<p>
+<br/>
+<p class='bottom-nav'>
 {% for parent in area.direct_ancestors %}
   {% if forloop.first %}
     {{ area.name }} -&gt; 

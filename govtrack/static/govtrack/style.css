@@ -32,6 +32,12 @@ tr.country-total {
     font-size: small;
     font-weight: bold;
 }
+.bottom-nav {
+}
+.button-cancel {
+    background-color: lightgrey;
+    color: black;
+}
 .button-save {
     background-color: green;
     color: white;
