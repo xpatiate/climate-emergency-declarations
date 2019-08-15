@@ -58,7 +58,7 @@
   <div class='admin-corner'>
     <div class='edit-area' style="display: block;">
       <a href='{% url 'area_edit' area.id %}'>edit</a>
-    <p><span class='link-api'><a href='{{ area_api_link }}'>API link</a></span></p>
+    <p><span class='link-api'><a href='{{ area_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></p>
     <div style='text-align: left'>
       {% for ctype in area.sub_types %}
         <a name='#{{area.id}}{{ ctype.id}}'></a>

@@ -119,6 +119,10 @@ class Country(models.Model):
     def find_by_code(cls, country_code):
         return Country.objects.get(country_code=country_code)
 
+    @property
+    def api_link(self):
+        return django.urls.reverse('api_country_population', args=[self.country_code])
+
     def active_declarations(self, **kwargs):
         """Return a list of declarations for a country which are active
         at a specified (or current) date."""

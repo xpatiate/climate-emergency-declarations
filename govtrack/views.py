@@ -105,6 +105,7 @@ def country(request, country_id, action='view'):
         'links': country.links.all(),
         'form': form,
         'linkform': linkform,
+        'country_api_link': request.build_absolute_uri( country.api_link ),
         })
 
 

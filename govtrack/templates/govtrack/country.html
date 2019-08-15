@@ -23,6 +23,7 @@
     <div class='admin-corner'>
         <div id='editcountry-{{ country.id }}' class='edit-country'>
         <a href='{% url 'country_edit' country.id %}'>edit</a>
+        <p><span class='link-api'><a href='{{ country_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></p>
         </div>
      {% if country.admin_notes %}
        <div class='admin-view'>
