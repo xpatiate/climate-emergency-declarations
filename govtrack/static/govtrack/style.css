@@ -24,6 +24,15 @@ tr.country-subhead {
 tr.country-total {
     background-color: #eeeeee;
 }
+.tooltiptext {
+    visibility: hidden;
+    position: absolute;
+    background-color: orange;
+    color: white;
+}
+.link-api:hover .tooltiptext {
+    visibility: visible;
+}
 .view-area, .view-structure {
     display: inline;
     background-color: white;
@@ -31,6 +40,12 @@ tr.country-total {
     color: green;
     font-size: small;
     font-weight: bold;
+}
+.bottom-nav {
+}
+.button-cancel {
+    background-color: lightgrey;
+    color: black;
 }
 .button-save {
     background-color: green;
@@ -40,6 +55,9 @@ tr.country-total {
     outline: 0;
 }
 .link-area {
+}
+.link-api {
+    font-family: monospace;
 }
 .supplementary {
     font-style: italic;
@@ -137,6 +155,9 @@ div.react-delete-link a {
     font-size: small;
     padding-left: 20px;
     display: none;
+}
+.edit-country {
+    font-size: small;
 }
 .edit-area {
     font-size: small;

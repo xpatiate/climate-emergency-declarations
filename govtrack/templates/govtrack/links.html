@@ -4,7 +4,7 @@
 {% for link in links %}
 <li id='link-{{link.id}}'><a href='{{ link.url }}' target='_new'>{{ link.url }}</a>
 {% if user.is_authenticated %}
-  {% with view='link_del' object=link %}
+  {% with view='api_link_del' object=link %}
     {% include 'govtrack/delete.html' %}
   {% endwith %}
 {% endif %}

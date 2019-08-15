@@ -28,9 +28,14 @@
 {% include 'govtrack/links.html' %}
 {{ linkform.as_table }}
 </table>
-<input type='submit' value='save' class='button-save'>
-<br><br>
-<a href='{% url 'country' country.id %}' class='button-cancel'>back to {{ country.name }}</a>
+<input type='submit' name='save' value='save' class='button-save'>
+<input type='submit' value='cancel' class='button-cancel' formnovalidate>
+
+<br>
+<p class='bottom-nav'>
+<a href='{% url 'country' country.id %}'>{{ country.name }}</a>
+</p>
+
 </form>
 
 {% endblock %}

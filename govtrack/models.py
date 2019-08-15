@@ -2,10 +2,11 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+import django.urls
 
 import datetime
 import logging
-logger = logging.getLogger('govtrack')
+logger = logging.getLogger('cegov')
 poplog = logging.getLogger('popcount')
 
 
@@ -23,6 +24,8 @@ class Hierarchy():
             # Children that are included here via supplementary relationships 
             # will have a different area as their 'actual' parent
             if self != child.parent:
+                child.is_supplementary = True
+            if self.is_supplementary:
                 child.is_supplementary = True
             itemlist.append(child)
             child.build_hierarchy(itemlist) 
@@ -116,6 +119,27 @@ class Country(models.Model):
     def find_by_code(cls, country_code):
         return Country.objects.get(country_code=country_code)
 
+    @property
+    def api_link(self):
+        return django.urls.reverse('api_country_population', args=[self.country_code])
+
+    def active_declarations(self, **kwargs):
+        """Return a list of declarations for a country which are active
+        at a specified (or current) date."""
+
+        as_at_date = kwargs.get('date', datetime.date.today())
+        filter_args = {
+            'status': 'D',
+            'area__country': self.id,
+            'event_date__lt': as_at_date,
+        }
+        dlist = Declaration.objects.filter(**filter_args).order_by('event_date')
+        active = []
+        for dec in dlist:
+            if dec.is_active_at_date(as_at_date):
+                active.append(dec)
+        return active
+
     def declarations(self, **kwargs):
         order_by = kwargs.get('order_by')
         order_name = 'area__sort_name'
@@ -152,15 +176,15 @@ class Country(models.Model):
         return dlist
 
     @property
+    def num_declarations(self):
+        return Declaration.objects.filter(status='D', area__country=self.id).count()
+
+    @property
     def declared_population(self):
         try:
             return self.get_root_area().declared_population()
         except AttributeError as ex:
             return 0
-
-    @property
-    def num_declarations(self):
-        return Declaration.objects.filter(status='D', area__country=self.id).count()
 
     @property
     def num_structures(self):
@@ -245,9 +269,9 @@ class Structure(Hierarchy, models.Model):
             return self.get_parent(parent.parent_id)
     
     @property
-    def num_records(self):
-        num_records = Area.objects.filter(structure=self.id).count()
-        return num_records
+    def num_areas(self):
+        num_areas = Area.objects.filter(structure=self.id).count()
+        return num_areas
 
     def __str__(self):
         return self.fullname()
@@ -334,21 +358,41 @@ class Area(Hierarchy, models.Model):
 
     @property
     def ancestors(self):
-        self.parentlist = [self]
+        self.parentlist = set([self])
         if (self.id != self.parent_id):
-            self.parentlist.insert(0,self.parent)
+            self.parentlist.add(self.parent)
         self.get_parent(self.parent.id)
         for s in self.supplements.all():
             if s not in self.parentlist:
-                self.parentlist.insert(0,s)
+                self.parentlist.add(s)
                 self.get_parent(s.id)
         return self.parentlist
 
     def get_parent(self, parent_id):
         parent = Area.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
-            self.parentlist.insert(0, parent.parent)
-            return self.get_parent(parent.parent_id)
+            self.parentlist.add( parent.parent)
+            self.get_parent(parent.parent_id)
+        for s in parent.supplements.all():
+            if s not in self.parentlist:
+                self.parentlist.add(s)
+                self.get_parent(s.id)
+        return self.parentlist
+
+    @property
+    def direct_ancestors(self):
+        self.direct_parentlist = [self]
+        if (self.id != self.parent_id):
+            self.direct_parentlist.append(self.parent)
+        self.get_direct_parent(self.parent.id)
+        return self.direct_parentlist
+
+    def get_direct_parent(self, parent_id):
+        parent = Area.objects.get(id=parent_id)
+        if parent.parent_id != parent_id:
+            self.direct_parentlist.append( parent.parent)
+            self.get_direct_parent(parent.parent_id)
+        return self.direct_parentlist
 
     def declared_population(self):
         popcounter = PopulationCounter()
@@ -392,11 +436,19 @@ class Area(Hierarchy, models.Model):
 
     def contribution(self):
         area_total = 0
-        logger.debug("num declared ancestors for %s is %s" % (self.name, self.num_declared_ancestors()))
-        if (self.is_declared and self.num_declared_ancestors() == 0):
+        num_dec_anc = self.num_declared_ancestors()
+        poplog.info("num declared ancestors for %s is %s" % (self.name, num_dec_anc))
+        # This area is declared and nothing above it has declared
+        if (self.is_declared and num_dec_anc == 0):
+            poplog.info("%s is declared and has no declared ancestors" % self.name)
             area_total = self.population
-        elif (self.num_declared_ancestors() > 1):
-            area_total = -1 * (self.num_declared_ancestors() - 1) * self.population
+        # Multiple areas above this one have declared
+        elif (num_dec_anc > 1):
+            poplog.info("%s has %s declared ancestors" % (self.name, num_dec_anc))
+            area_total = -1 * (num_dec_anc - 1) * self.population
+        else:
+            poplog.info("%s has exactly 1 declared ancestor" % self.name)
+        poplog.info("so %s contribution is %s" % (self.name, area_total))
         return area_total
 
     @property
@@ -412,11 +464,23 @@ class Area(Hierarchy, models.Model):
         return self.structure.level
 
     @property
+    def api_link(self):
+        return django.urls.reverse('api_area_data', args=[self.id])
+
+    @property
     def latest_declaration(self):
         try:
             return Declaration.objects.filter(area=self.id).latest('event_date')
         except Declaration.DoesNotExist as ex:
             pass
+
+    @property
+    def latest_declaration_date(self):
+        dec = self.latest_declaration
+        decdate = ''
+        if dec:
+            decdate = dec.display_event_date()
+        return decdate
 
     @property
     def is_declared(self):
@@ -434,7 +498,7 @@ class Area(Hierarchy, models.Model):
         return typekids
 
     @property
-    def is_counted(self):
+    def skip_is_counted(self):
         logger.debug("should we count item %s?" % self.name)
         # count population if:
             # count setting is true (always count)
@@ -445,37 +509,30 @@ class Area(Hierarchy, models.Model):
                     # AND
                     # none above it have
         do_count = None
-        if self.count_population == 1:
-            logger.debug("yes always count %s" % self.name)
-            do_count = True
-        elif self.count_population == -1:
-            logger.debug("no never count %s" % self.name)
-            do_count = False
-        else:
-            # calculate inherited setting
 
-            # am I declared? If so, then count, unless a parent has
-            if self.is_declared:
-                logger.debug("Item %s has declared, so will count unless parent has" % self.name)
-                do_count = True
-                # loop through all parents, see if any have declared
-                # get ancestor list, reversed (in asc order) and with self removed
-                rev_ancestors = self.ancestors[:-1]
-                rev_ancestors.reverse()
-                logger.debug('item %s has %s ancestors: %s' % (self.name,len(rev_ancestors), rev_ancestors))
-                for parent in rev_ancestors:
-                    logger.debug("item %s checking parent %s for inherited setting: %s" % (self.name,parent.name,parent.is_declared))
-                    if parent.is_declared:
-                        logger.debug("item %s has a declared parent, will not count" % self.name)
-                        do_count = False
-                        break
-                    # If this parent is not declared, go up another level to next parent
-                logger.debug("item %s finished parent loop, do count is %s" % (self.name,do_count))
-            else:
-                do_count = False
-            if not do_count:
-                logger.debug("No definite value for %s so setting to false" % self.name)
-                do_count = False
+        # am I declared? If so, then count, unless a parent has
+        if self.is_declared:
+            logger.debug("Item %s has declared, so will count unless parent has" % self.name)
+            do_count = True
+            # loop through all parents, see if any have declared
+            # get ancestor list, reversed (in asc order) and with self removed
+            rev_ancestors = self.ancestors[:-1]
+            rev_ancestors.reverse()
+            logger.debug('item %s has %s ancestors: %s' % (self.name,len(rev_ancestors), rev_ancestors))
+            for parent in rev_ancestors:
+                logger.debug("item %s checking parent %s for inherited setting: %s" % (self.name,parent.name,parent.is_declared))
+                if parent.is_declared:
+                    logger.debug("item %s has a declared parent, will not count" % self.name)
+                    do_count = False
+                    break
+                # If this parent is not declared, go up another level to next parent
+            logger.debug("item %s finished parent loop, do count is %s" % (self.name,do_count))
+        else:
+            do_count = False
+        if not do_count:
+            logger.debug("No definite value for %s so setting to false" % self.name)
+            do_count = False
+
         return do_count
 
     def get_supplement_choices(self, **kwargs):
@@ -523,6 +580,7 @@ class Declaration(models.Model):
     declaration_type = models.CharField(max_length=256, blank=True)
     description_short = models.CharField(max_length=256, blank=True)
     description_long = models.TextField(blank=True)
+    key_contact = models.CharField(max_length=128, blank=True)
     admin_notes = models.TextField(blank=True)
     verified = models.BooleanField(default=False)
 
@@ -546,3 +604,19 @@ class Declaration(models.Model):
         if ddate:
             return ddate.strftime('%d %B, %Y')
 
+    def is_currently_active(self):
+        if self.is_declared:
+            return self.is_active_at_date(datetime.date.today())
+        return False
+
+    def is_active_at_date(self, date):
+        siblings = Declaration.objects.filter(
+            area = self.area.id,
+            event_date__lt = date,
+            event_date__gt = self.event_date,
+            ).exclude(pk=self.id)
+        for sib in siblings:
+            if sib.status != 'D':
+                logger.info("excluding area %s due to declaration with non-D status %s at date %s" % (sib.area, sib.status, sib.event_date))
+                return False
+        return True

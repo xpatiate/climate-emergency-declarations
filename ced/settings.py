@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'govtrack.apps.GovtrackConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
@@ -156,7 +157,7 @@ LOGGING = {
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': True,
         },
-        'govtrack': {
+        'cegov': {
             'handlers': ['file','console'],
             'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
             'propagate': True,

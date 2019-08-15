@@ -28,16 +28,9 @@
             <a href="{% url 'area' dec.area.id %}">{{ dec.area.name }}</a>
         </td>
         <td class='td-index' align='right'>
-            {% if dec.area.is_counted %}
             {{ dec.area.population | intcomma}}
-            {% else %}
-            <i>{{ dec.area.population | intcomma}}</i>
-            {% endif %}
             </td>
         <td class='td-index'>{{ dec.display_event_date }}</td>
-        <!--
-        <td class='td-index'>{{ dec.is_counted }}</td>
-        -->
         </tr>
         {% endfor %}
         <tr class='country-total'>

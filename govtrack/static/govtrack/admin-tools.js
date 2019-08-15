@@ -71,7 +71,7 @@ User clicks 'create' button, form submits - no JS nivolved
     // Replace the textarea contents with the API response
     function extractPastedData(target) {
         var pastedText = target.html()
-        jQuery.ajax('/cegov/api/extract_areas', {
+        jQuery.ajax('/api/extract_areas', {
             'method': 'POST',
             'data': {
                 'area_table': pastedText,

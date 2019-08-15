@@ -39,7 +39,7 @@ class DeclarationForm(ModelForm):
     class Meta:
         model = Declaration
         fields = ['area','status', 'event_date', 'declaration_type', 'verified',
-            'description_short', 'description_long', 'admin_notes']
+            'description_short', 'description_long', 'key_contact', 'admin_notes']
         widgets = {
             'area': forms.HiddenInput(),
         }
