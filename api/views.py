@@ -19,16 +19,24 @@ DATE_FORMAT='%Y-%m-%d'
 
 def area_data(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
+    decl = area.latest_declaration
+    dec_date = ''
+    bestlink = ''
+    if decl.is_currently_active():
+        dec_date = decl.display_event_date()
+        # TODO: add a 'best link' field, for now just take the first one
+        links = decl.links.all()
+        if links:
+            bestlink = links[0].url
     areadata = [
         area.name,
         1,
         area.location,
         area.population,
-        area.latest_declaration_date,
+        dec_date,
         '', # empty col
-        '', # key contact
-        '', # key document/reference
-        '', # empty col
+        '', # TODO: key contact
+        bestlink, # key document/reference
         area.contribution()
     ]
     response = HttpResponse(content_type='text/csv')

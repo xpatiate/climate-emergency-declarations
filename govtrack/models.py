@@ -600,7 +600,9 @@ class Declaration(models.Model):
             return ddate.strftime('%d %B, %Y')
 
     def is_currently_active(self):
-        return self.is_active_at_date(datetime.date.today())
+        if self.is_declared:
+            return self.is_active_at_date(datetime.date.today())
+        return False
 
     def is_active_at_date(self, date):
         siblings = Declaration.objects.filter(
