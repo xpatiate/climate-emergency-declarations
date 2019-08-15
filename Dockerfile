@@ -19,6 +19,7 @@ COPY manage.py /code/
 COPY bin/run-tests.sh /code/bin/run-tests.sh
 COPY bin/run-server.sh /code/bin/run-server.sh
 COPY ced /code/ced/
+COPY api /code/api/
 COPY govtrack /code/govtrack/
 EXPOSE 8000
 CMD [ "bin/run-server.sh" ]

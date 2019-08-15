@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'govtrack.apps.GovtrackConfig',
+    'api.apps.ApiConfig',
 ]
 
 MIDDLEWARE = [
