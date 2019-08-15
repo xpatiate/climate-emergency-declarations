@@ -576,6 +576,7 @@ class Declaration(models.Model):
     declaration_type = models.CharField(max_length=256, blank=True)
     description_short = models.CharField(max_length=256, blank=True)
     description_long = models.TextField(blank=True)
+    key_contact = models.CharField(max_length=128, blank=True)
     admin_notes = models.TextField(blank=True)
     verified = models.BooleanField(default=False)
 

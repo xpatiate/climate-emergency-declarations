@@ -22,8 +22,10 @@ def area_data(request, area_id):
     decl = area.latest_declaration
     dec_date = ''
     bestlink = ''
-    if decl.is_currently_active():
+    contact = ''
+    if decl and decl.is_currently_active():
         dec_date = decl.display_event_date()
+        contact = decl.key_contact
         # TODO: add a 'best link' field, for now just take the first one
         links = decl.links.all()
         if links:
@@ -35,7 +37,7 @@ def area_data(request, area_id):
         area.population,
         dec_date,
         '', # empty col
-        '', # TODO: key contact
+        contact,
         bestlink, # key document/reference
         area.contribution()
     ]
