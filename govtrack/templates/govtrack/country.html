@@ -93,10 +93,10 @@
     </div>
     </td>
     <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
-    <td align='right' {% if not area.is_counted %}class='nocount'{% endif%}>
+    <td align='right'>
         {{area.population | intcomma}}
     </td>
-    <td align='right'>{{area.contribution | intcomma}}</td>
+    <td align='right'>{{area.show_contribution | intcomma}}</td>
     <td align='right'>{{area.cumulative_pop | intcomma}}</td>
     </tr>
 {% endfor %}

@@ -25,6 +25,8 @@ class Hierarchy():
             # will have a different area as their 'actual' parent
             if self != child.parent:
                 child.is_supplementary = True
+            if self.is_supplementary:
+                child.is_supplementary = True
             itemlist.append(child)
             child.build_hierarchy(itemlist) 
         return itemlist
@@ -352,21 +354,26 @@ class Area(Hierarchy, models.Model):
 
     @property
     def ancestors(self):
-        self.parentlist = [self]
+        self.parentlist = set([self])
         if (self.id != self.parent_id):
-            self.parentlist.insert(0,self.parent)
+            self.parentlist.add(self.parent)
         self.get_parent(self.parent.id)
         for s in self.supplements.all():
             if s not in self.parentlist:
-                self.parentlist.insert(0,s)
+                self.parentlist.add(s)
                 self.get_parent(s.id)
         return self.parentlist
 
     def get_parent(self, parent_id):
         parent = Area.objects.get(id=parent_id)
         if parent.parent_id != parent_id:
-            self.parentlist.insert(0, parent.parent)
-            return self.get_parent(parent.parent_id)
+            self.parentlist.add( parent.parent)
+            self.get_parent(parent.parent_id)
+        for s in parent.supplements.all():
+            if s not in self.parentlist:
+                self.parentlist.add(s)
+                self.get_parent(s.id)
+        return self.parentlist
 
     def declared_population(self):
         popcounter = PopulationCounter()
@@ -410,11 +417,19 @@ class Area(Hierarchy, models.Model):
 
     def contribution(self):
         area_total = 0
-        logger.debug("num declared ancestors for %s is %s" % (self.name, self.num_declared_ancestors()))
-        if (self.is_declared and self.num_declared_ancestors() == 0):
+        num_dec_anc = self.num_declared_ancestors()
+        poplog.info("num declared ancestors for %s is %s" % (self.name, num_dec_anc))
+        # This area is declared and nothing above it has declared
+        if (self.is_declared and num_dec_anc == 0):
+            poplog.info("%s is declared and has no declared ancestors" % self.name)
             area_total = self.population
-        elif (self.num_declared_ancestors() > 1):
-            area_total = -1 * (self.num_declared_ancestors() - 1) * self.population
+        # Multiple areas above this one have declared
+        elif (num_dec_anc > 1):
+            poplog.info("%s has %s declared ancestors" % (self.name, num_dec_anc))
+            area_total = -1 * (num_dec_anc - 1) * self.population
+        else:
+            poplog.info("%s has exactly 1 declared ancestor" % self.name)
+        poplog.info("so %s contribution is %s" % (self.name, area_total))
         return area_total
 
     @property
@@ -464,7 +479,7 @@ class Area(Hierarchy, models.Model):
         return typekids
 
     @property
-    def is_counted(self):
+    def skip_is_counted(self):
         logger.debug("should we count item %s?" % self.name)
         # count population if:
             # count setting is true (always count)
@@ -475,37 +490,30 @@ class Area(Hierarchy, models.Model):
                     # AND
                     # none above it have
         do_count = None
-        if self.count_population == 1:
-            logger.debug("yes always count %s" % self.name)
-            do_count = True
-        elif self.count_population == -1:
-            logger.debug("no never count %s" % self.name)
-            do_count = False
-        else:
-            # calculate inherited setting
 
-            # am I declared? If so, then count, unless a parent has
-            if self.is_declared:
-                logger.debug("Item %s has declared, so will count unless parent has" % self.name)
-                do_count = True
-                # loop through all parents, see if any have declared
-                # get ancestor list, reversed (in asc order) and with self removed
-                rev_ancestors = self.ancestors[:-1]
-                rev_ancestors.reverse()
-                logger.debug('item %s has %s ancestors: %s' % (self.name,len(rev_ancestors), rev_ancestors))
-                for parent in rev_ancestors:
-                    logger.debug("item %s checking parent %s for inherited setting: %s" % (self.name,parent.name,parent.is_declared))
-                    if parent.is_declared:
-                        logger.debug("item %s has a declared parent, will not count" % self.name)
-                        do_count = False
-                        break
-                    # If this parent is not declared, go up another level to next parent
-                logger.debug("item %s finished parent loop, do count is %s" % (self.name,do_count))
-            else:
-                do_count = False
-            if not do_count:
-                logger.debug("No definite value for %s so setting to false" % self.name)
-                do_count = False
+        # am I declared? If so, then count, unless a parent has
+        if self.is_declared:
+            logger.debug("Item %s has declared, so will count unless parent has" % self.name)
+            do_count = True
+            # loop through all parents, see if any have declared
+            # get ancestor list, reversed (in asc order) and with self removed
+            rev_ancestors = self.ancestors[:-1]
+            rev_ancestors.reverse()
+            logger.debug('item %s has %s ancestors: %s' % (self.name,len(rev_ancestors), rev_ancestors))
+            for parent in rev_ancestors:
+                logger.debug("item %s checking parent %s for inherited setting: %s" % (self.name,parent.name,parent.is_declared))
+                if parent.is_declared:
+                    logger.debug("item %s has a declared parent, will not count" % self.name)
+                    do_count = False
+                    break
+                # If this parent is not declared, go up another level to next parent
+            logger.debug("item %s finished parent loop, do count is %s" % (self.name,do_count))
+        else:
+            do_count = False
+        if not do_count:
+            logger.debug("No definite value for %s so setting to false" % self.name)
+            do_count = False
+
         return do_count
 
     def get_supplement_choices(self, **kwargs):
