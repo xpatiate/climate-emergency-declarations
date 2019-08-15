@@ -40,12 +40,12 @@
 
 <div class='parent-tree'>
 {% for struct in structure_list %}
-    <div class='level_{{ struct.level }}' id='structure-{{ struct.id }}'>&#8866; {{ struct.name }} ({{ struct.num_records }})
+    <div class='level_{{ struct.level }}' id='structure-{{ struct.id }}'>&#8866; {{ struct.name }} ({{ struct.num_areas }})
     {% if user.is_authenticated %}
       &nbsp;<button class='view-structure' id='viewstructure-{{ struct.id }}'>*</button>
       <div id='editstructure-{{ struct.id }}' class='edit-structure'>
       <a href='{% url 'structure_edit' struct.id %}'>edit</a> | 
-      {% if struct.num_records == 0 %}
+      {% if struct.num_areas == 0 %}
         {% with view="api_structure_del" object=struct %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
@@ -66,23 +66,23 @@
     <th>Contribution</th>
     <th>Cumulative</th>
   </tr>
-{% for record in records_list %}
+{% for area in areas_list %}
     <tr>
     <td>
-    {% if record.is_supplementary %}
+    {% if area.is_supplementary %}
     <div class='supplementary'>
     {% endif %}
-    <div class='level_{{ record.level }}' id='area-{{ record.id }}'>&#8866;({{ record.structure.name }})  <a class='link-area' href='{% url 'area' record.id %}'>{{ record.name }}</a>
-    {% if record.is_supplementary %}
+    <div class='level_{{ area.level }}' id='area-{{ area.id }}'>&#8866;({{ area.structure.name }})  <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
+    {% if area.is_supplementary %}
     </div>
     {% endif %}
-    {% if not record.is_supplementary and user.is_authenticated %}
-      &nbsp;<button class='view-area' id='viewarea-{{ record.id }}'>*</button>
-      <div id='editarea-{{ record.id }}' class='edit-area'>
-      <a href='{% url 'area_edit' record.id %}'>edit</a>
-      {% if record.level > 1 %}
+    {% if not area.is_supplementary and user.is_authenticated %}
+      &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
+      <div id='editarea-{{ area.id }}' class='edit-area'>
+      <a href='{% url 'area_edit' area.id %}'>edit</a>
+      {% if area.level > 1 %}
         |
-        {% with view="api_area_del" object=record %}
+        {% with view="api_area_del" object=area %}
         {% include 'govtrack/delete.html' %}
         {% endwith %}
       {% endif %}
@@ -92,14 +92,12 @@
     {% endif %}
     </div>
     </td>
-    <td align='right'>{% if record.is_declared %}Yes{% endif %}</td>
-    <td align='right' {% if not record.is_counted %}class='nocount'{% endif%}>
-        {{record.population | intcomma}}
+    <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
+    <td align='right' {% if not area.is_counted %}class='nocount'{% endif%}>
+        {{area.population | intcomma}}
     </td>
-    <td align='right'>{{record.contribution | intcomma}}</td>
-    <td align='right'>{{record.cumulative_pop | intcomma}}</td>
-    <!--<td align='right'>d: {{record.descendants | length}}</td>
-    <td align='right'>ad: {{record.all_descendants | length}}</td>-->
+    <td align='right'>{{area.contribution | intcomma}}</td>
+    <td align='right'>{{area.cumulative_pop | intcomma}}</td>
     </tr>
 {% endfor %}
   <tr class='total-pop-row'>

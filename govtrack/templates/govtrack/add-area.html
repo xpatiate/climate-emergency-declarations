@@ -1,9 +1,9 @@
-      {% for ctype in record.sub_types %}
-        <a name='#{{record.id}}{{ ctype.id}}'></a>
-        <li><a href='{% url 'area_child' record.id ctype.id  %}'>add {{ ctype.name }}</a> or <a onClick="showMultiAddForm('form_r{{record.id}}c{{ctype.id}}');">quick add multiple</a></li>
-        <form class='paste-text' id='form_r{{record.id}}c{{ctype.id}}' action='{% url 'api_area_multi_add' record.id ctype.id %}' method=POST>
+      {% for ctype in area.sub_types %}
+        <a name='#{{area.id}}{{ ctype.id}}'></a>
+        <li><a href='{% url 'area_child' area.id ctype.id  %}'>add {{ ctype.name }}</a> or <a onClick="showMultiAddForm('form_r{{area.id}}c{{ctype.id}}');">quick add multiple</a></li>
+        <form class='paste-text' id='form_r{{area.id}}c{{ctype.id}}' action='{% url 'api_area_multi_add' area.id ctype.id %}' method=POST>
         {% csrf_token %}
-        <textarea name='area_csv_data' id='text_r{{record.id}}c{{ctype.id}}'></textarea>
-        <input type='submit' value='create' id='button_r{{record.id}}c{{ctype.id}}' class='areas-create'>
+        <textarea name='area_csv_data' id='text_r{{area.id}}c{{ctype.id}}'></textarea>
+        <input type='submit' value='create' id='button_r{{area.id}}c{{ctype.id}}' class='areas-create'>
         </form>
       {% endfor %}

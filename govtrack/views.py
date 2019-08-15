@@ -37,10 +37,10 @@ def area(request, area_id):
     records = area.build_hierarchy()
 
     return render(request, 'govtrack/area.html', {
-        'record': area,
+        'area': area,
         'country': area.country,
         'parents_list': area.ancestors,
-        'records_list': records,
+        'areas_list': records,
         'links': area.links.all(),
         'area_api_link': request.build_absolute_uri( area.api_link ),
     })
@@ -77,9 +77,7 @@ def country(request, country_id, action='view'):
                     action='edit'
 
     structure = country.get_root_structure().build_hierarchy()
-    logger.debug("*** building hierarchy for records")
     records = country.get_root_area().build_hierarchy()
-    logger.debug("*** done building hierarchy for records")
 
     total_pop = 0
     for item in records:
@@ -94,7 +92,7 @@ def country(request, country_id, action='view'):
         'action': action,
         'country': country,
         'structure_list': structure,
-        'records_list': records,
+        'areas_list': records,
         'total_declared_population': total_declared_pop,
         'total_pop_by_contribution': total_pop,
         'links': country.links.all(),
@@ -158,27 +156,28 @@ def area_edit(request, area_id):
     linkform = LinkForm(initial=link_initial)
     # If POST received, save form
     if request.method == 'POST':
-        form = AreaForm(request.POST, instance=area)
-        linkform = LinkForm(request.POST, initial=link_initial)
-        do_redir = False
-        if form.is_valid():
-            do_redir=True
-            saved = form.save()
-            if linkform.has_changed():
-                do_redir=False
-                if linkform.is_valid():
-                    linkform.save()
-                    do_redir=True
-                else:
-                    logger.warn("did not save url because %s " % linkform.errors)
-            if do_redir:
-                return redirect('country', country_id=area.country.id)
+        do_redir=True
+        if request.POST.get('save'):
+            form = AreaForm(request.POST, instance=area)
+            linkform = LinkForm(request.POST, initial=link_initial)
+            do_redir = False
+            if form.is_valid():
+                saved = form.save()
+                if linkform.has_changed():
+                    do_redir=False
+                    if linkform.is_valid():
+                        linkform.save()
+                        do_redir=True
+                    else:
+                        logger.warn("did not save url because %s " % linkform.errors)
+        if do_redir:
+            return redirect('area', area_id=area.id)
 
     # Show form
     form.fields['supplements'].queryset = area.parent.get_supplement_choices(exclude=area.id)
     return render(request, 'govtrack/area.html', {
         'action': 'edit',
-        'record': area,
+        'area': area,
         'form': form,
         'links': area.links.all(),
         'linkform': linkform,
@@ -191,9 +190,8 @@ def area_child(request, parent_id, structure_id):
     if request.method == 'POST':
         form = AreaForm(request.POST)
         if form.is_valid():
-            form.save()
-            country_id = request.POST['country']
-            return redirect('country', country_id=country_id)
+            area = form.save()
+            return redirect('area', area_id=area.id)
     parent = get_object_or_404(Area, pk=parent_id)
     structure = get_object_or_404(Structure, pk=structure_id)
     areadata = {

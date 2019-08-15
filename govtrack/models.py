@@ -263,9 +263,9 @@ class Structure(Hierarchy, models.Model):
             return self.get_parent(parent.parent_id)
     
     @property
-    def num_records(self):
-        num_records = Area.objects.filter(structure=self.id).count()
-        return num_records
+    def num_areas(self):
+        num_areas = Area.objects.filter(structure=self.id).count()
+        return num_areas
 
     def __str__(self):
         return self.fullname()
