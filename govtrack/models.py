@@ -375,6 +375,21 @@ class Area(Hierarchy, models.Model):
                 self.get_parent(s.id)
         return self.parentlist
 
+    @property
+    def direct_ancestors(self):
+        self.direct_parentlist = [self]
+        if (self.id != self.parent_id):
+            self.direct_parentlist.append(self.parent)
+        self.get_direct_parent(self.parent.id)
+        return self.direct_parentlist
+
+    def get_direct_parent(self, parent_id):
+        parent = Area.objects.get(id=parent_id)
+        if parent.parent_id != parent_id:
+            self.direct_parentlist.append( parent.parent)
+            self.get_direct_parent(parent.parent_id)
+        return self.direct_parentlist
+
     def declared_population(self):
         popcounter = PopulationCounter()
         return popcounter.declared_population(self)

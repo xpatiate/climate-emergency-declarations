@@ -15,7 +15,7 @@
 {% endblock %}
 
 <div class='parent-tree'>
-{% for parent in parents_list %}
+{% for parent in parents_list reversed %}
     <div class='level_{{ parent.level }}'>&#8866;({{ parent.structure.name }}) {{ parent.name }}</div>
 {% endfor %}
 {% if action != "add" %}
@@ -76,9 +76,6 @@
 {% endif %}
 
 <p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
-{% if area.parent.id != area.id %}
-<p><b>Part of:</b> <a href='{% url 'area' area.parent.id %}'>{{ area.parent.name }}</a></p>
-{% endif %}
 <p><b>Location:</b> {{ area.location|default_if_none:'' }}</p>
 <p><b>Population:</b> {{ area.population | intcomma }}</p>
 <p class='description'><b>Description:</b> {{ area.description|default_if_none:'' }}</p>
@@ -149,12 +146,17 @@
 
 {% endif %}
 
-<br><br>
-{% for parent in area.ancestors %}
- {% if parent.id != area.id %}
+{% if area.id != area.parent.id %}
+<p>
+{% for parent in area.direct_ancestors %}
+  {% if forloop.first %}
+    {{ area.name }} -&gt; 
+  {% else %}
     <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
-    {% if not forloop.last %} | {% endif %}
+    {% if not forloop.last %} -&gt; {% endif %}
   {% endif %}
 {% endfor %}
+</p>
+{% endif %}
 
 {% endblock %}

@@ -39,7 +39,7 @@ def area(request, area_id):
     return render(request, 'govtrack/area.html', {
         'area': area,
         'country': area.country,
-        'parents_list': area.ancestors,
+        'parents_list': area.direct_ancestors,
         'areas_list': records,
         'links': area.links.all(),
         'area_api_link': request.build_absolute_uri( area.api_link ),
@@ -187,7 +187,7 @@ def area_edit(request, area_id):
         'links': area.links.all(),
         'linkform': linkform,
         'country': area.country,
-        'parents_list': area.ancestors,
+        'parents_list': area.direct_ancestors,
         'supplements_list': area.supplements.all(),
         })
 
@@ -206,7 +206,7 @@ def area_child(request, parent_id, structure_id):
         'location': parent.location,
         'structure': structure_id
     }
-    records = parent.ancestors
+    records = parent.direct_ancestors
     form = AreaForm(initial=areadata)
     form.fields['supplements'].queryset = parent.get_supplement_choices()
 
