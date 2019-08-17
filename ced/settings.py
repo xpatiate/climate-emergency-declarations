@@ -125,6 +125,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 
 # Logging
 
@@ -135,17 +136,17 @@ LOGGING = {
         'requests': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django_request.log',
+            'filename': '/var/log/django/request.log',
         },
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django_info.log',
+            'filename': '/var/log/django/info.log',
         },
         'popcount': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': '/var/log/django_popcount.log',
+            'filename': '/var/log/django/popcount.log',
         },
         'console': {
             'class': 'logging.StreamHandler',

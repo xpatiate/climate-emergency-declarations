@@ -1,0 +1,194 @@
+body {
+  padding-top: 50px;
+  background-image: url('draft.png');
+}
+td, th {
+  padding-left: 5px;
+  padding-right: 5px;
+}
+.td-index, .th-index {
+  padding: 5px 10px;
+}
+td.nocount {
+    color: #666666;
+    font-style: italic;
+}
+tr.total-pop-row {
+    background-color: #cccccc;
+    font-weight: bold;
+}
+tr.country-subhead {
+    background-color: #cccccc;
+    font-weight: bold;
+}
+tr.country-total {
+    background-color: #eeeeee;
+}
+.tooltiptext {
+    visibility: hidden;
+    position: absolute;
+    background-color: orange;
+    color: white;
+}
+.link-api:hover .tooltiptext {
+    visibility: visible;
+}
+.view-area, .view-structure {
+    display: inline;
+    background-color: white;
+    border: none;
+    color: green;
+    font-size: small;
+    font-weight: bold;
+}
+.bottom-nav {
+}
+.button-cancel {
+    background-color: lightgrey;
+    color: black;
+}
+.button-save {
+    background-color: green;
+    color: white;
+}
+.view-area:focus, .view-structure:focus {
+    outline: 0;
+}
+.link-area {
+}
+.link-api {
+    font-family: monospace;
+}
+.supplementary {
+    font-style: italic;
+    background-color: rgb(240,240,240);
+}
+.declarations {
+    border: 1px solid lightgrey;
+    background: rgb(240,240,240);
+    margin-bottom: 20px;
+    padding: 15px;
+}
+.dec-summary {
+    font-size: 14pt;
+}
+.object-view {
+    border: 1px solid lightgrey;
+    padding: 15px;
+    overflow: auto;
+}
+.description {
+}
+.parent-tree {
+    border: 1px solid lightgrey;
+    background: rgb(240,240,240);
+    margin-bottom: 20px;
+    padding: 15px;
+}
+.level_1 {
+  padding-left: 0px;
+}
+.level_2 {
+  padding-left: 20px;
+}
+.level_3 {
+  padding-left: 40px;
+}
+.level_4 {
+  padding-left: 60px;
+}
+.level_5 {
+  padding-left: 80px;
+}
+.level_6 {
+  padding-left: 100px;
+}
+.level_7 {
+  padding-left: 120px;
+}
+.level_8 {
+  padding-left: 160px;
+}
+.level_9 {
+  padding-left: 180px;
+}
+.level_10 {
+  padding-left: 200px;
+}
+
+/* ADMIN VIEW */
+.admin-corner {
+    float: right;
+    max-width: 350px;
+    text-align: right;
+    font-size: 10pt;
+    padding-top: 0px;
+    padding-right: 0px;
+    padding-left: 10px;
+    padding-bottom: 10px;
+    margin-right: 0px;
+    margin-left: 20px;
+    margin-bottom: 20px;
+}
+.admin-view {
+    border: 1px dotted orange;
+    background-color: papayawhip;
+    padding: 10px;
+    margin-top: 10px;
+}
+.declaration-options  {
+    display: inline;
+    font-size: small;
+}
+.react-delete-link {
+    color: orange;
+    font-size: small;
+    display: inline;
+}
+div.react-delete-link a {
+    color: orange;
+}
+.edit-country a, .edit-area a, .edit-structure a, .edit-dec a {
+    color: orange;
+}
+.edit-structure {
+    font-size: small;
+    padding-left: 20px;
+    display: none;
+}
+.edit-country {
+    font-size: small;
+}
+.edit-area {
+    font-size: small;
+    padding-left: 20px;
+    display: none;
+}
+
+/* FORMS */
+/* Hide HTML5 Up and Down arrows. */
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+table.form-table td, table.form-table th{
+    padding: 5px;
+    vertical-align: top;
+}
+.errorlist {
+    background-color: pink;
+}
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+textarea#id_description_short {
+    width: 350px;
+    height: 50px;
+}
+input[type='text'] {
+    width: 350px;
+}
+.paste-text {
+    display: none;
+}
