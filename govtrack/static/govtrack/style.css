@@ -140,12 +140,12 @@ tr.country-total {
     display: inline;
     font-size: small;
 }
-.react-delete-link {
+.delete-link {
     color: orange;
     font-size: small;
     display: inline;
 }
-div.react-delete-link a {
+div.delete-link a {
     color: orange;
 }
 .edit-country a, .edit-area a, .edit-structure a, .edit-dec a {

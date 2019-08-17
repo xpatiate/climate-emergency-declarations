@@ -4,7 +4,10 @@ var showing = {};
 $( document ).ready(function() {
     $( "button.view-structure" ).click( toggleEditOptions );
     $( "button.view-area" ).click( toggleEditOptions );
+
+    $('div.delete-link').click( deleteThis );
 });
+
 function toggleEditOptions(ev) {
     var el = ev.target
     var editdivid = el.id.replace('view','edit')
@@ -19,6 +22,25 @@ function toggleEditOptions(ev) {
         el.innerHTML = '-'
     }
 }
+
+function deleteThis(ev) {
+    ev.preventDefault()
+    var el = ev.target;
+    var parentDiv = el.parentElement;
+    var apiUrl = parentDiv.dataset.url;
+    var objType = parentDiv.dataset.type;
+    var objectId = objType + '-' + parentDiv.dataset.id;
+    const response = confirm('Are you sure you want to delete this ' + objType + '?');
+    if (response) {
+        var mainObj = $('#' + objectId)
+        mainObj.css('display','none');
+        console.log('making API call to ' + apiUrl);
+        //TODO make this a POST with CSRF
+        var oReq = new XMLHttpRequest();
+        oReq.open("GET", apiUrl);
+        oReq.send();
+    }
+};
 
 /* 
 Process for multiple area creation:
