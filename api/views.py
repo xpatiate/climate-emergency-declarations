@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpR
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from govtrack.models import Declaration, Country, Area, Structure, Link
+from govtrack.models import Declaration, Country, Area, Structure, Link, PopCount
 from govtrack.forms import AreaForm
 
 from bs4 import BeautifulSoup
@@ -26,10 +26,10 @@ def area_data(request, area_id):
     if decl and decl.is_currently_active():
         dec_date = decl.display_event_date()
         contact = decl.key_contact
-        # TODO: add a 'best link' field, for now just take the first one
-        links = decl.links.all()
-        if links:
-            bestlink = links[0].url
+        # TODO: add a 'best link' field
+        #links = decl.links.all()
+        #if links:
+        #    bestlink = links[0].url
     areadata = [
         area.name,
         1,
@@ -50,7 +50,29 @@ def country_population(request, country_code):
     country = Country.find_by_code(country_code)
     if not country:
         raise Http404("No country for specified code")
-    return HttpResponse(str(country.declared_population), content_type='text/plain')
+    return HttpResponse(str(country.current_popcount), content_type='text/plain')
+
+def country_regenerate_timeline(request, country_code):
+    status=403
+    if request.user.is_authenticated:
+        country = Country.find_by_code(country_code)
+        if not country:
+            raise Http404("No country for specified code")
+        country.generate_population_count()
+        return HttpResponse(str(country.current_popcount), content_type='text/plain')
+    else:
+        return HttpResponse(status=status)
+
+def country_population_timeline(request, country_code):
+    country = Country.find_by_code(country_code)
+    if not country:
+        raise Http404("No country for specified code")
+    response = HttpResponse(content_type='text/csv')
+    writer = csv.writer(response)
+    for pc in country.popcounts:
+        area = pc.declaration.area
+        writer.writerow([pc.declaration.event_date, country.name, area.name, area.population, pc.status, pc.population])
+    return response
 
 # unused
 def country_declarations(request, country_code):

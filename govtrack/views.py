@@ -16,7 +16,8 @@ logger = logging.getLogger('cegov')
 def index(request):
     # first get all countries with active declarations
     dlist = Declaration.objects.filter(status='D').order_by('area__country__name','area__sort_name')
-    country_list = set([d.area.country for d in dlist])
+    declared_countries = set([d.area.country for d in dlist])
+    country_list = sorted(list(declared_countries), key=lambda c: c.name)
     countries = []
     # now get the actual declarations for each country
     for c in country_list:
@@ -26,7 +27,7 @@ def index(request):
                 'name': c.name,
                 'id': c.id,
                 'num_areas': len(dlist),
-                'declared_population': c.declared_population
+                'declared_population': c.current_popcount
             },
             dlist))
     return render(request, 'govtrack/index.html', {'countries': countries})
@@ -48,7 +49,7 @@ def area(request, area_id):
 def countries(request):
     clist = Country.objects.order_by('name')
     for c in clist:
-        c.area_population = c.declared_population
+        c.area_population = c.current_popcount
     return render(request, 'govtrack/countries.html', {'country_list': clist})
 
 def country(request, country_id, action='view'):
@@ -67,7 +68,6 @@ def country(request, country_id, action='view'):
         if request.POST.get('save'):
             form = CountryForm(request.POST, instance=country)
             linkform = LinkForm(request.POST, initial=link_initial)
-            do_redir = False
             if form.is_valid():
                 saved = form.save()
                 action='view'
@@ -93,7 +93,7 @@ def country(request, country_id, action='view'):
             item.cumulative_pop = total_pop
             item.show_contribution = 0
 
-    total_declared_pop = country.get_root_area().declared_population()
+    total_declared_pop = country.current_popcount
 
     return render(request, 'govtrack/country.html', {
         'action': action,
@@ -150,6 +150,7 @@ def structure_child(request, parent_id):
             form = StructureForm(request.POST)
             if form.is_valid():
                 form.save()
+                do_redir=True
         if do_redir:
             return redirect('country', country_id=country_id)
     structuredata = {
@@ -179,6 +180,7 @@ def area_edit(request, area_id):
             do_redir = False
             if form.is_valid():
                 saved = form.save()
+                do_redir=True
                 if linkform.has_changed():
                     do_redir=False
                     if linkform.is_valid():
@@ -186,7 +188,6 @@ def area_edit(request, area_id):
                         do_redir=True
                     else:
                         logger.warn("did not save url because %s " % linkform.errors)
-        if do_redir:
             return redirect('area', area_id=area.id)
 
     # Show form
@@ -261,7 +262,11 @@ def declaration_add(request, area_id):
             form = DeclarationForm(request.POST, initial=decldata)
             if form.is_valid():
                 do_redir = True
-                form.save()
+                dec = form.save()
+                if dec.affects_population_count:
+                    # Regenerate all stored population counts for the country,
+                    # from the date of this declaration onwards
+                    dec.area.country.generate_population_count(dec.event_date)
         if do_redir:
             return redirect('area', area_id=area_id)
     return render(request, 'govtrack/declare.html', {

@@ -10,7 +10,7 @@ services:
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=s3kr1t
+      - POSTGRES_PASSWORD=
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
   web:
@@ -27,9 +27,10 @@ services:
      - DB_USER=postgres
      - DB_HOST=db
      - DB_PORT=5432
-     - DB_PASS=s3kr1t
+     - DB_PASS=
      - HTTP_HOST=127.0.0.1,0.0.0.0,icef.localhost,qa-icef.localhost
      - DEBUG=True
      - ADMIN_PATH=b72c0824
      - DO_MIGRATE=True
      - DJANGO_LOG_LEVEL=DEBUG
+     - RUN_DEBUG_MODE=True
