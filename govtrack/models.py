@@ -137,11 +137,15 @@ class Country(models.Model):
             'area__country': self.id,
             'event_date__lt': as_at_date,
         }
-        dlist = Declaration.objects.filter(**filter_args).order_by('event_date')
+        areas_declared = set()
+        dlist = Declaration.objects.filter(**filter_args).order_by('-event_date')
         active = []
         for dec in dlist:
+            # only show the latest active declaration for an area
             if dec.is_active_at_date(as_at_date):
-                active.append(dec)
+                if not dec.area in areas_declared:
+                    active.insert(0,dec)
+                    areas_declared.add(dec.area)
         return active
 
     def declarations(self, **kwargs):
@@ -181,7 +185,7 @@ class Country(models.Model):
 
     @property
     def num_declarations(self):
-        return Declaration.objects.filter(status='D', area__country=self.id).count()
+        return len(self.active_declarations())
 
     @property
     def declared_population(self):

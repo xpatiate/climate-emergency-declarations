@@ -150,6 +150,7 @@ def structure_child(request, parent_id):
             form = StructureForm(request.POST)
             if form.is_valid():
                 form.save()
+                do_redir=True
         if do_redir:
             return redirect('country', country_id=country_id)
     structuredata = {
