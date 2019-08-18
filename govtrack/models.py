@@ -2,6 +2,7 @@ from django.db import models
 from django.db.models import Q
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 import django.urls
 
 import datetime
@@ -36,16 +37,19 @@ class PopulationCounter():
 
     def __init__(self):
         self.counted = None
-        self.count_all = False
+        self.date = None
 
     def declared_population(self, area, total=0):
         if not self.counted:
             self.counted = set()
 
-        poplog.debug("%s,%s,%s" % (total,0,area.name))
-        logger.debug("#### COUNTING declared population for %s ####" % area.name)
+        debugdate = ''
+        if self.date:
+            debugdate = ' at %s' % self.date
+        poplog.debug("%s,%s,%s,%s" % (total,0,area.name,self.date))
+        logger.debug("#### COUNTING declared population for %s%s ####" % (area.name, debugdate))
         logger.debug("#### total %s, already counted: %s" % (total,self.counted))
-        if area.is_declared:
+        if area.is_declared_at(self.date):
             # Check if any descendents are already counted
             current_desc = area.all_descendants
             overlap = current_desc.intersection(self.counted)
@@ -63,7 +67,7 @@ class PopulationCounter():
             else:
                 # Current area is declared and has overlap
                 # Figure out which overlapping areas to subtract
-                logger.debug("%s is declared but has overlapping descendants" % area.name)
+                logger.debug("%s is declared%s but has overlapping descendants" % (area.name,debugdate))
                 subtotal = area.population
                 # Need to process these subareas as a tree, not a list
                 for kid in overlap:
@@ -78,7 +82,7 @@ class PopulationCounter():
                 poplog.debug("%s,%s,%s" % (area.population,total,area.name))
         else:
             # Current area is not declared, look at children
-            logger.debug("%s not declared, looking at children" % area.name)
+            logger.debug("%s not declared%s, looking at children" % (area.name,debugdate))
             for child in area.children:
                 logger.debug("has %s been counted? %s" % (child, self.counted))
                 if child in self.counted:
@@ -206,6 +210,64 @@ class Country(models.Model):
         except Area.DoesNotExist as ex:
             logger.error("no root area for country %s: %s" % (self.id,self.name))
         return None
+
+    @property
+    def popcounts(self):
+        return PopCount.objects.filter(country=self).order_by('date')
+
+    @property
+    def current_popcount(self):
+        try:
+            latest = self.popcounts.latest('date')
+            return latest.population
+        except PopCount.DoesNotExist as ex:
+            pass
+        return 0
+
+    def generate_population_count(self, fromdate=None):
+        """Recalculate all stored population counts from the given date onwards."""
+        logger.info("Counting population update from %s" % fromdate)
+        filter_args = {
+            'country': self,
+        }
+        if fromdate:
+            filter_args['date__gte'] = fromdate
+
+        # delete any popcounts after this point
+        existing_popcounts = PopCount.objects.filter(**filter_args)
+        logger.info("going to delete %s existing popcounts" % len(existing_popcounts))
+        existing_popcounts.delete()
+
+        # find declarations for this country, only of status D or V
+        filter_args = {
+            'area__country': self.id,
+            'status__in': Declaration.POPULATION_STATUS.keys()
+        }
+        if fromdate:
+            filter_args['event_date__gte'] = fromdate
+        future_decs = Declaration.objects.filter(**filter_args).order_by('event_date')
+        logger.info("got %s declarations" % len(future_decs))
+
+        # Make a dict of the unique dates for all declarations,
+        # and the declarations linked to each date
+        date_dict = { str(d.event_date): [] for d in future_decs }
+        for d in future_decs:
+            date_dict[str(d.event_date)].append(d)
+        change_dates = sorted(date_dict.keys())
+        logger.info("got change dates: %s" % change_dates)
+
+        root = self.get_root_area()
+        for cdate in change_dates:
+            # Calculate the population as at this date
+            pc = PopulationCounter()
+            pc.date = cdate
+            date_pop = pc.declared_population(root)
+            # Note we add a unique popcount for each declaration on this date,
+            # but they all have the same population,
+            # because we can't break down population change by declaration at this stage
+            for decln in date_dict[cdate]:
+                pop = PopCount.create(self, decln, date_pop)
+
 
     def __str__(self):
         return self.name
@@ -424,13 +486,13 @@ class Area(Hierarchy, models.Model):
     def num_indirect_descendants(self):
         return (len(self.all_descendants) - len(self.descendants))
 
-    def num_declared_ancestors(self):
+    def num_declared_ancestors(self, dec_date=None):
         num_declared = 0
         for parent in self.ancestors:
             if parent == self:
                 continue
-            if parent.is_declared:
-                logger.debug("parent %s is declared" % parent.name)
+            if parent.is_declared_at(dec_date):
+                logger.debug("parent %s is declared at %s" % (parent.name, dec_date))
                 num_declared += 1
         return num_declared
 
@@ -484,11 +546,31 @@ class Area(Hierarchy, models.Model):
 
     @property
     def is_declared(self):
+        """Return true if the Area's most recent declaration, at the current date,
+        is DECLARED."""
         # Consider an area to be declared based on the status of its most
         # recent declaration
         latest = self.latest_declaration
         if latest:
             return self.latest_declaration.status == 'D'
+        return False
+
+    def is_declared_at(self, dec_date):
+        """Return true if the Area's most recent declaration, at the given date,
+        is DECLARED."""
+        if not dec_date:
+            return self.is_declared
+
+        latest_dec = None
+        try:
+            latest_dec = Declaration.objects.filter(area=self.id, event_date__lte=dec_date).latest('event_date')
+        except ValidationError as ex:
+            logger.error("invalid date: %s" % dec_date)
+            pass
+        except Declaration.DoesNotExist as ex:
+            pass
+        if latest_dec:
+            return latest_dec.status == 'D'
         return False
 
     @property
@@ -584,6 +666,12 @@ class Declaration(models.Model):
     admin_notes = models.TextField(blank=True)
     verified = models.BooleanField(default=False)
 
+    # These status values can affect population counts -
+    # other types of status are tracked but are not included in counts
+    POPULATION_STATUS = {
+        'D': True,
+        'V': True
+    }
     @classmethod
     def content_type_id(cls):
         return ContentType.objects.get_for_model(cls).pk
@@ -609,6 +697,12 @@ class Declaration(models.Model):
             return self.is_active_at_date(datetime.date.today())
         return False
 
+    @property
+    def affects_population_count(self):
+        """Return true if this declaration status will potentially alter
+        population counts (only Declared or Revoked)"""
+        return self.POPULATION_STATUS.get(self.status)
+
     def is_active_at_date(self, date):
         siblings = Declaration.objects.filter(
             area = self.area.id,
@@ -620,3 +714,27 @@ class Declaration(models.Model):
                 logger.info("excluding area %s due to declaration with non-D status %s at date %s" % (sib.area, sib.status, sib.event_date))
                 return False
         return True
+
+class PopCount(models.Model):
+    country = models.ForeignKey(Country, on_delete=models.CASCADE)
+    declaration = models.ForeignKey(Declaration, on_delete=models.CASCADE)
+    population = models.PositiveIntegerField()
+    date = models.DateField(verbose_name='Declaration date')
+    # This status field mirrors the one in Declaration class
+    # except it will only include those status values which change the population count
+    status = models.CharField(
+        max_length=1,
+        choices = Declaration.STATUS_TYPES,
+        default=Declaration.DECLARED,
+    )
+
+    def __str__(self):
+        return self.population
+
+    @classmethod
+    def create(cls, country, declaration, population):
+        pop = cls(country=country, declaration=declaration, population=population)
+        pop.status = declaration.status
+        pop.date = declaration.event_date
+        pop.save()
+        return pop
