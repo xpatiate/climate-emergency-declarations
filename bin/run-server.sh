@@ -22,7 +22,8 @@ else
     # and are not writable by www-data otherwise
     chown www-data /var/log/django/*log
 
-    tail -f /var/log/django/request.log
+    #tail -f /var/log/django/request.log
+    tail -f /var/log/django/uwsgi.log
 fi
 
 exit 0
