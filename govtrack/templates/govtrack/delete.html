@@ -1,2 +1,2 @@
 {% load govtrack %} 
-<div class='react-delete-link' id='{{object | to_class_name | lower}}-{{ object.id }}' data-url="{% url view object.id %}"></div>
+<div class='delete-link' data-type='{{object | to_class_name | lower}}' data-id='{{ object.id }}' data-url="{% url view object.id %}"><a href=''>X</a></div>
