@@ -26,10 +26,10 @@ def area_data(request, area_id):
     if decl and decl.is_currently_active():
         dec_date = decl.display_event_date()
         contact = decl.key_contact
-        # TODO: add a 'best link' field, for now just take the first one
-        links = decl.links.all()
-        if links:
-            bestlink = links[0].url
+        # TODO: add a 'best link' field
+        #links = decl.links.all()
+        #if links:
+        #    bestlink = links[0].url
     areadata = [
         area.name,
         1,
