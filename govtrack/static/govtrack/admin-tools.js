@@ -85,7 +85,7 @@ function selectBinItem(ev) {
 function pasteBin(ev) {
     let html = ev.originalEvent.clipboardData.getData('text/html');
     
-    let data = tableToCSV(html);
+    let data = tableToCSV(html, '|');
     
     if (data) {
         ev.preventDefault();
@@ -95,7 +95,7 @@ function pasteBin(ev) {
     }
 }
 
-function tableToCSV(input) {
+function tableToCSV(input, separator, split_links=false) {
     let pastedElement = document.createElement('html');
     pastedElement.innerHTML = input;
 
@@ -109,12 +109,23 @@ function tableToCSV(input) {
     
     if (table != null) {
         for (let row = 0; row < table.children.length; row++) {
-            values[row] = []
+            values[row] = [];
             for (let cell = 0; cell < table.children[row].children.length; cell++) {
-                values[row][cell] = table.children[row].children[cell].textContent
+                if (split_links) {
+                    let link = table.children[row].children[cell].querySelector('a');
+                    
+                    if (link) {
+                        values[row].push(link.textContent);
+                        values[row].push(link.getAttribute('href'));
+                    } else {
+                        values[row].push(table.children[row].children[cell].textContent);
+                    }
+                } else {
+                    values[row].push(table.children[row].children[cell].textContent);
+                }
             }
         }
-        return values.map((row) => row.join('|')).join('\n');
+        return values.map((row) => row.join(separator)).join('\n');
     } else {
         return false;
     }
@@ -135,27 +146,15 @@ User clicks 'create' button, form submits - no JS nivolved
   -> Submit form to API which parses textarea data and creates areas
 */
     
-function getPastedHTML(e) {
-    e.preventDefault();
-    var target = $(e.target)
-    var pastedText = ''
-    // try to get HTML-formatted text from clipboard event
-    if (e.originalEvent.clipboardData && e.originalEvent.clipboardData.getData) {
-        pastedText = e.originalEvent.clipboardData.getData('text/html');
+function getPastedHTML(ev) {
+    let html = ev.originalEvent.clipboardData.getData('text/html');
+    
+    let data = tableToCSV(html, ',', true);
+    
+    if (data) {
+        ev.preventDefault();
+        ev.target.value = data;
     }
-    // If none, try to get plain text
-    if (pastedText == '') {
-        pastedText = e.originalEvent.clipboardData.getData('text/plain');
-    }
-    target.html(pastedText)
-    // If pastedText looks like HTML and contains a <table>,
-    // call extractPastedData
-    var dom_areas = $($.parseHTML(pastedText))
-    var table_area = dom_areas.closest('table');
-    if (table_area.length) {
-        extractPastedData(target)
-    }
-    // otherwise we just leave the pasted text in the textarea
 }
 
 // Simple function to display the textarea when link is clicked,
@@ -169,19 +168,4 @@ function showMultiAddForm(target_id) {
         target.css('display', 'none');
     }
     return false;
-}
-
-// After HTML text is pasted, send it to the API to extract the areas and URLs
-// Replace the textarea contents with the API response
-function extractPastedData(target) {
-    var pastedText = target.html()
-    jQuery.ajax('/api/extract_areas', {
-        'method': 'POST',
-        'data': {
-            'area_table': pastedText,
-        },
-        'success': function(response) {
-            target.html(response['areas'])
-        }
-    });
 }

@@ -151,27 +151,6 @@ def import_declaration_del(request, import_declaration_id):
         import_declaration.delete()
     return HttpResponse(status=status)
 
-# TODO: add CSRF to AJAX form
-@csrf_exempt
-def extract_area_data(request):
-
-    # get pasted text from POST data
-    area_table = request.POST.get('area_table')
-    area_unescaped = html.unescape(area_table)
-
-    soup = BeautifulSoup( area_unescaped, 'html.parser')
-    areas = []
-    areastring = io.StringIO()
-    writer = csv.writer(areastring)
-    for td in soup.find_all('td'):
-        a = td.find('a')
-        if a:
-            writer.writerow([a.get_text(), a['href']])
-        else:
-            tdtext = td.get_text()
-            writer.writerow([tdtext])
-    return JsonResponse({'areas': areastring.getvalue()})
-
 # Create multiple areas at once from CSV-like text
 def add_multi_areas(request, parent_id, structure_id):
     if request.method == 'POST' and request.user.is_authenticated:
