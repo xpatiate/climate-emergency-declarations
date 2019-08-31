@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpR
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 
-from govtrack.models import Declaration, Country, Area, Structure, Link, PopCount
+from govtrack.models import Declaration, Country, Area, Structure, Link, PopCount, ImportDeclaration
 from govtrack.forms import AreaForm
 
 from bs4 import BeautifulSoup
@@ -143,6 +143,14 @@ def link_del(request, link_id):
         link.delete()
     return HttpResponse(status=status)
 
+def import_declaration_del(request, import_declaration_id):
+    status=403
+    if request.user.is_authenticated:
+        status=200
+        import_declaration = get_object_or_404(ImportDeclaration, pk=import_declaration_id)
+        import_declaration.delete()
+    return HttpResponse(status=status)
+
 # TODO: add CSRF to AJAX form
 @csrf_exempt
 def extract_area_data(request):
@@ -163,7 +171,6 @@ def extract_area_data(request):
             tdtext = td.get_text()
             writer.writerow([tdtext])
     return JsonResponse({'areas': areastring.getvalue()})
-
 
 # Create multiple areas at once from CSV-like text
 def add_multi_areas(request, parent_id, structure_id):
@@ -200,4 +207,89 @@ def add_multi_areas(request, parent_id, structure_id):
                     except ValidationError as ex:
                         logger.error("couldn't save new link: %s" % ex)
     return redirect('area', area_id=parent_id)
+
+# Bin methods
+def add_multi_import_declarations(request, country_code):
+    lines = request.POST.get('paste_data').split('\n')
+    for line in lines:
+        values = line.split('|')
+        if (len(values[4].split(' ')[0]) == 1):
+            values[4] = '0' + values[4]
+        importDeclaration = ImportDeclaration({
+            'name': values[0],
+            'num_govs': int(''.join(values[1].split(','))),
+            'area': values[2],
+            'population': int(''.join(values[3].split(','))),
+            'date': datetime.datetime.strptime(values[4], '%d %b %Y').date(),
+            'due': values[5],
+            'contact': values[6],
+            'link': values[7],
+            'country': Country.objects.filter(country_code=country_code).first()
+        })
+        importDeclaration.save()
+
+    return redirect('country', Country.objects.filter(country_code=country_code).first().id)
+
+def import_declaration_pro(request, parent_id, structure_id, import_declaration_id):
+    importDeclaration = ImportDeclaration.objects.filter(id=import_declaration_id).first()
+    parent = Area.objects.filter(id=parent_id).first()
+    structure = Structure.objects.filter(id=structure_id).first()
+
+    area = Area(**{
+        'name': importDeclaration.name,
+        'country': importDeclaration.country,
+        'location': importDeclaration.area,
+        'population': importDeclaration.population,
+        'structure': structure,
+        'parent': parent,
+    })
+    area.save()
+
+    declaration = Declaration(**{
+        'area': area,
+        'status': 'D',
+        'event_date': importDeclaration.date,
+    })
+    declaration.save()
+
+    if declaration.affects_population_count:
+        # Regenerate all stored population counts for the country,
+        # from the date of this declaration onwards
+        area.country.generate_population_count(declaration.event_date)
+
+    Link(**{
+        'content_type_id': Declaration.content_type_id(),
+        'object_id': declaration.id,
+        'url': importDeclaration.link,
+    }).save()
+
+    importDeclaration.delete()
+
+    return redirect('country', importDeclaration.country.id)
+
+def declaration_from_import(request, area_id, import_declaration_id):
+    importDeclaration = ImportDeclaration.objects.filter(id=import_declaration_id).first()
+    area = Area.objects.filter(id=area_id).first()
+
+    declaration = Declaration(**{
+        'area': area,
+        'status': 'D',
+        'event_date': importDeclaration.date,
+    })
+    declaration.save()
+
+    if declaration.affects_population_count:
+        # Regenerate all stored population counts for the country,
+        # from the date of this declaration onwards
+        area.country.generate_population_count(declaration.event_date)
+
+    Link(**{
+        'content_type_id': Declaration.content_type_id(),
+        'object_id': declaration.id,
+        'url': importDeclaration.link,
+    }).save()
+
+    importDeclaration.delete()
+
+    return redirect('country', importDeclaration.country.id)
 

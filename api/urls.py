@@ -5,6 +5,10 @@ from . import views
 urlpatterns = [
     # API paths
     path('extract_areas', views.extract_area_data, name='api_area_extract'),
+    path('import_declarations/add/<str:country_code>', views.add_multi_import_declarations, name='api_import_declaration_multi_add'),
+    path('import_declaration/del/<int:import_declaration_id>', views.import_declaration_del, name='api_import_declaration_del'),
+    path('import_declaration/pro/<int:parent_id>/<int:structure_id>/<int:import_declaration_id>', views.import_declaration_pro, name='api_import_declaration_pro'),
+    path('import_declaration/dec/<int:area_id>/<int:import_declaration_id>', views.declaration_from_import, name='api_import_declaration_dec'),
     path('areas/add/<int:parent_id>/<int:structure_id>', views.add_multi_areas, name='api_area_multi_add'),
     path('country/<str:country_code>/population', views.country_population, name='api_country_population'),
     path('country/<str:country_code>/declarations', views.country_declarations, name='api_country_declarations'),

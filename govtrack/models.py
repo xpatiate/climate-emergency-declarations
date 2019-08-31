@@ -276,7 +276,6 @@ class Country(models.Model):
     def __str__(self):
         return self.name
 
-
 class Structure(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
@@ -341,7 +340,6 @@ class Structure(Hierarchy, models.Model):
 
     def __str__(self):
         return self.fullname()
-
 
 class Area(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
@@ -742,3 +740,14 @@ class PopCount(models.Model):
         pop.date = declaration.event_date
         pop.save()
         return pop
+
+class ImportDeclaration(models.Model):
+    name = models.TextField(null=True, blank=True)
+    num_govs = models.PositiveSmallIntegerField(null=True, blank=True)
+    area = models.TextField(null=True, blank=True)
+    population = models.PositiveIntegerField(null=True, blank=True)
+    date = models.DateField(null=True, blank=True)
+    due = models.TextField(null=True, blank=True)
+    contact = models.TextField(null=True, blank=True)
+    link = models.TextField(null=True, blank=True)
+    country = models.ForeignKey(Country, on_delete=models.CASCADE)

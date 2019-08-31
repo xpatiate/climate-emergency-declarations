@@ -115,6 +115,15 @@ tr.country-total {
 .level_10 {
   padding-left: 200px;
 }
+.areas {
+    width: 100%;
+}
+.areas th {
+    text-align: right;
+}
+.object-view {
+    margin: 20px 0px;
+}
 
 /* ADMIN VIEW */
 .admin-corner {
@@ -145,7 +154,7 @@ tr.country-total {
     font-size: small;
     display: inline;
 }
-div.delete-link a {
+.delete-link a {
     color: orange;
 }
 .edit-country a, .edit-area a, .edit-structure a, .edit-dec a {
@@ -163,6 +172,45 @@ div.delete-link a {
     font-size: small;
     padding-left: 20px;
     display: none;
+}
+.bin {
+    display: none;
+}
+.bin textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 50px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.bin > div {
+    width: 100%;
+    height: 200px;
+    resize: vertical;
+    overflow-y: scroll;
+    padding: 0px 10px;
+    border: 1px solid lightgrey;
+}
+.bin table {
+    width: 100%;
+}
+.bin tr {
+    text-align: right;
+}
+.bin td:first-child {
+    text-align: left;
+}
+.bin-create {
+    margin: 20px 0px 10px 5px;
+}
+.bin-heading {
+    display: flex;
+}
+.bin-heading > * {
+    vertical-align: middle;
+}
+#selected-bin-item {
+    background: #f0f0f0;
 }
 
 /* FORMS */

@@ -15,148 +15,181 @@
 {% endblock %}
 
 <div class='parent-tree'>
-{% for parent in parents_list reversed %}
+    {% for parent in parents_list reversed %}
     <div class='level_{{ parent.level }}'>&#8866;({{ parent.structure.name }}) {{ parent.name }}</div>
-{% endfor %}
-{% if action != "add" %}
+    {% endfor %}
+    {% if action != "add" %}
     <div class='level_{{ area.level|add:"1" }}'>&#8866; {{ area.num_children }} children
-    {% if area.num_supplementary_children %}
-    ({{ area.num_supplementary_children }} supplementary)
-    {% endif %}
+        {% if area.num_supplementary_children %}
+        ({{ area.num_supplementary_children }} supplementary)
+        {% endif %}
     </div>
-{% endif %}
+    {% endif %}
 </div>
 
 {% if action %}
 
 <form method='POST' action='
-{% block formaction %}
+    {% block formaction %}
     {% if action == "add" %}
     {% url 'area_child' parent.id structure_id %}'
     {% else %}
     {% url 'area_edit' area.id %}'
     {% endif %}
-{% endblock %}
+    {% endblock %}
     '>
-{% csrf_token %}
-<p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
-<table class='form-table'>
-{{ form.as_table }}
-{% include 'govtrack/links.html' %}
-{{ linkform.as_table }}
-</table>
-{% block formextra %}{% endblock %}
-<input type='submit' name='save' value='save' class='button-save'>
-<input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
+    {% csrf_token %}
+    <p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
+    <table class='form-table'>
+        {{ form.as_table }}
+        {% include 'govtrack/links.html' %}
+        {{ linkform.as_table }}
+    </table>
+    {% block formextra %}{% endblock %}
+    <input type='submit' name='save' value='save' class='button-save'>
+    <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
 </form>
 
 {% else %}
-
 {% block view %}
-<div class='object-view'>
+
 {% if user.is_authenticated %}
-  <div class='admin-corner'>
-    <div class='edit-area' style="display: block;">
-      <a href='{% url 'area_edit' area.id %}'>edit</a>
-    <p><span class='link-api'><a href='{{ area_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></p>
-    <div style='text-align: left'>
-      {% for ctype in area.sub_types %}
-        <a name='#{{area.id}}{{ ctype.id}}'></a>
-        <li><a href='{% url 'area_child' area.id ctype.id  %}'>add {{ ctype.name }}</a></li>
-      {% endfor %}
+<div class='bin'>
+    <form class='paste-bin' action='{% url 'api_import_declaration_multi_add' country.country_code %}' method=POST>
+        <div class='bin-heading'>
+            <h3>The Bin</h3>
+            <input class='bin-create' type='submit' value='create'>
+        </div>
+        {% csrf_token %}
+        <textarea name='paste_data'></textarea>
+    </form>
+    <div>
+        <table>
+            {% for import_declaration in import_declaration_list %}
+            <tr data-id='{{ import_declaration.id }}' onclick='selectBinItem(event)'>
+                <td>{{ import_declaration.name }}</td>
+                <!-- <td>{{ import_declaration.num_govs }}</td> -->
+                <td>{{ import_declaration.area }}</td>
+                <td>{{ import_declaration.population }}</td>
+                <td>{{ import_declaration.date }}</td>
+                <!-- <td>{{ import_declaration.due }}</td> -->
+                <!-- <td>{{ import_declaration.contact }}</td> -->
+                <td><a href='{{ import_declaration.link }}'>evidence</a></td>
+                <td>
+                    <!-- <a href='{% url 'api_import_declaration_del' import_declaration.id %}'>X</a> -->
+                    {% with view='api_import_declaration_del' object=import_declaration %}
+                    {% include 'govtrack/delete.html' %}
+                    {% endwith %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
     </div>
-    </div>
-    {% if user.is_authenticated and area.admin_notes %}
-     <div class='admin-view'>
-     <b>Admin Notes</b>
-     <p>{{ area.admin_notes }}</p>
-     </div>
-    {% endif %}
-  </div>
-{% endif %}
-
-<p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
-<p><b>Location:</b> {{ area.location|default_if_none:'' }}</p>
-<p><b>Population:</b> {{ area.population | intcomma }}</p>
-<p class='description'><b>Description:</b> {{ area.description|default_if_none:'' }}</p>
-{% include 'govtrack/links.html' %}
-
-
-{% if area.num_all_children %}
-<p><b>Children:</b></p>
-<table>
-{% for area in areas_list %}
-    <tr>
-    <td>
-    {% if area.is_supplementary %}
-    <div class='supplementary'>
-    {% endif %}
-    <div class='level_{{ area.level }}' id='area-{{ area.id }}'>&#8866;({{ area.structure.name }})  <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
-    {% if area.is_supplementary %}
-    </div>
-    {% endif %}
-    {% if not area.is_supplementary and user.is_authenticated %}
-      &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
-      <div id='editarea-{{ area.id }}' class='edit-area'>
-      <a href='{% url 'area_edit' area.id %}'>edit</a>
-      {% if area.level > 1 %}
-        |
-        {% with view="api_area_del" object=area %}
-        {% include 'govtrack/delete.html' %}
-        {% endwith %}
-      {% endif %}
-      <br>
-    {% include 'govtrack/add-area.html' %}
-      </div>
-    {% endif %}
-    </div>
-    </td>
-    </tr>
-{% endfor %}
-</table>
-<br/>
-{% endif %}
-
-
-
 </div>
-<br>
-<div class='declarations'>
-<h4>Declarations</h4>
-<ul>
-{% for dec in area.declarations %}
-<li id='declaration-{{dec.id}}'>{{ dec}}
-    <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
-    {% if user.is_authenticated %}
-    <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
-    {% with view='api_declaration_del' object=dec %}
-        {% include 'govtrack/delete.html' %}
-    {% endwith %}
-    {% endif %}
-</li>
-{% endfor %}
-{% if user.is_authenticated %}
-    <li><a class='edit-dec' href='{% url 'declaration_add' area.id  %}'>add declaration</a>
 {% endif %}
-</ul>
-<br>
+
+<div class='object-view'>
+    {% if user.is_authenticated %}
+    <div class='admin-corner'>
+        <div class='edit-area' style="display: block;">
+            <a href='{% url 'area_edit' area.id %}'>edit</a>
+            <div><span class='link-api'><a href='{{ area_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></div>
+            <a class='toggle-bin'>show bin</a>
+            <div style='text-align: left'>
+                {% for ctype in area.sub_types %}
+                <a name='#{{area.id}}{{ ctype.id}}'></a>
+                <li><a href='{% url 'area_child' area.id ctype.id  %}'>add {{ ctype.name }}</a></li>
+                {% endfor %}
+            </div>
+        </div>
+        {% if user.is_authenticated and area.admin_notes %}
+        <div class='admin-view'>
+            <b>Admin Notes</b>
+            <p>{{ area.admin_notes }}</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
+    <p><b>Location:</b> {{ area.location|default_if_none:'' }}</p>
+    <p><b>Population:</b> {{ area.population | intcomma }}</p>
+    <p class='description'><b>Description:</b> {{ area.description|default_if_none:'' }}</p>
+    {% include 'govtrack/links.html' %}
+
+    {% if area.num_all_children %}
+    <p><b>Children:</b></p>
+    <table>
+        {% for area in areas_list %}
+        <tr>
+            <td>
+                {% if area.is_supplementary %}
+                <div class='supplementary'>
+                {% endif %}
+                <div class='level_{{ area.level }}' id='area-{{ area.id }}'>&#8866;({{ area.structure.name }})  <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
+                {% if area.is_supplementary %}
+                </div>
+                {% endif %}
+                    {% if not area.is_supplementary and user.is_authenticated %}
+                    &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
+                    <div id='editarea-{{ area.id }}' class='edit-area'>
+                    <a href='{% url 'area_edit' area.id %}'>edit</a>
+                    {% if area.level > 1 %}
+                    |
+                    {% with view='api_area_del' object=area %}
+                    {% include 'govtrack/delete.html' %}
+                    {% endwith %}
+                    {% endif %}
+                    |
+                    <a class='dec-from-bin' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from bin</a>
+                    {% include 'govtrack/add-area.html' %}
+                </div>
+                {% endif %}
+                </div>
+            </td>
+        </tr>
+    {% endfor %}
+    </table>
+    {% endif %}
+</div>
+
+<div class='declarations'>
+    <h4>Declarations</h4>
+    <ul>
+        {% for dec in area.declarations %}
+        <li id='declaration-{{dec.id}}'>
+            {{ dec }}
+            <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
+                {% if user.is_authenticated %}
+                <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
+                    {% with view='api_declaration_del' object=dec %}
+                    {% include 'govtrack/delete.html' %}
+                    {% endwith %}
+                </div>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+        {% if user.is_authenticated %}
+        <li><a class='edit-dec' href='{% url 'declaration_add' area.id  %}'>add declaration</a></li>
+        {% endif %}
+    </ul>
 </div>
 
 {% endblock %}
-
 {% endif %}
 
 {% if area.id != area.parent.id %}
-<br/>
+<br>
 <p class='bottom-nav'>
-{% for parent in area.direct_ancestors %}
-  {% if forloop.first %}
+    {% for parent in area.direct_ancestors %}
+    {% if forloop.first %}
     {{ area.name }} -&gt; 
-  {% else %}
+    {% else %}
     <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
     {% if not forloop.last %} -&gt; {% endif %}
-  {% endif %}
-{% endfor %}
+    {% endif %}
+    {% endfor %}
 </p>
 {% endif %}
 
