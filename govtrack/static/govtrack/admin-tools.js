@@ -7,12 +7,19 @@ $(document).ready(() => {
 
     $('div.delete-link').click(deleteThis);
 
-    $('.toggle-bin').click(toggleBin);
-    $('.bin textarea').bind('paste', pasteBin);
+    let toggleInbox = $('.toggle-inbox');
+    
+    console.log(toggleInbox);
 
-    if (localStorage.getItem('bin') == 'shown') {
-        toggleBin();
+    if (toggleInbox.length > 0) {
+        if (localStorage.getItem('inbox') == 'hidden') {
+            toggleInbox();
+        }
+
+        toggleInbox.click(toggleInbox);
     }
+    
+    $('.inbox-paste textarea').bind('paste', pasteInbox);
 });
 
 function toggleEditOptions(ev) {
@@ -56,33 +63,35 @@ function deleteThis(ev) {
     }
 };
 
-function toggleBin() {
-    let bin = $('.bin');
-    if (bin.css('display') == 'none') {
-        bin.css('display', 'block');
-        $('.toggle-bin').html('hide bin');
-        localStorage.setItem('bin', 'shown');
-    } else {
-        bin.css('display', 'none');
-        $('.toggle-bin').html('show bin');
-        localStorage.setItem('bin', 'hidden');
-    }
+function toggleInbox() {
+    // let inbox = $('.inbox-paste, .inbox-list');
+    // if (inbox.css('display') == 'none') {
+    //     inbox.css('display', 'block');
+    //     $('.toggle-inbox').html('hide inbox');
+    //     localStorage.setItem('inbox', 'shown');
+    // } else {
+    //     inbox.css('display', 'none');
+    //     $('.toggle-inbox').html('show inbox');
+    //     localStorage.setItem('inbox', 'hidden');
+    // }
+    console.log('fosifjseijfseoifj');
+    
 }
 
-function selectBinItem(ev) {
+function selectInboxItem(ev) {
     for (let row = 0; row < ev.target.parentElement.parentElement.children.length; row++) {
         ev.target.parentElement.parentElement.children[row].removeAttribute('id');
     }
     
-    ev.target.parentElement.id = 'selected-bin-item';
+    ev.target.parentElement.id = 'selected-inbox-item';
 
-    document.querySelectorAll('.add-from-bin, .dec-from-bin').forEach((el) => {
+    document.querySelectorAll('.add-from-inbox, .dec-from-inbox').forEach((el) => {
         let url = el.getAttribute('data-url')
         el.setAttribute('href', url.substring(0, url.length - 1) + ev.target.parentElement.getAttribute('data-id'));
     });
 }
 
-function pasteBin(ev) {
+function pasteInbox(ev) {
     let html = ev.originalEvent.clipboardData.getData('text/html');
     
     let data = tableToCSV(html, '|');

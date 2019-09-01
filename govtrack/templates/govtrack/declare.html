@@ -47,6 +47,10 @@
 <input type='submit' value='cancel' class='button-cancel' formnovalidate>
 </form>
 
+{% if action == 'edit' %}
+{% include 'govtrack/inbox-list.html' %}
+{% endif %}
+
 {% else %}
 
 {% block view %}
@@ -56,12 +60,12 @@
     <div class='edit-dec' style="display: block;">
     <a href='{% url 'declaration_edit' declaration.id %}'>edit</a>
     </div>
-    {% if user.is_authenticated and declaration.admin_notes %}
-     <div class='admin-view'>
-     <b>Admin Notes</b>
-     <p>{{ declaration.admin_notes }}</p>
-     </div>
-    {% endif %}
+        {% if user.is_authenticated and declaration.admin_notes %}
+        <div class='admin-view'>
+            <b>Admin Notes</b>
+            <p>{{ declaration.admin_notes }}</p>
+        </div>
+        {% endif %}
     </div>
 {% endif %}
 <p class='dec-summary'>{{ declaration.description_short }}</p>

@@ -1,0 +1,25 @@
+{% load humanize %}
+
+{% if import_declaration_list %}
+<div class='inbox-list'>
+    <table>
+        {% for import_declaration in import_declaration_list %}
+        <tr data-id='{{ import_declaration.id }}' onclick='selectInboxItem(event)'>
+            <td>{{ import_declaration.name }}</td>
+            <!-- <td>{{ import_declaration.num_govs }}</td> -->
+            <td>{{ import_declaration.area }}</td>
+            <td>{{ import_declaration.population | intcomma }}</td>
+            <td>{{ import_declaration.date }}</td>
+            <!-- <td>{{ import_declaration.due }}</td> -->
+            <!-- <td>{{ import_declaration.contact }}</td> -->
+            <td><a href='{{ import_declaration.link }}'>evidence</a></td>
+            <td>
+                {% with view='api_import_declaration_del' object=import_declaration %}
+                {% include 'govtrack/delete.html' %}
+                {% endwith %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endif %}

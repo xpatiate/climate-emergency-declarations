@@ -50,51 +50,19 @@
     <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
 </form>
 
+{% include 'govtrack/inbox-list.html' %}
+
 {% else %}
 {% block view %}
-
-{% if user.is_authenticated %}
-<div class='bin'>
-    <form class='paste-bin' action='{% url 'api_import_declaration_multi_add' country.country_code %}' method=POST>
-        <div class='bin-heading'>
-            <h3>The Bin</h3>
-            <input class='bin-create' type='submit' value='create'>
-        </div>
-        {% csrf_token %}
-        <textarea name='paste_data'></textarea>
-    </form>
-    <div>
-        <table>
-            {% for import_declaration in import_declaration_list %}
-            <tr data-id='{{ import_declaration.id }}' onclick='selectBinItem(event)'>
-                <td>{{ import_declaration.name }}</td>
-                <!-- <td>{{ import_declaration.num_govs }}</td> -->
-                <td>{{ import_declaration.area }}</td>
-                <td>{{ import_declaration.population }}</td>
-                <td>{{ import_declaration.date }}</td>
-                <!-- <td>{{ import_declaration.due }}</td> -->
-                <!-- <td>{{ import_declaration.contact }}</td> -->
-                <td><a href='{{ import_declaration.link }}'>evidence</a></td>
-                <td>
-                    <!-- <a href='{% url 'api_import_declaration_del' import_declaration.id %}'>X</a> -->
-                    {% with view='api_import_declaration_del' object=import_declaration %}
-                    {% include 'govtrack/delete.html' %}
-                    {% endwith %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-</div>
-{% endif %}
 
 <div class='object-view'>
     {% if user.is_authenticated %}
     <div class='admin-corner'>
         <div class='edit-area' style="display: block;">
-            <a href='{% url 'area_edit' area.id %}'>edit</a>
+            <a href='{% url 'area_edit' area.id %}'>edit</a> |
+            <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
             <div><span class='link-api'><a href='{{ area_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></div>
-            <a class='toggle-bin'>show bin</a>
+            <a class='toggle-inbox'>hide inbox</a>
             <div style='text-align: left'>
                 {% for ctype in area.sub_types %}
                 <a name='#{{area.id}}{{ ctype.id}}'></a>
@@ -114,10 +82,17 @@
     <p><b>Country:</b> <a href='{% url 'country' country.id %}'>{{ country.name }}</a></p>
     <p><b>Location:</b> {{ area.location|default_if_none:'' }}</p>
     <p><b>Population:</b> {{ area.population | intcomma }}</p>
-    <p class='description'><b>Description:</b> {{ area.description|default_if_none:'' }}</p>
+    <p class='description'><b>Description:</b> {{ area.description | default_if_none:'' }}</p>
     {% include 'govtrack/links.html' %}
+</div>
 
-    {% if area.num_all_children %}
+{% if user.is_authenticated %}
+{% include 'govtrack/inbox-paste.html' %}
+{% include 'govtrack/inbox-list.html' %}
+{% endif %}
+
+{% if area.num_all_children %}
+<div class='object-view'>
     <p><b>Children:</b></p>
     <table>
         {% for area in areas_list %}
@@ -141,7 +116,7 @@
                     {% endwith %}
                     {% endif %}
                     |
-                    <a class='dec-from-bin' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from bin</a>
+                    <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
                     {% include 'govtrack/add-area.html' %}
                 </div>
                 {% endif %}
@@ -150,8 +125,8 @@
         </tr>
     {% endfor %}
     </table>
-    {% endif %}
 </div>
+{% endif %}
 
 <div class='declarations'>
     <h4>Declarations</h4>

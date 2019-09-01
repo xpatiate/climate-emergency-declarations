@@ -169,6 +169,7 @@ def structure_child(request, parent_id):
 def area_edit(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     form = AreaForm(instance=area)
+    import_declarations = ImportDeclaration.objects.filter(country=area.country).order_by('-date')
 
     link_initial = {
         'content_type': Area.content_type_id(),
@@ -205,6 +206,7 @@ def area_edit(request, area_id):
         'country': area.country,
         'parents_list': area.direct_ancestors,
         'supplements_list': area.supplements.all(),
+        'import_declaration_list': import_declarations,
         })
 
 def area_child(request, parent_id, structure_id):
@@ -284,6 +286,7 @@ def declaration_edit(request, declaration_id):
     if not dec:
         raise Http404("No such declaration")
     form = DeclarationForm(instance=dec)
+    import_declarations = ImportDeclaration.objects.filter(country=dec.area.country).order_by('-date')
     link_initial = {
         'content_type': Declaration.content_type_id(),
         'object_id': declaration_id,
@@ -316,5 +319,6 @@ def declaration_edit(request, declaration_id):
         'linkform': linkform,
         'area': dec.area,
         'links': dec.links.all(),
+        'import_declaration_list': import_declarations,
         })
 

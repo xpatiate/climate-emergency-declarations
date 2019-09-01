@@ -187,14 +187,14 @@ def add_multi_areas(request, parent_id, structure_id):
                         logger.error("couldn't save new link: %s" % ex)
     return redirect('area', area_id=parent_id)
 
-# Bin methods
+# Inbox methods
 def add_multi_import_declarations(request, country_code):
     lines = request.POST.get('paste_data').split('\n')
     for line in lines:
         values = line.split('|')
         if (len(values[4].split(' ')[0]) == 1):
             values[4] = '0' + values[4]
-        importDeclaration = ImportDeclaration({
+        importDeclaration = ImportDeclaration(**{
             'name': values[0],
             'num_govs': int(''.join(values[1].split(','))),
             'area': values[2],
@@ -228,6 +228,7 @@ def import_declaration_pro(request, parent_id, structure_id, import_declaration_
         'area': area,
         'status': 'D',
         'event_date': importDeclaration.date,
+        'key_contact': importDeclaration.contact,
     })
     declaration.save()
 
@@ -254,6 +255,7 @@ def declaration_from_import(request, area_id, import_declaration_id):
         'area': area,
         'status': 'D',
         'event_date': importDeclaration.date,
+        'key_contact': importDeclaration.contact,
     })
     declaration.save()
 

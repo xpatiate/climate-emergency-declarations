@@ -173,43 +173,43 @@ tr.country-total {
     padding-left: 20px;
     display: none;
 }
-.bin {
+/* .inbox-paste, .inbox-list {
     display: none;
-}
-.bin textarea {
+} */
+.inbox-paste textarea {
     width: 100%;
     resize: vertical;
     min-height: 50px;
     padding: 15px;
-    margin-bottom: 15px;
 }
-.bin > div {
+.inbox-list {
     width: 100%;
     height: 200px;
     resize: vertical;
     overflow-y: scroll;
     padding: 0px 10px;
     border: 1px solid lightgrey;
+    margin: 20px 0px;
 }
-.bin table {
+.inbox-list table {
     width: 100%;
 }
-.bin tr {
+.inbox-list tr {
     text-align: right;
 }
-.bin td:first-child {
+.inbox-list td:first-child {
     text-align: left;
 }
-.bin-create {
+.inbox-create {
     margin: 20px 0px 10px 5px;
 }
-.bin-heading {
+.inbox-heading {
     display: flex;
 }
-.bin-heading > * {
+.inbox-heading > * {
     vertical-align: middle;
 }
-#selected-bin-item {
+#selected-inbox-item {
     background: #f0f0f0;
 }
 

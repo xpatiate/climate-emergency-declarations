@@ -23,7 +23,7 @@
         <div id='editcountry-{{ country.id }}' class='edit-country'>
             <a href='{% url 'country_edit' country.id %}'>edit</a>
             <div><span class='link-api'><a href='{{ country_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></div>
-            <a class='toggle-bin'>show bin</a>
+            <a class='toggle-inbox'>hide inbox</a>
         </div>
         {% if country.admin_notes %}
         <div class='admin-view'>
@@ -61,38 +61,8 @@
 </div>
 
 {% if user.is_authenticated %}
-<div class='bin'>
-    <form class='paste-bin' action='{% url 'api_import_declaration_multi_add' country.country_code %}' method=POST>
-        <div class='bin-heading'>
-            <h3>The Bin</h3>
-            <input class='bin-create' type='submit' value='create'>
-        </div>
-        {% csrf_token %}
-        <textarea name='paste_data'></textarea>
-    </form>
-    <div>
-        <table>
-            {% for import_declaration in import_declaration_list %}
-            <tr data-id='{{ import_declaration.id }}' onclick='selectBinItem(event)'>
-                <td>{{ import_declaration.name }}</td>
-                <!-- <td>{{ import_declaration.num_govs }}</td> -->
-                <td>{{ import_declaration.area }}</td>
-                <td>{{ import_declaration.population }}</td>
-                <td>{{ import_declaration.date }}</td>
-                <!-- <td>{{ import_declaration.due }}</td> -->
-                <!-- <td>{{ import_declaration.contact }}</td> -->
-                <td><a href='{{ import_declaration.link }}'>evidence</a></td>
-                <td>
-                    <!-- <a href='{% url 'api_import_declaration_del' import_declaration.id %}'>X</a> -->
-                    {% with view='api_import_declaration_del' object=import_declaration %}
-                    {% include 'govtrack/delete.html' %}
-                    {% endwith %}
-                </td>
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-</div>
+{% include 'govtrack/inbox-paste.html' %}
+{% include 'govtrack/inbox-list.html' %}
 {% endif %}
 
 <h3>Areas</h3>
@@ -125,7 +95,7 @@
                 {% endwith %}
                 {% endif %}
                 |
-                <a class='dec-from-bin' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from bin</a>
+                <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
                 {% include 'govtrack/add-area.html' %}
             </div>
             {% endif %}
@@ -133,18 +103,18 @@
         </td>
         <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
         <td align='right'>
-            {{area.population | intcomma}}
+            {{ area.population | intcomma }}
         </td>
-        <td align='right'>{{area.show_contribution | intcomma}}</td>
-        <td align='right'>{{area.cumulative_pop | intcomma}}</td>
+        <td align='right'>{{ area.show_contribution | intcomma }}</td>
+        <td align='right'>{{ area.cumulative_pop | intcomma }}</td>
     </tr>
     {% endfor %}
     <tr class='total-pop-row'>
         <td>Total population under declaration:</td>
         <td></td>
-        <td align='right'>{{total_declared_population | intcomma}}</td>
+        <td align='right'>{{ total_declared_population | intcomma }}</td>
         <td></td>
-        <td align='right'>{{total_pop_by_contribution | intcomma}}</td>
+        <td align='right'>{{ total_pop_by_contribution | intcomma }}</td>
     </tr>
 </table>
 
