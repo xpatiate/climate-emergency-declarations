@@ -5,7 +5,6 @@ from django.views.decorators.csrf import csrf_exempt
 from govtrack.models import Declaration, Country, Area, Structure, Link, PopCount, ImportDeclaration
 from govtrack.forms import AreaForm
 
-from bs4 import BeautifulSoup
 import csv
 import datetime
 import html
@@ -188,26 +187,33 @@ def add_multi_areas(request, parent_id, structure_id):
     return redirect('area', area_id=parent_id)
 
 # Inbox methods
-def add_multi_import_declarations(request, country_code):
-    lines = request.POST.get('paste_data').split('\n')
-    for line in lines:
-        values = line.split('|')
-        if (len(values[4].split(' ')[0]) == 1):
-            values[4] = '0' + values[4]
-        importDeclaration = ImportDeclaration(**{
-            'name': values[0],
-            'num_govs': int(''.join(values[1].split(','))),
-            'area': values[2],
-            'population': int(''.join(values[3].split(','))),
-            'date': datetime.datetime.strptime(values[4], '%d %b %Y').date(),
-            'due': values[5],
-            'contact': values[6],
-            'link': values[7],
-            'country': Country.objects.filter(country_code=country_code).first()
-        })
-        importDeclaration.save()
+def add_multi_import_declarations(request, country_id):
+    try:
+        lines = request.POST.get('paste_data').split('\n')
+        data = []
 
-    return redirect('country', Country.objects.filter(country_code=country_code).first().id)
+        for line in lines:
+            values = line.split('|')
+            if (len(values[4].split(' ')[0]) == 1):
+                values[4] = '0' + values[4]
+            data.append({
+                'name': values[0],
+                'num_govs': int(''.join(values[1].split(','))),
+                'area': values[2],
+                'population': int(''.join(values[3].split(','))),
+                'date': datetime.datetime.strptime(values[4], '%d %b %Y').date(),
+                'due': values[5],
+                'contact': values[6],
+                'link': values[7],
+                'country': Country.objects.filter(id=country_id).first()
+            })
+    except (AttributeError, ValueError, IndexError):
+        return HttpResponse("Error: 400\nInvalid Input Data", status=400, content_type='text/plain')
+
+    for datum in data:
+        ImportDeclaration(**datum).save()
+
+    return redirect('country', Country.objects.filter(id=country_id).first().id)
 
 def import_declaration_pro(request, parent_id, structure_id, import_declaration_id):
     importDeclaration = ImportDeclaration.objects.filter(id=import_declaration_id).first()

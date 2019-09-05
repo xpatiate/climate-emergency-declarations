@@ -31,7 +31,7 @@
 
 <form method='POST' action='
     {% block formaction %}
-    {% if action == "add" %}
+    {% if action == 'add' %}
     {% url 'area_child' parent.id structure_id %}'
     {% else %}
     {% url 'area_edit' area.id %}'

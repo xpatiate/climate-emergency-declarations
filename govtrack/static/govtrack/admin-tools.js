@@ -7,16 +7,14 @@ $(document).ready(() => {
 
     $('div.delete-link').click(deleteThis);
 
-    let toggleInbox = $('.toggle-inbox');
+    let toggleInboxEl = $('.toggle-inbox');
     
-    console.log(toggleInbox);
-
-    if (toggleInbox.length > 0) {
+    if (toggleInboxEl.length > 0) {
         if (localStorage.getItem('inbox') == 'hidden') {
             toggleInbox();
         }
-
-        toggleInbox.click(toggleInbox);
+        
+        toggleInboxEl.click(toggleInbox);
     }
     
     $('.inbox-paste textarea').bind('paste', pasteInbox);
@@ -64,31 +62,40 @@ function deleteThis(ev) {
 };
 
 function toggleInbox() {
-    // let inbox = $('.inbox-paste, .inbox-list');
-    // if (inbox.css('display') == 'none') {
-    //     inbox.css('display', 'block');
-    //     $('.toggle-inbox').html('hide inbox');
-    //     localStorage.setItem('inbox', 'shown');
-    // } else {
-    //     inbox.css('display', 'none');
-    //     $('.toggle-inbox').html('show inbox');
-    //     localStorage.setItem('inbox', 'hidden');
-    // }
-    console.log('fosifjseijfseoifj');
-    
+    let inbox = $('.inbox-paste, .inbox-list');
+    if (inbox.css('display') == 'none') {
+        inbox.css('display', 'block');
+        $('.toggle-inbox').html('hide inbox');
+        localStorage.setItem('inbox', 'shown');
+    } else {
+        inbox.css('display', 'none');
+        $('.toggle-inbox').html('show inbox');
+        localStorage.setItem('inbox', 'hidden');
+    }
 }
 
 function selectInboxItem(ev) {
+    let deselect = false;
     for (let row = 0; row < ev.target.parentElement.parentElement.children.length; row++) {
-        ev.target.parentElement.parentElement.children[row].removeAttribute('id');
+        if (ev.target.parentElement.parentElement.children[row].getAttribute('id')) {
+            ev.target.parentElement.parentElement.children[row].removeAttribute('id');
+            deselect = true;
+            continue;
+        }
     }
-    
-    ev.target.parentElement.id = 'selected-inbox-item';
 
-    document.querySelectorAll('.add-from-inbox, .dec-from-inbox').forEach((el) => {
-        let url = el.getAttribute('data-url')
-        el.setAttribute('href', url.substring(0, url.length - 1) + ev.target.parentElement.getAttribute('data-id'));
-    });
+    if (deselect) {
+        document.querySelectorAll('.add-from-inbox, .dec-from-inbox').forEach((el) => {
+            el.removeAttribute('href');
+        });
+    } else {
+        ev.target.parentElement.id = 'selected-inbox-item';
+    
+        document.querySelectorAll('.add-from-inbox, .dec-from-inbox').forEach((el) => {
+            let url = el.getAttribute('data-url')
+            el.setAttribute('href', url.substring(0, url.length - 1) + ev.target.parentElement.getAttribute('data-id'));
+        });
+    }
 }
 
 function pasteInbox(ev) {
@@ -175,6 +182,7 @@ function showMultiAddForm(target_id) {
         target.on('paste', getPastedHTML);
     } else {
         target.css('display', 'none');
+        target.off('paste', getPastedHTML);
     }
     return false;
 }

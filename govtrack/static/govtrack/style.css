@@ -173,9 +173,6 @@ tr.country-total {
     padding-left: 20px;
     display: none;
 }
-/* .inbox-paste, .inbox-list {
-    display: none;
-} */
 .inbox-paste textarea {
     width: 100%;
     resize: vertical;
@@ -184,7 +181,7 @@ tr.country-total {
 }
 .inbox-list {
     width: 100%;
-    height: 200px;
+    height: 100px;
     resize: vertical;
     overflow-y: scroll;
     padding: 0px 10px;
@@ -219,7 +216,6 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
     -webkit-appearance: none;
     margin: 0;
 }
-
 table.form-table td, table.form-table th{
     padding: 5px;
     vertical-align: top;

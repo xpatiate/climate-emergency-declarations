@@ -1,5 +1,5 @@
 <div class='inbox-paste'>
-    <form class='paste-inbox' action='{% url 'api_import_declaration_multi_add' country.country_code %}' method=POST>
+    <form class='paste-inbox' action='{% url 'api_import_declaration_multi_add' country.id %}' method=POST>
         {% csrf_token %}
         <div class='inbox-heading'>
             <h3>The Inbox</h3>

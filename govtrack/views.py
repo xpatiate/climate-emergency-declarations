@@ -193,6 +193,7 @@ def area_edit(request, area_id):
                         do_redir=True
                     else:
                         logger.warn("did not save url because %s " % linkform.errors)
+        if do_redir:
             return redirect('area', area_id=area.id)
 
     # Show form
