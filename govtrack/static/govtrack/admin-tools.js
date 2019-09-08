@@ -77,11 +77,11 @@ function toggleInbox() {
 function selectInboxItem(ev) {
     let deselect = false;
     for (let row = 0; row < ev.target.parentElement.parentElement.children.length; row++) {
-        if (ev.target.parentElement.parentElement.children[row].getAttribute('id')) {
-            ev.target.parentElement.parentElement.children[row].removeAttribute('id');
+        if (ev.target.parentElement.parentElement.children[row].getAttribute('id') == ev.target.parentElement.getAttribute('id') && ev.target.parentElement.getAttribute('id')) {
             deselect = true;
-            continue;
         }
+        
+        ev.target.parentElement.parentElement.children[row].removeAttribute('id');
     }
 
     if (deselect) {
@@ -89,7 +89,7 @@ function selectInboxItem(ev) {
             el.removeAttribute('href');
         });
     } else {
-        ev.target.parentElement.id = 'selected-inbox-item';
+        ev.target.parentElement.setAttribute('id', 'selected-inbox-item');
     
         document.querySelectorAll('.add-from-inbox, .dec-from-inbox').forEach((el) => {
             let url = el.getAttribute('data-url')
