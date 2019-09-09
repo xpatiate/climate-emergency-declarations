@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpR
 from django.forms import formset_factory
 from django.http import JsonResponse, HttpResponseBadRequest
 
-from .models import Declaration, Country, Area, Structure, Link
+from .models import Declaration, Country, Area, Structure, Link, ImportDeclaration
 from .forms import StructureForm, AreaForm, DeclarationForm, LinkForm, CountryForm
 
 import csv
@@ -32,16 +32,18 @@ def index(request):
             dlist))
     return render(request, 'govtrack/index.html', {'countries': countries})
 
-
 def area(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     records = area.build_hierarchy()
+
+    import_declarations = ImportDeclaration.objects.filter(country=area.country).order_by('-date')
 
     return render(request, 'govtrack/area.html', {
         'area': area,
         'country': area.country,
         'parents_list': area.direct_ancestors,
         'areas_list': records,
+        'import_declaration_list': import_declarations,
         'links': area.links.all(),
         'area_api_link': request.build_absolute_uri( area.api_link ),
     })
@@ -81,6 +83,8 @@ def country(request, country_id, action='view'):
     structure = country.get_root_structure().build_hierarchy()
     records = country.get_root_area().build_hierarchy()
 
+    import_declarations = ImportDeclaration.objects.filter(country=country).order_by('-date')
+
     total_pop = 0
     item_seen = set()
     for item in records:
@@ -100,6 +104,7 @@ def country(request, country_id, action='view'):
         'country': country,
         'structure_list': structure,
         'areas_list': records,
+        'import_declaration_list': import_declarations,
         'total_declared_population': total_declared_pop,
         'total_pop_by_contribution': total_pop,
         'links': country.links.all(),
@@ -107,7 +112,6 @@ def country(request, country_id, action='view'):
         'linkform': linkform,
         'country_api_link': request.build_absolute_uri( country.api_link ),
         })
-
 
 def structure_edit(request, structure_id):
     structure = get_object_or_404(Structure, pk=structure_id)
@@ -191,6 +195,7 @@ def structure_child(request, parent_id):
 def area_edit(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     form = AreaForm(instance=area)
+    import_declarations = ImportDeclaration.objects.filter(country=area.country).order_by('-date')
 
     link_initial = {
         'content_type': Area.content_type_id(),
@@ -214,6 +219,7 @@ def area_edit(request, area_id):
                         do_redir=True
                     else:
                         logger.warn("did not save url because %s " % linkform.errors)
+        if do_redir:
             return redirect('area', area_id=area.id)
 
     # Show form
@@ -227,6 +233,7 @@ def area_edit(request, area_id):
         'country': area.country,
         'parents_list': area.direct_ancestors,
         'supplements_list': area.supplements.all(),
+        'import_declaration_list': import_declarations,
         })
 
 def area_child(request, parent_id, structure_id):
@@ -333,6 +340,7 @@ def declaration_edit(request, declaration_id):
     if not dec:
         raise Http404("No such declaration")
     form = DeclarationForm(instance=dec)
+    import_declarations = ImportDeclaration.objects.filter(country=dec.area.country).order_by('-date')
     link_initial = {
         'content_type': Declaration.content_type_id(),
         'object_id': declaration_id,
@@ -365,5 +373,6 @@ def declaration_edit(request, declaration_id):
         'linkform': linkform,
         'area': dec.area,
         'links': dec.links.all(),
+        'import_declaration_list': import_declarations,
         })
 

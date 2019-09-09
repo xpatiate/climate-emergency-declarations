@@ -1,6 +1,6 @@
 # climate-emergency-declarations
 
-This repository is a work in progress, building a site that is intended to augment the current ICEF spreadsheet at https://bit.ly/ce-goverments
+This repository is a work in progress, building a site that is intended to augment the current [ICEF spreadsheet](https://docs.google.com/spreadsheets/d/1tb-LklFWLujYnjmCSvCWRcLUJCCWAL27dKPzVcFq9CQ)
 
 It's using Django with PostgreSQL to maintain a database tracking governments around the world which have recognised or declared a climate emergency.
 
@@ -12,6 +12,16 @@ It's currently under active development and will include:
 * logic to calculate overall population figures, incorporating special handling for governments at different hierarchical levels to avoid double-counting
 * an API making declaration data accessible to other services
 * generation of charts and other resources
+
+## Using the inbox
+
+The inbox acts as a staging area for declaration data from the ICEF spreadsheet. It currently consists of a list of inbox items and a text area to create new items.
+
+The list is shown on various pages that can be used as reference or can be selected from to create new areas and declarations. To create a new area from the inbox, select an inbox item by clicking on it then click any 'add from inbox' admin link and a new area and declaration will be added with the information in the inbox item. To add a declaration to an existing area from the inbox, select an inbox item then click any 'declare from inbox' admin link and a new declaration will be created with the information in the inbox item.
+
+The current method for creating new inbox items is via the inbox paste area. It allows for multiple rows to be copied from the ICEF spreadsheet Data page and pasted into a csv format in the text field. The text can then be submitted by pressing the 'create' button.
+
+The inbox system will later include a form for inbox item creation to allow for the creation of new inbox items individually.
 
 ## Running for local development and testing
 

@@ -1,4 +1,4 @@
-{% extends "govtrack/base.html" %}
+{% extends 'govtrack/base.html' %}
 
 {% load humanize %}
 
@@ -16,99 +16,106 @@
 </table>
 <input type='submit' name='save' value='save' class='button-save'>
 <input type='submit' value='cancel' class='button-cancel' formnovalidate>
-<br>
 {% else %}
 <div class='object-view'>
     {% if user.is_authenticated %}
     <div class='admin-corner'>
         <div id='editcountry-{{ country.id }}' class='edit-country'>
-        <a href='{% url 'country_edit' country.id %}'>edit</a>
-        <p><span class='link-api'><a href='{{ country_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></p>
+            <a href='{% url 'country_edit' country.id %}'>edit</a>
+            <div><span class='link-api'><a href='{{ country_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></div>
+            <a class='toggle-inbox'>hide inbox</a>
         </div>
-     {% if country.admin_notes %}
-       <div class='admin-view'>
-       <b>Admin Notes</b>
-       <p>{{ country.admin_notes }}</p>
-       </div>
-     {% endif %}
+        {% if country.admin_notes %}
+        <div class='admin-view'>
+            <b>Admin Notes</b>
+            <p>{{ country.admin_notes }}</p>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
     <p><b>Population:</b> {{ country.population | intcomma }}</p>
     <p><b>Region:</b> {{ country.region }}</p>
-    <p class='description'><b>Description:</b> {{ country.description|default_if_none:'' }}</p>
+    <p class='description'><b>Description:</b> {{ country.description | default_if_none:'' }}</p>
     {% include 'govtrack/links.html' %}
 </div>
-<br>
 
 <div class='parent-tree'>
-{% for struct in structure_list %}
-    <div class='level_{{ struct.level }}' id='structure-{{ struct.id }}'>&#8866; {{ struct.name }} ({{ struct.num_areas }})
-    {% if user.is_authenticated %}
-      &nbsp;<button class='view-structure' id='viewstructure-{{ struct.id }}'>*</button>
-      <div id='editstructure-{{ struct.id }}' class='edit-structure'>
-      <a href='{% url 'structure_edit' struct.id %}'>edit</a> | 
-      {% if struct.num_areas == 0 %}
-        {% with view="api_structure_del" object=struct %}
-        {% include 'govtrack/delete.html' %}
-        {% endwith %}
-        |{% endif %}
-      <a href='{% url 'structure_child' struct.id %}'>add child</a>
-      </div>
-    {% endif %}
+    {% for struct in structure_list %}
+    <div class='level_{{ struct.level }}' id='structure-{{ struct.id }}'>
+        &#8866; {{ struct.name }} ({{ struct.num_areas }})
+        {% if user.is_authenticated %}
+        &nbsp;<button class='view-structure' id='viewstructure-{{ struct.id }}'>*</button>
+        <div id='editstructure-{{ struct.id }}' class='edit-structure'>
+            <a href='{% url 'structure_edit' struct.id %}'>edit</a> | 
+            {% if struct.num_areas == 0 %}
+            {% with view='api_structure_del' object=struct %}
+            {% include 'govtrack/delete.html' %}
+            {% endwith %}
+            |
+            {% endif %}
+            <a href='{% url 'structure_child' struct.id %}'>add child</a>
+        </div>
+        {% endif %}
     </div>
-{% endfor %}
+    {% endfor %}
 </div>
 
+{% if user.is_authenticated %}
+{% include 'govtrack/inbox-paste.html' %}
+{% include 'govtrack/inbox-list.html' %}
+{% endif %}
+
 <h3>Areas</h3>
-<table>
-  <tr>
-    <th></th>
-    <th>Declared?</th>
-    <th>Population</th>
-    <th>Contribution</th>
-    <th>Cumulative</th>
-  </tr>
-{% for area in areas_list %}
+<table class='areas'>
     <tr>
-    <td>
-    {% if area.is_supplementary %}
-    <div class='supplementary'>
-    {% endif %}
-    <div class='level_{{ area.level }}' id='area-{{ area.id }}'>&#8866;({{ area.structure.name }})  <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
-    {% if area.is_supplementary %}
-    </div>
-    {% endif %}
-    {% if not area.is_supplementary and user.is_authenticated %}
-      &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
-      <div id='editarea-{{ area.id }}' class='edit-area'>
-      <a href='{% url 'area_edit' area.id %}'>edit</a>
-      {% if area.level > 1 %}
-        |
-        {% with view="api_area_del" object=area %}
-        {% include 'govtrack/delete.html' %}
-        {% endwith %}
-      {% endif %}
-      <br>
-    {% include 'govtrack/add-area.html' %}
-      </div>
-    {% endif %}
-    </div>
-    </td>
-    <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
-    <td align='right'>
-        {{area.population | intcomma}}
-    </td>
-    <td align='right'>{{area.show_contribution | intcomma}}</td>
-    <td align='right'>{{area.cumulative_pop | intcomma}}</td>
+        <th></th>
+        <th>Declared?</th>
+        <th>Population</th>
+        <th>Contribution</th>
+        <th>Cumulative</th>
     </tr>
-{% endfor %}
-  <tr class='total-pop-row'>
-    <td>Total population under declaration:</td>
-    <td></td>
-    <td align='right'>{{total_declared_population | intcomma}}</td>
-    <td></td>
-    <td align='right'>{{total_pop_by_contribution | intcomma}}</td>
-  </tr>
+    {% for area in areas_list %}
+    <tr>
+        <td>
+            {% if area.is_supplementary %}
+            <div class='supplementary'>
+            {% endif %}
+            <div class='level_{{ area.level }}' id='area-{{ area.id }}'>&#8866;({{ area.structure.name }})  <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
+            {% if area.is_supplementary %}
+            </div>
+            {% endif %}
+                {% if not area.is_supplementary and user.is_authenticated %}
+                &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
+                <div id='editarea-{{ area.id }}' class='edit-area'>
+                <a href='{% url 'area_edit' area.id %}'>edit</a>
+                {% if area.level > 1 %}
+                |
+                {% with view='api_area_del' object=area %}
+                {% include 'govtrack/delete.html' %}
+                {% endwith %}
+                {% endif %}
+                |
+                <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
+                {% include 'govtrack/add-area.html' %}
+            </div>
+            {% endif %}
+            </div>
+        </td>
+        <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
+        <td align='right'>
+            {{ area.population | intcomma }}
+        </td>
+        <td align='right'>{{ area.show_contribution | intcomma }}</td>
+        <td align='right'>{{ area.cumulative_pop | intcomma }}</td>
+    </tr>
+    {% endfor %}
+    <tr class='total-pop-row'>
+        <td>Total population under declaration:</td>
+        <td></td>
+        <td align='right'>{{ total_declared_population | intcomma }}</td>
+        <td></td>
+        <td align='right'>{{ total_pop_by_contribution | intcomma }}</td>
+    </tr>
 </table>
 
 {% endif %}

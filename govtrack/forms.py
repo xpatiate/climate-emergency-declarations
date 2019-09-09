@@ -37,7 +37,6 @@ class AreaForm(ModelForm):
     description = forms.CharField(widget=forms.Textarea,label='Description', required=False)
     admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
 
-
 class DeclarationForm(ModelForm):
     class Meta:
         model = Declaration
@@ -54,7 +53,6 @@ class DeclarationForm(ModelForm):
     description_short = forms.CharField(widget=forms.Textarea, label='Summary', required=False)
     description_long = forms.CharField(widget=forms.Textarea,label='Details', required=False)
     admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
-
 
 class LinkForm(ModelForm):
     prefix = 'link'
