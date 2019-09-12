@@ -36,7 +36,7 @@ def area(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     records = area.build_hierarchy()
 
-    import_declarations = ImportDeclaration.objects.filter(country=area.country).order_by('-date')
+    import_declarations = ImportDeclaration.objects.filter(country=area.country).order_by('date')
 
     return render(request, 'govtrack/area.html', {
         'area': area,
@@ -51,6 +51,7 @@ def area(request, area_id):
 def countries(request):
     clist = Country.objects.order_by('name')
     for c in clist:
+        c.inbox_count = ImportDeclaration.objects.filter(country=c).count()
         c.area_population = c.current_popcount
     return render(request, 'govtrack/countries.html', {'country_list': clist})
 
@@ -83,7 +84,7 @@ def country(request, country_id, action='view'):
     structure = country.get_root_structure().build_hierarchy()
     records = country.get_root_area().build_hierarchy()
 
-    import_declarations = ImportDeclaration.objects.filter(country=country).order_by('-date')
+    import_declarations = ImportDeclaration.objects.filter(country=country).order_by('date')
 
     total_pop = 0
     item_seen = set()
@@ -195,7 +196,7 @@ def structure_child(request, parent_id):
 def area_edit(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     form = AreaForm(instance=area)
-    import_declarations = ImportDeclaration.objects.filter(country=area.country).order_by('-date')
+    import_declarations = ImportDeclaration.objects.filter(country=area.country).order_by('date')
 
     link_initial = {
         'content_type': Area.content_type_id(),
@@ -340,7 +341,7 @@ def declaration_edit(request, declaration_id):
     if not dec:
         raise Http404("No such declaration")
     form = DeclarationForm(instance=dec)
-    import_declarations = ImportDeclaration.objects.filter(country=dec.area.country).order_by('-date')
+    import_declarations = ImportDeclaration.objects.filter(country=dec.area.country).order_by('date')
     link_initial = {
         'content_type': Declaration.content_type_id(),
         'object_id': declaration_id,

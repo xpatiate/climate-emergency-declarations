@@ -14,6 +14,7 @@
         <th align='right'>Structures</th>
         <th align='right'>Areas</th>
         <th align='right'>Declarations</th>
+        <th align='right'>Inbox Items</th>
       </tr>
     {% for country in country_list %}
         <tr>
@@ -23,6 +24,7 @@
         <td align='right'>{% if country.num_structures > 1%}{{ country.num_structures }}{% endif %}</td>
         <td align='right'>{% if country.num_areas > 1 %}{{ country.num_areas }}{% endif %}</td>
         <td align='right'>{% if country.num_declarations %}{{ country.num_declarations }}{% endif %}</td>
+        <td align='right'>{% if country.inbox_count %}{{ country.inbox_count }}{% endif %}</td>
         </td>
         </tr>
     {% endfor %}
