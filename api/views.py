@@ -276,7 +276,5 @@ def declaration_from_import(request, area_id, import_declaration_id):
         'url': importDeclaration.link,
     }).save()
 
-    importDeclaration.delete()
-
     return redirect('country', importDeclaration.country.id)
 
