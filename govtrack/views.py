@@ -51,6 +51,7 @@ def area(request, area_id):
 def countries(request):
     clist = Country.objects.order_by('name')
     for c in clist:
+        c.inbox_count = ImportDeclaration.objects.filter(country=c).count()
         c.area_population = c.current_popcount
     return render(request, 'govtrack/countries.html', {'country_list': clist})
 
