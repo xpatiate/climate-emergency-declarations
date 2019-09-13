@@ -71,8 +71,6 @@
         <th></th>
         <th>Declared?</th>
         <th>Population</th>
-        <th>Contribution</th>
-        <th>Cumulative</th>
     </tr>
     {% for area in areas_list %}
     <tr>
@@ -105,16 +103,12 @@
         <td align='right'>
             {{ area.population | intcomma }}
         </td>
-        <td align='right'>{{ area.show_contribution | intcomma }}</td>
-        <td align='right'>{{ area.cumulative_pop | intcomma }}</td>
     </tr>
     {% endfor %}
     <tr class='total-pop-row'>
         <td>Total population under declaration:</td>
         <td></td>
         <td align='right'>{{ total_declared_population | intcomma }}</td>
-        <td></td>
-        <td align='right'>{{ total_pop_by_contribution | intcomma }}</td>
     </tr>
 </table>
 
