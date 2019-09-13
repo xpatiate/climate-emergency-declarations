@@ -86,18 +86,6 @@ def country(request, country_id, action='view'):
 
     import_declarations = ImportDeclaration.objects.filter(country=country).order_by('date')
 
-    total_pop = 0
-    item_seen = set()
-    for item in records:
-        if item not in item_seen:
-            total_pop += item.contribution()
-            item.show_contribution = item.contribution()
-            item.cumulative_pop += total_pop
-            item_seen.add(item)
-        else:
-            item.cumulative_pop = total_pop
-            item.show_contribution = 0
-
     total_declared_pop = country.current_popcount
 
     return render(request, 'govtrack/country.html', {
@@ -107,7 +95,6 @@ def country(request, country_id, action='view'):
         'areas_list': records,
         'import_declaration_list': import_declarations,
         'total_declared_population': total_declared_pop,
-        'total_pop_by_contribution': total_pop,
         'links': country.links.all(),
         'form': form,
         'linkform': linkform,
