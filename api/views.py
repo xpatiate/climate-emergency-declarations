@@ -167,7 +167,6 @@ def add_multi_areas(request, parent_id, structure_id):
                 'sort_name': newarea_name
             })
             if form.is_valid():
-                logger.info(len(lines))
                 newarea = form.save()
                 logger.info("Created new area %s" % newarea)
                 if len(row) == 2:
