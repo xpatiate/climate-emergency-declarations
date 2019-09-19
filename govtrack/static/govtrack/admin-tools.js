@@ -165,7 +165,7 @@ User clicks 'create' button, form submits - no JS nivolved
 function getPastedHTML(ev) {
     let html = ev.originalEvent.clipboardData.getData('text/html');
     
-    let data = tableToCSV(html, ',', true);
+    let data = tableToCSV(html, '|', true);
     
     if (data) {
         ev.preventDefault();

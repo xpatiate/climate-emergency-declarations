@@ -153,11 +153,10 @@ def import_declaration_del(request, import_declaration_id):
 # Create multiple areas at once from CSV-like text
 def add_multi_areas(request, parent_id, structure_id):
     if request.method == 'POST' and request.user.is_authenticated:
-        area_data = request.POST.get('area_csv_data')
-        areastring = io.StringIO(area_data)
-        reader = csv.reader(areastring)
         parent = Area.objects.get(id=parent_id)
-        for row in reader:
+        lines = request.POST.get('area_csv_data').split('\n')
+        for line in lines:
+            row = line.split('|')
             newarea_name = row[0]
             form = AreaForm({
                 'country': parent.country_id,
