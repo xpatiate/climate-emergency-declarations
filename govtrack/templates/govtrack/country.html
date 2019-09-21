@@ -73,7 +73,7 @@
         <th>Population</th>
     </tr>
     {% for area in areas_list %}
-    <tr>
+    <tr {% if area.is_declared %}class='declared-row'{% endif %}>
         <td>
             {% if area.is_supplementary %}
             <div class='supplementary'>
