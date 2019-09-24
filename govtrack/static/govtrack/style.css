@@ -124,6 +124,9 @@ tr.country-total {
 .object-view {
     margin: 20px 0px;
 }
+.declared-row {
+    background-color: #ddecff;
+}
 
 /* ADMIN VIEW */
 .admin-corner {
