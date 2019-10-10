@@ -250,6 +250,10 @@ def declaration_add(request, area_id):
         'area': area_id,
     }
     form = DeclarationForm(initial=decldata)
+    link_initial = {
+        'content_type': Declaration.content_type_id(),
+    }
+    linkform = LinkForm(initial=link_initial)
     if request.method == 'POST':
         do_redir = True
         if request.POST.get('save'):
@@ -258,6 +262,15 @@ def declaration_add(request, area_id):
             if form.is_valid():
                 do_redir = True
                 dec = form.save()
+                link_initial['object_id'] = dec.id
+                request.POST._mutable = True
+                request.POST['link-object_id'] = dec.id
+                linkform = LinkForm(request.POST, initial=link_initial)
+                if linkform.has_changed():
+                    do_redir=False
+                    if linkform.is_valid():
+                        linkform.save()
+                        do_redir=True
                 if dec.affects_population_count:
                     # Regenerate all stored population counts for the country,
                     # from the date of this declaration onwards
@@ -267,6 +280,7 @@ def declaration_add(request, area_id):
     return render(request, 'govtrack/declare.html', {
         'action': 'add',
         'form': form,
+        'linkform': linkform,
         'area': area
         })
 

@@ -18,7 +18,7 @@
 {% if action != 'view' %}
 <!-- load Fengyuan Chen’s Datepicker -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.css" integrity="sha256-b88RdwbRJEzRx95nCuuva+hO5ExvXXnpX+78h8DjyOE=" crossorigin="anonymous" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js" integrity="sha256-/7FLTdzP6CfC1VBAj/rsp3Rinuuu9leMRGd354hvk0k=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/datepicker/0.6.5/datepicker.min.js" integrity="sha256-/7FLTdzP6CfC1VBAj/rsp3Rinuuu9leMRGd354hvk0k=" crossorigin="anonymous"></script>
 <form method='POST' action='
 {% block formaction %}
     {% if action == 'add' %}
@@ -36,11 +36,11 @@
 </table>
 {% block formextra %}
 <script>
-  $(function () {
-    $("#id_event_date").datepicker({
-      format:'yyyy-mm-dd',
+    $(function () {
+        $("#id_event_date").datepicker({
+            format:'yyyy-mm-dd',
+        });
     });
-  });
 </script>
 {% endblock %}
 <input type='submit' name='save' value='save' class='button-save'>
