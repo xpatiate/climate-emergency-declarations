@@ -644,6 +644,7 @@ class Declaration(models.Model):
     # on decisions to reject listing for a government
     # Eventually this data should be moved out into a separate 'decision' object
     LISTING_REJECTED = 'J'
+    LISTING_UNDER_REVIEW = 'U'
     STATUS_TYPES = [
         (DECLARED, 'Declared'),
         (INACTIVE, 'Inactive'),
@@ -651,11 +652,12 @@ class Declaration(models.Model):
         (REVOKED, 'Revoked'),
         (PROGRESS, 'In Progress'),
         (LISTING_REJECTED, 'Listing Rejected'),
+        (LISTING_UNDER_REVIEW, 'Listing Under Review'),
     ]
     STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
     status = models.CharField(
         max_length=1,
-        choices = STATUS_TYPES,
+        choices=STATUS_TYPES,
         default=DECLARED,
     )
     event_date = models.DateField(verbose_name='Event date')
@@ -726,7 +728,7 @@ class PopCount(models.Model):
     # except it will only include those status values which change the population count
     status = models.CharField(
         max_length=1,
-        choices = Declaration.STATUS_TYPES,
+        choices=Declaration.STATUS_TYPES,
         default=Declaration.DECLARED,
     )
 
