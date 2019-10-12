@@ -57,10 +57,10 @@ class DeclarationForm(ModelForm):
 class LinkForm(ModelForm):
     prefix = 'link'
     url = forms.CharField(required=False, label='Add link', validators=[URLValidator()])
+    object_id = forms.IntegerField(required=False, widget=forms.HiddenInput())
     class Meta:
         model = Link
         fields = ['url', 'content_type', 'object_id']
         widgets = {
             'content_type': forms.HiddenInput(),
-            'object_id': forms.HiddenInput(),
         }
