@@ -1,0 +1,26 @@
+{% extends 'govtrack/base.html' %}
+{% load humanize %}
+
+{% block title %}{{ area.country.name }}{% endblock %}
+
+{% block content %}
+
+{% block heading %}
+<h3>Inbox <a href="{% url 'country' country.id %}">{{ country.name }}</a></h3>
+{% endblock %}
+
+{% include 'govtrack/inbox-paste.html' %}
+{% include 'govtrack/inbox-list.html' %}
+
+{% if country_list %}
+<h4>Other Inboxes</h4>
+<div class="inbox-switch">
+{% for country in country_list %}
+    <div><a href="{% url 'inbox' country.id %}">{{ country.name }}</a></div>
+{% endfor %}
+</div>
+{% else %}
+    <p>No countries found.</p>
+{% endif %}
+
+{% endblock %}

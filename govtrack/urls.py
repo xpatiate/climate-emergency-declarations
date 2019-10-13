@@ -15,4 +15,5 @@ urlpatterns = [
     path('declaration/add/<int:area_id>/', views.declaration_add, name='declaration_add'),
     path('declaration/edit/<int:declaration_id>/', views.declaration_edit, name='declaration_edit'),
     path('area/child/<int:parent_id>/<int:structure_id>', views.area_child, name='area_child'),
+    path('inbox/<int:country_id>', views.inbox, name='inbox'),
 ]

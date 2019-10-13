@@ -378,3 +378,10 @@ def declaration_edit(request, declaration_id):
         'import_declaration_list': import_declarations,
         })
 
+def inbox(request, country_id):
+    country = get_object_or_404(Country, pk=country_id)
+    return render(request, 'govtrack/inbox.html', {
+        'country': country,
+        'country_list': Country.objects.order_by('name'),
+        'import_declaration_list': ImportDeclaration.objects.filter(country=country).order_by('date'),
+    })
