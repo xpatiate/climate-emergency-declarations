@@ -91,6 +91,43 @@
 {% include 'govtrack/inbox-list.html' %}
 {% endif %}
 
+<div class='declarations'>
+    <h4>Declarations</h4>
+    <ul>
+        {% for dec in area.declarations %}
+        <li id='declaration-{{dec.id}}'>
+            {{ dec }}
+            <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
+                {% if user.is_authenticated %}
+                <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
+                    {% with view='api_declaration_del' object=dec %}
+                    {% include 'govtrack/delete.html' %}
+                    {% endwith %}
+                </div>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+        {% if user.is_authenticated %}
+        <li><a class='edit-dec' href='{% url 'declaration_add' area.id  %}'>add declaration</a></li>
+        {% endif %}
+    </ul>
+</div>
+
+{% if area.id != area.parent.id %}
+<br>
+<p class='bottom-nav'>
+    {% for parent in area.direct_ancestors %}
+    {% if forloop.first %}
+    {{ area.name }} -&gt; 
+    {% else %}
+    <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
+    {% if not forloop.last %} -&gt; {% endif %}
+    {% endif %}
+    {% endfor %}
+</p>
+{% endif %}
+
 {% if area.num_all_children %}
 <div class='object-view'>
     <p><b>Children:</b></p>
@@ -128,44 +165,7 @@
 </div>
 {% endif %}
 
-<div class='declarations'>
-    <h4>Declarations</h4>
-    <ul>
-        {% for dec in area.declarations %}
-        <li id='declaration-{{dec.id}}'>
-            {{ dec }}
-            <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
-                {% if user.is_authenticated %}
-                <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
-                    {% with view='api_declaration_del' object=dec %}
-                    {% include 'govtrack/delete.html' %}
-                    {% endwith %}
-                </div>
-                {% endif %}
-            </div>
-        </li>
-        {% endfor %}
-        {% if user.is_authenticated %}
-        <li><a class='edit-dec' href='{% url 'declaration_add' area.id  %}'>add declaration</a></li>
-        {% endif %}
-    </ul>
-</div>
-
 {% endblock %}
-{% endif %}
-
-{% if area.id != area.parent.id %}
-<br>
-<p class='bottom-nav'>
-    {% for parent in area.direct_ancestors %}
-    {% if forloop.first %}
-    {{ area.name }} -&gt; 
-    {% else %}
-    <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
-    {% if not forloop.last %} -&gt; {% endif %}
-    {% endif %}
-    {% endfor %}
-</p>
 {% endif %}
 
 {% endblock %}
