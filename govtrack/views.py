@@ -135,14 +135,33 @@ def structure_edit(request, structure_id):
 def structure_child(request, parent_id):
     parent = get_object_or_404(Structure, pk=parent_id)
     country_id = parent.country.id
+    link_initial = {
+        'content_type': Structure.content_type_id(),
+        'object_id': 'unknown',
+    }
+    linkform = LinkForm(initial=link_initial)
     if request.method == 'POST':
         do_redir = True
         if request.POST.get('save'):
             do_redir = False
             form = StructureForm(request.POST)
             if form.is_valid():
-                form.save()
+                new_struct = form.save()
                 do_redir=True
+                new_link_url = request.POST.get('link-url')
+                if new_link_url:
+                    post_data = {
+                        'link-object_id': new_struct.id,
+                        'link-content_type': link_initial['content_type'],
+                        'link-url': request.POST.get('link-url')
+                    }
+                    linkform = LinkForm(post_data)
+                    do_redir=False
+                    if linkform.is_valid():
+                        linkform.save()
+                        do_redir=True
+                    else:
+                        logger.warn("did not save url because %s " % linkform.errors)
         if do_redir:
             return redirect('country', country_id=country_id)
     structuredata = {
@@ -152,7 +171,14 @@ def structure_child(request, parent_id):
         'country': parent.country.id
     }
     form = StructureForm(initial=structuredata)
-    return render(request, 'govtrack/structure.html', {'action': 'add', 'form': form, 'country': parent.country, 'parent': parent, 'parents_list': parent.ancestors})
+    return render(request, 'govtrack/structure.html', {
+        'action': 'add',
+        'form': form,
+        'linkform': linkform,
+        'country': parent.country,
+        'parent': parent,
+        'parents_list': parent.ancestors,
+        })
 
 def area_edit(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
@@ -199,6 +225,11 @@ def area_edit(request, area_id):
         })
 
 def area_child(request, parent_id, structure_id):
+    link_initial = {
+        'content_type': Area.content_type_id(),
+        'object_id': 'unknown',
+    }
+    linkform = LinkForm(initial=link_initial)
     if request.method == 'POST':
         do_redir = True
         if request.POST.get('save'):
@@ -208,6 +239,27 @@ def area_child(request, parent_id, structure_id):
                 area = form.save()
                 do_redir = True
                 area_id = area.id
+                new_link_url = request.POST.get('link-url')
+                if new_link_url:
+                    # XXX there must be a better way to do this - have tried:
+                    #
+                    # link_initial['object_id'] = area_id
+                    # linkform = LinkForm(request.POST, initial=link_initial)
+
+                    # but it seems that the hidden object_id overrides the set one
+                    # so have to make a fake POST data dict
+                    post_data = {
+                        'link-object_id': area_id,
+                        'link-content_type': link_initial['content_type'],
+                        'link-url': request.POST.get('link-url')
+                    }
+                    linkform = LinkForm(post_data)
+                    do_redir=False
+                    if linkform.is_valid():
+                        linkform.save()
+                        do_redir=True
+                    else:
+                        logger.warn("did not save url because %s " % linkform.errors)
         else:
             area_id = parent_id
         if do_redir:
@@ -229,6 +281,7 @@ def area_child(request, parent_id, structure_id):
         'action': 'add',
         'parent': parent,
         'form': form,
+        'linkform': linkform,
         'country': parent.country,
         'structure_name': structure.name,
         'parents_list': records,

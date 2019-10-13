@@ -115,6 +115,18 @@ tr.country-total {
 .level_10 {
   padding-left: 200px;
 }
+.areas {
+    width: 100%;
+}
+.areas th {
+    text-align: right;
+}
+.object-view {
+    margin: 20px 0px;
+}
+.declared-row {
+    background-color: #ddecff;
+}
 
 /* ADMIN VIEW */
 .admin-corner {
@@ -145,7 +157,7 @@ tr.country-total {
     font-size: small;
     display: inline;
 }
-div.delete-link a {
+.delete-link a {
     color: orange;
 }
 .edit-country a, .edit-area a, .edit-structure a, .edit-dec a {
@@ -164,6 +176,42 @@ div.delete-link a {
     padding-left: 20px;
     display: none;
 }
+.inbox-paste textarea {
+    width: 100%;
+    resize: vertical;
+    min-height: 50px;
+    padding: 15px;
+}
+.inbox-list {
+    width: 100%;
+    height: 100px;
+    resize: vertical;
+    overflow-y: scroll;
+    padding: 0px 10px;
+    border: 1px solid lightgrey;
+    margin: 20px 0px;
+}
+.inbox-list table {
+    width: 100%;
+}
+.inbox-list tr {
+    text-align: right;
+}
+.inbox-list td:first-child {
+    text-align: left;
+}
+.inbox-create {
+    margin: 20px 0px 10px 5px;
+}
+.inbox-heading {
+    display: flex;
+}
+.inbox-heading > * {
+    vertical-align: middle;
+}
+#selected-inbox-item {
+    background: #f0f0f0;
+}
 
 /* FORMS */
 /* Hide HTML5 Up and Down arrows. */
@@ -171,7 +219,6 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
     -webkit-appearance: none;
     margin: 0;
 }
-
 table.form-table td, table.form-table th{
     padding: 5px;
     vertical-align: top;

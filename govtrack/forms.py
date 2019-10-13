@@ -18,8 +18,10 @@ class StructureForm(ModelForm):
         widgets = {
             'country': forms.HiddenInput(),
             'level': forms.HiddenInput(),
-            'parent': forms.HiddenInput()
+            'parent': forms.HiddenInput(),
+            'name': forms.TextInput(attrs={'autofocus': 'autofocus'})
             }
+
 
 class AreaForm(ModelForm):
     
@@ -30,6 +32,7 @@ class AreaForm(ModelForm):
             'structure': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
             'country': forms.HiddenInput(),
+            'name': forms.TextInput(attrs={'autofocus': 'autofocus'})
         }
     description = forms.CharField(widget=forms.Textarea,label='Description', required=False)
     admin_notes = forms.CharField(widget=forms.Textarea,label='Admin Notes', required=False)
