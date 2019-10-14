@@ -59,10 +59,13 @@
     {% if user.is_authenticated %}
     <div class='admin-corner'>
         <div class='edit-area' style="display: block;">
-            <a href='{% url 'area_edit' area.id %}'>edit</a> |
-            <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
+            <div>
+                <a href='{% url 'area_edit' area.id %}'>edit</a> |
+                <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
+            </div>
             <div><span class='link-api'><a href='{{ area_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></div>
-            <a class='toggle-inbox'>hide inbox</a>
+            <div><a href="{% url 'inbox' country.id %}">go to inbox</a></div>
+            <div><a class='toggle-inbox'>hide inbox</a></div>
             <div style='text-align: left'>
                 {% for ctype in area.sub_types %}
                 <a name='#{{area.id}}{{ ctype.id}}'></a>
@@ -87,8 +90,45 @@
 </div>
 
 {% if user.is_authenticated %}
-{% include 'govtrack/inbox-paste.html' %}
+<h4>The Inbox</h4>
 {% include 'govtrack/inbox-list.html' %}
+{% endif %}
+
+<div class='declarations'>
+    <h4>Declarations</h4>
+    <ul>
+        {% for dec in area.declarations %}
+        <li id='declaration-{{dec.id}}'>
+            {{ dec }}
+            <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
+                {% if user.is_authenticated %}
+                <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
+                    {% with view='api_declaration_del' object=dec %}
+                    {% include 'govtrack/delete.html' %}
+                    {% endwith %}
+                </div>
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+        {% if user.is_authenticated %}
+        <li><a class='edit-dec' href='{% url 'declaration_add' area.id  %}'>add declaration</a></li>
+        {% endif %}
+    </ul>
+</div>
+
+{% if area.id != area.parent.id %}
+<br>
+<p class='bottom-nav'>
+    {% for parent in area.direct_ancestors %}
+    {% if forloop.first %}
+    {{ area.name }} -&gt; 
+    {% else %}
+    <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
+    {% if not forloop.last %} -&gt; {% endif %}
+    {% endif %}
+    {% endfor %}
+</p>
 {% endif %}
 
 {% if area.num_all_children %}
@@ -128,44 +168,7 @@
 </div>
 {% endif %}
 
-<div class='declarations'>
-    <h4>Declarations</h4>
-    <ul>
-        {% for dec in area.declarations %}
-        <li id='declaration-{{dec.id}}'>
-            {{ dec }}
-            <div class='declaration-options'><a href='{% url 'declaration' dec.id %}'>details</a>
-                {% if user.is_authenticated %}
-                <div class='edit-dec' style="display: inline"><a href='{% url 'declaration_edit' dec.id %}'>edit</a>
-                    {% with view='api_declaration_del' object=dec %}
-                    {% include 'govtrack/delete.html' %}
-                    {% endwith %}
-                </div>
-                {% endif %}
-            </div>
-        </li>
-        {% endfor %}
-        {% if user.is_authenticated %}
-        <li><a class='edit-dec' href='{% url 'declaration_add' area.id  %}'>add declaration</a></li>
-        {% endif %}
-    </ul>
-</div>
-
 {% endblock %}
-{% endif %}
-
-{% if area.id != area.parent.id %}
-<br>
-<p class='bottom-nav'>
-    {% for parent in area.direct_ancestors %}
-    {% if forloop.first %}
-    {{ area.name }} -&gt; 
-    {% else %}
-    <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
-    {% if not forloop.last %} -&gt; {% endif %}
-    {% endif %}
-    {% endfor %}
-</p>
 {% endif %}
 
 {% endblock %}
