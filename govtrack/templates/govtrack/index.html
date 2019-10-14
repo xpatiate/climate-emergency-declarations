@@ -16,11 +16,7 @@
       </tr>
     {% for country, dlist in countries %}
         <tr class='country-subhead'><th class='th-index' colspan='4'>
-            {% if user.is_authenticated %}
             <a href="{% url 'country' country.id %}">{{ country.name }}</a>
-            {% else %}
-            {{country.name}}
-            {% endif %}
         </th></tr>
         {% for dec in dlist %}
         <tr>
