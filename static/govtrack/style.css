@@ -182,9 +182,9 @@ tr.country-total {
     min-height: 50px;
     padding: 15px;
 }
-.inbox-list {
+.inbox-list, .inbox-switch {
     width: 100%;
-    height: 100px;
+    height: 150px;
     resize: vertical;
     overflow-y: scroll;
     padding: 0px 10px;
@@ -201,7 +201,7 @@ tr.country-total {
     text-align: left;
 }
 .inbox-create {
-    margin: 20px 0px 10px 5px;
+    margin: 5px 0px;
 }
 .inbox-heading {
     display: flex;
