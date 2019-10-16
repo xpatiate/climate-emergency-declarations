@@ -62,7 +62,7 @@ function deleteThis(ev) {
 };
 
 function toggleInbox() {
-    let inbox = $('.inbox-paste, .inbox-list');
+    let inbox = $('.inbox-heading, .inbox-list');
     if (inbox.css('display') == 'none') {
         inbox.css('display', 'block');
         $('.toggle-inbox').html('hide inbox');

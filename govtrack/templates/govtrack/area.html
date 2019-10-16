@@ -65,7 +65,9 @@
             </div>
             <div><span class='link-api'><a href='{{ area_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></div>
             <div><a href="{% url 'inbox' country.id %}">go to inbox</a></div>
+            {% if import_declaration_list %}
             <div><a class='toggle-inbox'>hide inbox</a></div>
+            {% endif %}
             <div style='text-align: left'>
                 {% for ctype in area.sub_types %}
                 <a name='#{{area.id}}{{ ctype.id}}'></a>
@@ -89,8 +91,8 @@
     {% include 'govtrack/links.html' %}
 </div>
 
-{% if user.is_authenticated %}
-<h4>The Inbox</h4>
+{% if user.is_authenticated and import_declaration_list %}
+<h4 class='inbox-heading'>The Inbox</h4>
 {% include 'govtrack/inbox-list.html' %}
 {% endif %}
 
