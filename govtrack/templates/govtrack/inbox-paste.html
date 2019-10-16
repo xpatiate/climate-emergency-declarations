@@ -1,7 +1,0 @@
-<div class='inbox-paste'>
-    <form class='paste-inbox' action='{% url 'api_import_declaration_multi_add' country.id %}' method=POST>
-        {% csrf_token %}
-        <input class='inbox-create' type='submit' value='create'>
-        <textarea name='paste_data'></textarea>
-    </form>
-</div>

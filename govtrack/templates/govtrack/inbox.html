@@ -9,8 +9,16 @@
 <h3>Inbox <a href="{% url 'country' country.id %}">{{ country.name }}</a></h3>
 {% endblock %}
 
-{% include 'govtrack/inbox-paste.html' %}
+<div class='inbox-paste'>
+    <form class='paste-inbox' action='{% url 'api_import_declaration_multi_add' country.id %}' method=POST>
+        {% csrf_token %}
+        <input class='inbox-create' type='submit' value='create'>
+        <textarea name='paste_data'></textarea>
+    </form>
+</div>
+{% if import_declaration_list %}
 {% include 'govtrack/inbox-list.html' %}
+{% endif %}
 
 {% if country_list %}
 <h4>Other Inboxes</h4>
