@@ -22,7 +22,6 @@ class StructureForm(ModelForm):
             'name': forms.TextInput(attrs={'autofocus': 'autofocus'})
             }
 
-
 class AreaForm(ModelForm):
     
     class Meta:
