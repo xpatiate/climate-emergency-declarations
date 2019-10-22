@@ -194,21 +194,28 @@ def add_multi_import_declarations(request, country_id):
 
             for line in lines:
                 values = line.split('|')
-                if (len(values[4].split(' ')[0]) == 1):
-                    values[4] = '0' + values[4]
+                date = False
+                for fmt in ('%d %b, %Y', '%d %b %Y', '%d %B %Y', '%Y-%m-%d', '%d %B, %Y', '%d-%m-%Y'):
+                    try:
+                        date = datetime.datetime.strptime(values[4], fmt).date()
+                        break
+                    except ValueError:
+                        pass
+                if (not date):
+                    raise ValueError('no valid date format found')
                 data.append({
                     'name': values[0],
                     'num_govs': int(''.join(values[1].split(','))),
                     'area': values[2],
                     'population': int(''.join(values[3].split(','))),
-                    'date': datetime.datetime.strptime(values[4], '%d %b %Y').date(),
+                    'date': date,
                     'due': values[5],
                     'contact': values[6],
                     'link': values[7],
                     'country': Country.objects.filter(id=country_id).first()
                 })
-        except (AttributeError, ValueError, IndexError):
-            return HttpResponse("Error: 400\nInvalid Input Data", status=400, content_type='text/plain')
+        except (AttributeError, ValueError, IndexError) as error:
+            return HttpResponse("Error: 400\nInvalid Input Data\n{}".format(error), status=400, content_type='text/plain')
 
         for datum in data:
             ImportDeclaration(**datum).save()
