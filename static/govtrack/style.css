@@ -128,6 +128,10 @@ tr.country-total {
     background-color: #ddecff;
 }
 
+.countries tr:nth-child(odd) {
+    background-color: #d7dde7;
+}
+
 /* ADMIN VIEW */
 .admin-corner {
     float: right;
@@ -210,7 +214,7 @@ tr.country-total {
     vertical-align: middle;
 }
 #selected-inbox-item {
-    background: #f0f0f0;
+    background: #dadada;
 }
 
 /* FORMS */
