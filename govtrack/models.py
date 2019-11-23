@@ -655,6 +655,13 @@ class Declaration(models.Model):
         (LISTING_UNDER_REVIEW, 'Listing Under Review'),
     ]
     STATUS_MAP = { s[0]: s[1] for s in STATUS_TYPES }
+    # These status values can affect population counts -
+    # other types of status are tracked but are not included in counts
+    POPULATION_STATUS = {
+        'D': True,
+        'V': True
+    }
+
     status = models.CharField(
         max_length=1,
         choices=STATUS_TYPES,
@@ -662,7 +669,6 @@ class Declaration(models.Model):
     )
     event_date = models.DateField(verbose_name='Event date')
     links = GenericRelation(Link, null=True, related_query_name='link')
- 
     declaration_type = models.CharField(max_length=256, blank=True)
     description_short = models.CharField(max_length=256, blank=True)
     description_long = models.TextField(blank=True)
@@ -670,15 +676,14 @@ class Declaration(models.Model):
     admin_notes = models.TextField(blank=True)
     verified = models.BooleanField(default=False)
 
-    # These status values can affect population counts -
-    # other types of status are tracked but are not included in counts
-    POPULATION_STATUS = {
-        'D': True,
-        'V': True
-    }
     @classmethod
     def content_type_id(cls):
         return ContentType.objects.get_for_model(cls).pk
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            # call area create proxies for declaration
+        super().save(*args, **kwargs)
 
     @property
     def status_name(self):
@@ -753,3 +758,7 @@ class ImportDeclaration(models.Model):
     contact = models.TextField(null=True, blank=True)
     link = models.TextField(null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
+
+class ProxyDeclaration(models.Model):
+    declaration = models.ForeignKey(Declaration, on_delete=models.CASCADE)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE)
