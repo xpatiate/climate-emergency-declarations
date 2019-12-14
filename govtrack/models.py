@@ -7,15 +7,15 @@ import django.urls
 
 import datetime
 import logging
+
 logger = logging.getLogger('cegov')
 poplog = logging.getLogger('popcount')
 
-
-DATE_FORMAT='%Y-%m-%d'
+DATE_FORMAT = '%Y-%m-%d'
 # Create your models here.
 
 class Hierarchy():
-    """Mix-in class to provide tree-related methods."""
+    '''Mix-in class to provide tree-related methods.'''
     def build_hierarchy(self, itemlist=None):
         if itemlist is None:
             itemlist = []
@@ -33,66 +33,24 @@ class Hierarchy():
         return itemlist
 
 class PopulationCounter():
-    """Utility class to perform population counting on tree structures."""
+    '''Utility class to perform population counting on tree structures.'''
 
-    def __init__(self):
-        self.counted = None
-        self.date = None
+    def declared_population(self, area, date=None):
+        count = []
+        queue = [area]
+        total = 0
 
-    def declared_population(self, area, total=0):
-        if not self.counted:
-            self.counted = set()
-
-        debugdate = ''
-        if self.date:
-            debugdate = ' at %s' % self.date
-        poplog.debug("%s,%s,%s,%s" % (total,0,area.name,self.date))
-        logger.debug("#### COUNTING declared population for %s%s ####" % (area.name, debugdate))
-        logger.debug("#### total %s, already counted: %s" % (total,self.counted))
-        if area.is_declared_at(self.date):
-            # Check if any descendents are already counted
-            current_desc = area.all_descendants
-            overlap = current_desc.intersection(self.counted)
-            logger.debug("overlap between [%s] and [%s] is [%s]" % (current_desc, self.counted, overlap))
-
-            if not overlap:
-                # Current area is declared and has no overlap:
-                # - Add self and all descendants (inc indirect) to counted
-                self.counted.add(area)
-                self.counted.update(area.all_descendants)
-                # - Count total population
-                logger.debug("%s adding %s to %s" % (area.name,area.population,total))
-                total += area.population
-                poplog.debug("%s,%s,%s" % (area.population,total,area.name))
+        while queue:
+            this = queue.pop(0)
+            if this.is_declared_at_proxied(date) and not Area.objects.filter(supplements=this.id).exists():
+                count.append(this)
             else:
-                # Current area is declared and has overlap
-                # Figure out which overlapping areas to subtract
-                logger.debug("%s is declared%s but has overlapping descendants" % (area.name,debugdate))
-                subtotal = area.population
-                # Need to process these subareas as a tree, not a list
-                for kid in overlap:
-                    if kid in area.all_children:
-                        logger.debug("subtracting %s (pop of %s) from subtotal %s" % (kid.population, kid.name, subtotal))
-                        subtotal -= kid.population
-                logger.debug("total to add for %s is %s" % (area.name, subtotal))
-                self.counted.add(area)
-                self.counted.update(area.all_descendants)
-
-                total += subtotal
-                poplog.debug("%s,%s,%s" % (area.population,total,area.name))
-        else:
-            # Current area is not declared, look at children
-            logger.debug("%s not declared%s, looking at children" % (area.name,debugdate))
-            for child in area.children:
-                logger.debug("has %s been counted? %s" % (child, self.counted))
-                if child in self.counted:
-                    logger.debug("already counted child %s" % child)
-                    continue
-                total = self.declared_population(child, total)
-                logger.debug("after counting %s, counted set is %s" % (child,self.counted))
-            logger.debug("Children of %s returned %s" % (area.name, total))
-        logger.debug("#### %s returning total of %s ####" % (area.name,total))
-        logger.debug("#### have now counted: %s" % self.counted)
+                for child in this.children:
+                    queue.append(child)
+        
+        for area in count:
+            total += area.population
+        
         return total
 
 class Link(models.Model):
@@ -102,7 +60,7 @@ class Link(models.Model):
     content_object = GenericForeignKey('content_type', 'object_id')
 
     def html(self):
-        return f"<a href='{self.url}'>{self.url}</a>"
+        return f'<a href=\'{self.url}\'>{self.url}</a>'
     def __str__(self):
         return self.url
 
@@ -128,8 +86,8 @@ class Country(models.Model):
         return django.urls.reverse('api_country_population', args=[self.country_code])
 
     def active_declarations(self, **kwargs):
-        """Return a list of declarations for a country which are active
-        at a specified (or current) date."""
+        '''Return a list of declarations for a country which are active
+        at a specified (or current) date.'''
 
         as_at_date = kwargs.get('date', datetime.date.today())
         filter_args = {
@@ -206,13 +164,13 @@ class Country(models.Model):
         try:
             return Structure.objects.get(country=self.id, level=1)
         except Structure.DoesNotExist as ex:
-            logger.error("no root structure for country %s: %s" % (self.id,self.name))
+            logger.error('no root structure for country %s: %s' % (self.id,self.name))
 
     def get_root_area(self):
         try:
             return Area.objects.get(country=self.id, structure__level=1)
         except Area.DoesNotExist as ex:
-            logger.error("no root area for country %s: %s" % (self.id,self.name))
+            logger.error('no root area for country %s: %s' % (self.id,self.name))
         return None
 
     @property
@@ -229,8 +187,8 @@ class Country(models.Model):
         return 0
 
     def generate_population_count(self, fromdate=None):
-        """Recalculate all stored population counts from the given date onwards."""
-        logger.info("Counting population update from %s" % fromdate)
+        '''Recalculate all stored population counts from the given date onwards.'''
+        logger.info('Counting population update from %s' % fromdate)
         filter_args = {
             'country': self,
         }
@@ -239,7 +197,7 @@ class Country(models.Model):
 
         # delete any popcounts after this point
         existing_popcounts = PopCount.objects.filter(**filter_args)
-        logger.info("going to delete %s existing popcounts" % len(existing_popcounts))
+        logger.info('going to delete %s existing popcounts' % len(existing_popcounts))
         existing_popcounts.delete()
 
         # find declarations for this country, only of status D or V
@@ -250,7 +208,7 @@ class Country(models.Model):
         if fromdate:
             filter_args['event_date__gte'] = fromdate
         future_decs = Declaration.objects.filter(**filter_args).order_by('event_date')
-        logger.info("got %s declarations" % len(future_decs))
+        logger.info('got %s declarations' % len(future_decs))
 
         # Make a dict of the unique dates for all declarations,
         # and the declarations linked to each date
@@ -258,20 +216,18 @@ class Country(models.Model):
         for d in future_decs:
             date_dict[str(d.event_date)].append(d)
         change_dates = sorted(date_dict.keys())
-        logger.info("got change dates: %s" % change_dates)
+        logger.info('got change dates: %s' % change_dates)
 
         root = self.get_root_area()
         for cdate in change_dates:
             # Calculate the population as at this date
             pc = PopulationCounter()
-            pc.date = cdate
-            date_pop = pc.declared_population(root)
+            date_pop = pc.declared_population(root, date=cdate)
             # Note we add a unique popcount for each declaration on this date,
             # but they all have the same population,
             # because we can't break down population change by declaration at this stage
             for decln in date_dict[cdate]:
                 pop = PopCount.create(self, decln, date_pop)
-
 
     def __str__(self):
         return self.name
@@ -295,6 +251,7 @@ class Structure(Hierarchy, models.Model):
     def content_type_id(cls):
         return ContentType.objects.get_for_model(cls).pk
 
+    @property
     def fullname(self):
         name = ''
         if (self.level > 1):
@@ -338,8 +295,12 @@ class Structure(Hierarchy, models.Model):
         num_areas = Area.objects.filter(structure=self.id).count()
         return num_areas
 
+    @property
+    def indent_level(self):
+        return max(0, self.level - 1)
+
     def __str__(self):
-        return self.fullname()
+        return self.fullname
 
 class Area(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
@@ -349,7 +310,7 @@ class Area(Hierarchy, models.Model):
     structure = models.ForeignKey(Structure, on_delete=models.CASCADE)
     description = models.TextField(null=True, blank=True)
     admin_notes = models.TextField(null=True, blank=True)
-    parent = models.ForeignKey('self', 
+    parent = models.ForeignKey('self',
         on_delete=models.CASCADE)
     supplements = models.ManyToManyField('self',
         symmetrical=False, related_name='supplement',
@@ -357,10 +318,16 @@ class Area(Hierarchy, models.Model):
     sort_name = models.CharField(max_length=64, null=True, blank=True)
     links = GenericRelation(Link, null=True, related_query_name='link')
 
+    __original_population = None
+
     parentlist = []
     descendant_list = set()
     is_supplementary = False
     cumulative_pop = 0
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_population = self.population
 
     @classmethod
     def content_type_id(cls):
@@ -369,17 +336,33 @@ class Area(Hierarchy, models.Model):
     def save(self, *args, **kwargs):
         if not self.sort_name:
             self.sort_name = self.name
+        
+        changed_pop = False
+        if self.population != self.__original_population:
+            changed_pop = True
+        
         super().save(*args, **kwargs)
+        self.__original_population = self.population
+
+        if changed_pop:
+            self.regen_from_oldest_dec()
 
     @property
     def declarations(self):
         children = Declaration.objects.filter(area=self.id).order_by('event_date')
         return children
+    
+    @property
+    def declarations_proxied(self):
+        declarations = Declaration.objects.filter(Q(area=self.id) | Q(proxied_areas=self.id))
+        
+        return declarations
 
     @property
     def linkname(self):
         return 'area'
 
+    @property
     def fullname(self):
         return '%s (%s)' % (self.name, self.structure.name)
 
@@ -389,12 +372,17 @@ class Area(Hierarchy, models.Model):
 
     @property
     def children(self):
-        children = Area.objects.filter(parent=self.id).exclude(pk=self.id).order_by('structure','sort_name')
+        children = Area.objects.filter(parent=self.id).exclude(pk=self.id).order_by('structure', 'sort_name')
         return children
+
+    def regen_from_oldest_dec(self):
+        decs = self.declarations_proxied
+        if decs:
+            self.country.generate_population_count(fromdate=decs.latest('-event_date').event_date)
 
     @property
     def indirect_children(self):
-        children = Area.objects.filter(supplements=self.id).exclude(pk=self.id).order_by('structure','sort_name')
+        children = Area.objects.filter(supplements=self.id).exclude(pk=self.id).order_by('structure', 'sort_name')
         return children
 
     @property
@@ -407,7 +395,7 @@ class Area(Hierarchy, models.Model):
         # both as prime parent and supplementary parent
         combined = Area.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
-        ).exclude(pk=self.id).order_by('structure','sort_name')
+        ).exclude(pk=self.id).order_by('structure', 'sort_name')
         return combined
 
     @property
@@ -494,25 +482,25 @@ class Area(Hierarchy, models.Model):
             if parent == self:
                 continue
             if parent.is_declared_at(dec_date):
-                logger.debug("parent %s is declared at %s" % (parent.name, dec_date))
+                logger.debug('parent %s is declared at %s' % (parent.name, dec_date))
                 num_declared += 1
         return num_declared
 
     def contribution(self):
         area_total = 0
         num_dec_anc = self.num_declared_ancestors()
-        poplog.info("num declared ancestors for %s is %s" % (self.name, num_dec_anc))
+        poplog.info('num declared ancestors for %s is %s' % (self.name, num_dec_anc))
         # This area is declared and nothing above it has declared
         if (self.is_declared and num_dec_anc == 0):
-            poplog.info("%s is declared and has no declared ancestors" % self.name)
+            poplog.info('%s is declared and has no declared ancestors' % self.name)
             area_total = self.population
         # Multiple areas above this one have declared
         elif (num_dec_anc > 1):
-            poplog.info("%s has %s declared ancestors" % (self.name, num_dec_anc))
+            poplog.info('%s has %s declared ancestors' % (self.name, num_dec_anc))
             area_total = -1 * (num_dec_anc - 1) * self.population
         else:
-            poplog.info("%s has exactly 1 declared ancestor" % self.name)
-        poplog.info("so %s contribution is %s" % (self.name, area_total))
+            poplog.info('%s has exactly 1 declared ancestor' % self.name)
+        poplog.info('so %s contribution is %s' % (self.name, area_total))
         return area_total
 
     @property
@@ -528,13 +516,24 @@ class Area(Hierarchy, models.Model):
         return self.structure.level
 
     @property
+    def indent_level(self):
+        return self.structure.indent_level
+
+    @property
     def api_link(self):
         return django.urls.reverse('api_area_data', args=[self.id])
 
     @property
     def latest_declaration(self):
         try:
-            return Declaration.objects.filter(area=self.id).latest('event_date')
+            return self.declarations.latest('event_date')
+        except Declaration.DoesNotExist as ex:
+            pass
+
+    @property
+    def latest_declaration_proxied(self):
+        try:
+            return self.declarations_proxied.latest('event_date')
         except Declaration.DoesNotExist as ex:
             pass
 
@@ -547,9 +546,17 @@ class Area(Hierarchy, models.Model):
         return decdate
 
     @property
+    def latest_declaration_date_proxied(self):
+        dec = self.latest_declaration_proxied
+        decdate = ''
+        if dec:
+            decdate = dec.display_event_date()
+        return decdate
+
+    @property
     def is_declared(self):
-        """Return true if the Area's most recent declaration, at the current date,
-        is DECLARED."""
+        '''Return true if the Area's most recent declaration, at the current date,
+        is DECLARED.'''
         # Consider an area to be declared based on the status of its most
         # recent declaration
         latest = self.latest_declaration
@@ -557,18 +564,45 @@ class Area(Hierarchy, models.Model):
             return self.latest_declaration.status == 'D'
         return False
 
+    @property
+    def is_declared_proxied(self):
+        '''Return true if the Area's most recent declaration, at the current date,
+        is DECLARED.'''
+        # Consider an area to be declared based on the status of its most
+        # recent declaration
+        latest = self.latest_declaration_proxied
+        if latest:
+            return latest.status == 'D'
+        return False
+
     def is_declared_at(self, dec_date):
-        """Return true if the Area's most recent declaration, at the given date,
-        is DECLARED."""
+        '''Return true if the Area's most recent declaration, at the given date,
+        is DECLARED.'''
         if not dec_date:
             return self.is_declared
 
         latest_dec = None
         try:
-            latest_dec = Declaration.objects.filter(area=self.id, event_date__lte=dec_date).latest('event_date')
+            latest_dec = self.all_declarations.filter(event_date__lte=dec_date).latest('event_date')
         except ValidationError as ex:
-            logger.error("invalid date: %s" % dec_date)
+            logger.error('invalid date: %s' % dec_date)
+        except Declaration.DoesNotExist as ex:
             pass
+        if latest_dec:
+            return latest_dec.status == 'D'
+        return False
+
+    def is_declared_at_proxied(self, dec_date):
+        '''Return true if the Area's most recent declaration, at the given date,
+        is DECLARED.'''
+        if not dec_date:
+            return self.is_declared_proxied
+
+        latest_dec = None
+        try:
+            latest_dec = self.declarations_proxied.filter(event_date__lte=dec_date).latest('event_date')
+        except ValidationError as ex:
+            logger.error('invalid date: %s' % dec_date)
         except Declaration.DoesNotExist as ex:
             pass
         if latest_dec:
@@ -583,7 +617,7 @@ class Area(Hierarchy, models.Model):
 
     @property
     def skip_is_counted(self):
-        logger.debug("should we count item %s?" % self.name)
+        logger.debug('should we count item %s?' % self.name)
         # count population if:
             # count setting is true (always count)
             # OR
@@ -596,7 +630,7 @@ class Area(Hierarchy, models.Model):
 
         # am I declared? If so, then count, unless a parent has
         if self.is_declared:
-            logger.debug("Item %s has declared, so will count unless parent has" % self.name)
+            logger.debug('Item %s has declared, so will count unless parent has' % self.name)
             do_count = True
             # loop through all parents, see if any have declared
             # get ancestor list, reversed (in asc order) and with self removed
@@ -604,17 +638,17 @@ class Area(Hierarchy, models.Model):
             rev_ancestors.reverse()
             logger.debug('item %s has %s ancestors: %s' % (self.name,len(rev_ancestors), rev_ancestors))
             for parent in rev_ancestors:
-                logger.debug("item %s checking parent %s for inherited setting: %s" % (self.name,parent.name,parent.is_declared))
+                logger.debug('item %s checking parent %s for inherited setting: %s' % (self.name,parent.name,parent.is_declared))
                 if parent.is_declared:
-                    logger.debug("item %s has a declared parent, will not count" % self.name)
+                    logger.debug('item %s has a declared parent, will not count' % self.name)
                     do_count = False
                     break
                 # If this parent is not declared, go up another level to next parent
-            logger.debug("item %s finished parent loop, do count is %s" % (self.name,do_count))
+            logger.debug('item %s finished parent loop, do count is %s' % (self.name,do_count))
         else:
             do_count = False
         if not do_count:
-            logger.debug("No definite value for %s so setting to false" % self.name)
+            logger.debug('No definite value for %s so setting to false' % self.name)
             do_count = False
 
         return do_count
@@ -630,7 +664,7 @@ class Area(Hierarchy, models.Model):
         return arealist
 
     def __str__(self):
-        return self.fullname()
+        return self.fullname
 
 class Declaration(models.Model):
     area = models.ForeignKey(Area, on_delete=models.CASCADE)
@@ -675,15 +709,34 @@ class Declaration(models.Model):
     key_contact = models.CharField(max_length=128, blank=True)
     admin_notes = models.TextField(blank=True)
     verified = models.BooleanField(default=False)
+    proxied_areas = models.ManyToManyField(Area, blank=True, related_name='proxy_declarations')
 
     @classmethod
     def content_type_id(cls):
         return ContentType.objects.get_for_model(cls).pk
     
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__event_date = self.event_date
+        self.__status = self.status
+
     def save(self, *args, **kwargs):
+        new = False
         if not self.pk:
-            # call area create proxies for declaration
+            new = True
+
+        changed = False
+        if self.event_date != self.__event_date or self.status != self.__status:
+            changed = True
+
         super().save(*args, **kwargs)
+        self.__event_date = self.event_date
+        if new:
+            for child in self.area.all_children:
+                self.proxied_areas.add(child)
+
+        if changed:
+            self.area.country.generate_population_count(fromdate=self.event_date)
 
     @property
     def status_name(self):
@@ -708,19 +761,19 @@ class Declaration(models.Model):
 
     @property
     def affects_population_count(self):
-        """Return true if this declaration status will potentially alter
-        population counts (only Declared or Revoked)"""
+        '''Return true if this declaration status will potentially alter
+        population counts (only Declared or Revoked)'''
         return self.POPULATION_STATUS.get(self.status)
 
     def is_active_at_date(self, date):
         siblings = Declaration.objects.filter(
-            area = self.area.id,
-            event_date__lt = date,
-            event_date__gt = self.event_date,
+            area=self.area.id,
+            event_date__lt=date,
+            event_date__gt=self.event_date,
             ).exclude(pk=self.id)
         for sib in siblings:
             if sib.status != 'D':
-                logger.info("excluding area %s due to declaration with non-D status %s at date %s" % (sib.area, sib.status, sib.event_date))
+                logger.info('excluding area %s due to declaration with non-D status %s at date %s' % (sib.area, sib.status, sib.event_date))
                 return False
         return True
 
@@ -759,6 +812,26 @@ class ImportDeclaration(models.Model):
     link = models.TextField(null=True, blank=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
 
-class ProxyDeclaration(models.Model):
-    declaration = models.ForeignKey(Declaration, on_delete=models.CASCADE)
-    area = models.ForeignKey(Area, on_delete=models.CASCADE)
+from django.db.models.signals import m2m_changed
+
+def supplements_changed(sender, **kwargs):
+    if (kwargs['action'] == 'pre_add'):
+        for key in kwargs['pk_set']:
+            parent = Area.objects.filter(id=key).first()
+            if parent.supplement.count() == 0:
+                # decs = Declaration.objects.filter(area=key)
+                for dec in parent.declaration_set.all():
+                    dec.proxied_areas.add(child)
+                    for child in parent.all_children:
+                        print(f'adding {child.name} to {dec}')
+                        dec.proxied_areas.add(child)
+            parent.regen_from_oldest_dec()
+    if (kwargs['action'] == 'post_remove'):
+        for key in kwargs['pk_set']:
+            count = Area.objects.filter(id=key).first().supplement.count()
+    if (kwargs['action'] == 'post_clear'):
+        # might need to add something here if the supplements m2m is going to be cleared at somepoint
+        pass
+    print(f'{kwargs}')
+
+m2m_changed.connect(supplements_changed, sender=Area.supplements.through)

@@ -23,7 +23,7 @@
         <div id='editcountry-{{ country.id }}' class='edit-country'>
             <div><a href='{% url 'country_edit' country.id %}'>edit</a></div>
             <div><span class='link-api'><a href='{{ country_api_link }}'>API link<span class='tooltiptext'>right click to copy link</span></a></span></div>
-            <div><a href="{% url 'inbox' country.id %}">go to inbox</a></div>
+            <div><a href='{% url "inbox" country.id %}'>go to inbox</a></div>
             {% if import_declaration_list %}
             <div><a class='toggle-inbox'>hide inbox</a></div>
             {% endif %}
@@ -44,7 +44,12 @@
 
 <div class='parent-tree'>
     {% for struct in structure_list %}
-    <div class='level_{{ struct.level }}' id='structure-{{ struct.id }}'>
+    <div id='structure-{{ struct.id }}'>
+        {% with ''|center:struct.indent_level as range %}
+        {% for _ in range %}
+        <span class='level_indent'></span>
+        {% endfor %}
+        {% endwith %}
         &#8866; {{ struct.name }} ({{ struct.num_areas }})
         {% if user.is_authenticated %}
         &nbsp;<button class='view-structure' id='viewstructure-{{ struct.id }}'>*</button>
@@ -69,51 +74,56 @@
 {% endif %}
 
 <h3>Areas</h3>
-<table class='areas'>
-    <tr>
-        <th></th>
-        <th>Declared?</th>
-        <th>Population</th>
-    </tr>
-    {% for area in areas_list %}
-    <tr {% if area.is_declared %}class='declared-row'{% endif %}>
-        <td>
-            {% if area.is_supplementary %}
-            <div class='supplementary'>
-            {% endif %}
-            <div class='level_{{ area.level }}' id='area-{{ area.id }}'>&#8866;({{ area.structure.name }})  <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
-            {% if area.is_supplementary %}
-            </div>
-            {% endif %}
-                {% if not area.is_supplementary and user.is_authenticated %}
-                &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
-                <div id='editarea-{{ area.id }}' class='edit-area'>
-                <a href='{% url 'area_edit' area.id %}'>edit</a>
-                {% if area.level > 1 %}
-                |
-                {% with view='api_area_del' object=area %}
-                {% include 'govtrack/delete.html' %}
+<div class="areas">
+    <table>
+        <tr>
+            <th>Area</th>
+            <th>Declared?</th>
+            <th>Population</th>
+        </tr>
+        {% for area in areas_list %}
+        <tr {% if area.is_declared %}class='declared-row'{% endif %} {% if area.is_supplementary %}class='supplementary'{% endif %}>
+            <td>
+                {% with ''|center:area.indent_level as range %}
+                {% for _ in range %}
+                <span class='level_indent'></span>
+                {% endfor %}
                 {% endwith %}
+                <span id='area-{{ area.id }}'>
+                    &#8866;({{ area.structure.name }}) <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
+                {% if area.is_supplementary %}
+                </span>
+                {% else %}
+                    {% if user.is_authenticated %}
+                    &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
+                    <div id='editarea-{{ area.id }}' class='edit-area'>
+                    <a href='{% url 'area_edit' area.id %}'>edit</a>
+                    {% if area.level > 1 %}
+                    |
+                    {% with view='api_area_del' object=area %}
+                    {% include 'govtrack/delete.html' %}
+                    {% endwith %}
+                    {% endif %}
+                    |
+                    <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
+                    {% include 'govtrack/add-area.html' %}
+                    </div>
+                    {% endif %}
                 {% endif %}
-                |
-                <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
-                {% include 'govtrack/add-area.html' %}
-            </div>
-            {% endif %}
-            </div>
-        </td>
-        <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
-        <td align='right'>
-            {{ area.population | intcomma }}
-        </td>
-    </tr>
-    {% endfor %}
-    <tr class='total-pop-row'>
-        <td>Total population under declaration:</td>
-        <td></td>
-        <td align='right'>{{ total_declared_population | intcomma }}</td>
-    </tr>
-</table>
+            </td>
+            <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
+            <td align='right'>
+                {{ area.population | intcomma }}
+            </td>
+        </tr>
+        {% endfor %}
+        <tr class='total-pop-row'>
+            <td>Total population under declaration:</td>
+            <td></td>
+            <td align='right'>{{ total_declared_population | intcomma }}</td>
+        </tr>
+    </table>
+</div>
 
 {% endif %}
 {% endblock %}
