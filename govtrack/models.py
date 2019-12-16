@@ -37,19 +37,32 @@ class PopulationCounter():
 
     def declared_population(self, area, date=None):
         count = []
-        queue = [area]
+        declared_aggloms = []
         total = 0
+        area.proxy_declared = False
+        queue = [area]
 
         while queue:
             this = queue.pop(0)
-            if this.is_declared_at_proxied(date) and not Area.objects.filter(supplements=this.id).exists():
+            is_agglom = Area.objects.filter(supplements=this.id).exists()
+            try:
+                this.proxy_declared
+            except AttributeError:
+                this.proxy_declared = False
+                for parent in [*Area.objects.filter(supplement=this.id), this.parent]:
+                    if parent.id in declared_aggloms or parent.is_declared_at(date):
+                        this.proxy_declared = True
+            would_count = this.proxy_declared or this.is_declared_at(date)
+            if would_count and not is_agglom:
                 count.append(this)
-            else:
+            if would_count and is_agglom:
+                declared_aggloms.append(this.id)
+            if not would_count or would_count and is_agglom:
                 for child in this.children:
                     queue.append(child)
         
-        for area in count:
-            total += area.population
+        for counted in count:
+            total += counted.population
         
         return total
 
@@ -61,6 +74,7 @@ class Link(models.Model):
 
     def html(self):
         return f'<a href=\'{self.url}\'>{self.url}</a>'
+    
     def __str__(self):
         return self.url
 
@@ -236,7 +250,7 @@ class Structure(Hierarchy, models.Model):
     name = models.CharField(max_length=64)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
     level = models.PositiveSmallIntegerField()
-    parent = models.ForeignKey('self', 
+    parent = models.ForeignKey('self',
         on_delete=models.CASCADE)
     admin_notes = models.TextField(blank=True)
     links = GenericRelation(Link, null=True, blank=True, related_query_name='link')
@@ -353,12 +367,6 @@ class Area(Hierarchy, models.Model):
         return children
     
     @property
-    def declarations_proxied(self):
-        declarations = Declaration.objects.filter(Q(area=self.id) | Q(proxied_areas=self.id))
-        
-        return declarations
-
-    @property
     def linkname(self):
         return 'area'
 
@@ -376,7 +384,7 @@ class Area(Hierarchy, models.Model):
         return children
 
     def regen_from_oldest_dec(self):
-        decs = self.declarations_proxied
+        decs = self.declarations
         if decs:
             self.country.generate_population_count(fromdate=decs.latest('-event_date').event_date)
 
@@ -531,23 +539,8 @@ class Area(Hierarchy, models.Model):
             pass
 
     @property
-    def latest_declaration_proxied(self):
-        try:
-            return self.declarations_proxied.latest('event_date')
-        except Declaration.DoesNotExist as ex:
-            pass
-
-    @property
     def latest_declaration_date(self):
         dec = self.latest_declaration
-        decdate = ''
-        if dec:
-            decdate = dec.display_event_date()
-        return decdate
-
-    @property
-    def latest_declaration_date_proxied(self):
-        dec = self.latest_declaration_proxied
         decdate = ''
         if dec:
             decdate = dec.display_event_date()
@@ -564,17 +557,6 @@ class Area(Hierarchy, models.Model):
             return self.latest_declaration.status == 'D'
         return False
 
-    @property
-    def is_declared_proxied(self):
-        '''Return true if the Area's most recent declaration, at the current date,
-        is DECLARED.'''
-        # Consider an area to be declared based on the status of its most
-        # recent declaration
-        latest = self.latest_declaration_proxied
-        if latest:
-            return latest.status == 'D'
-        return False
-
     def is_declared_at(self, dec_date):
         '''Return true if the Area's most recent declaration, at the given date,
         is DECLARED.'''
@@ -583,24 +565,7 @@ class Area(Hierarchy, models.Model):
 
         latest_dec = None
         try:
-            latest_dec = self.all_declarations.filter(event_date__lte=dec_date).latest('event_date')
-        except ValidationError as ex:
-            logger.error('invalid date: %s' % dec_date)
-        except Declaration.DoesNotExist as ex:
-            pass
-        if latest_dec:
-            return latest_dec.status == 'D'
-        return False
-
-    def is_declared_at_proxied(self, dec_date):
-        '''Return true if the Area's most recent declaration, at the given date,
-        is DECLARED.'''
-        if not dec_date:
-            return self.is_declared_proxied
-
-        latest_dec = None
-        try:
-            latest_dec = self.declarations_proxied.filter(event_date__lte=dec_date).latest('event_date')
+            latest_dec = self.declarations.filter(event_date__lte=dec_date).latest('event_date')
         except ValidationError as ex:
             logger.error('invalid date: %s' % dec_date)
         except Declaration.DoesNotExist as ex:
@@ -709,7 +674,6 @@ class Declaration(models.Model):
     key_contact = models.CharField(max_length=128, blank=True)
     admin_notes = models.TextField(blank=True)
     verified = models.BooleanField(default=False)
-    proxied_areas = models.ManyToManyField(Area, blank=True, related_name='proxy_declarations')
 
     @classmethod
     def content_type_id(cls):
@@ -731,9 +695,6 @@ class Declaration(models.Model):
 
         super().save(*args, **kwargs)
         self.__event_date = self.event_date
-        if new:
-            for child in self.area.all_children:
-                self.proxied_areas.add(child)
 
         if changed:
             self.area.country.generate_population_count(fromdate=self.event_date)
@@ -815,23 +776,14 @@ class ImportDeclaration(models.Model):
 from django.db.models.signals import m2m_changed
 
 def supplements_changed(sender, **kwargs):
-    if (kwargs['action'] == 'pre_add'):
-        for key in kwargs['pk_set']:
-            parent = Area.objects.filter(id=key).first()
-            if parent.supplement.count() == 0:
-                # decs = Declaration.objects.filter(area=key)
-                for dec in parent.declaration_set.all():
-                    dec.proxied_areas.add(child)
-                    for child in parent.all_children:
-                        print(f'adding {child.name} to {dec}')
-                        dec.proxied_areas.add(child)
-            parent.regen_from_oldest_dec()
+    update = False
+    if (kwargs['action'] == 'post_add'):
+        update = True
     if (kwargs['action'] == 'post_remove'):
-        for key in kwargs['pk_set']:
-            count = Area.objects.filter(id=key).first().supplement.count()
+        update = True
     if (kwargs['action'] == 'post_clear'):
-        # might need to add something here if the supplements m2m is going to be cleared at somepoint
-        pass
-    print(f'{kwargs}')
+        update = True
+    if update:
+        kwargs['instance'].country.generate_population_count()
 
 m2m_changed.connect(supplements_changed, sender=Area.supplements.through)
