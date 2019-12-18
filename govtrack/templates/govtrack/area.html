@@ -16,10 +16,23 @@
 
 <div class='parent-tree'>
     {% for parent in parents_list reversed %}
-    <div class='level_{{ parent.level }}'>&#8866;({{ parent.structure.name }}) {{ parent.name }}</div>
+    <div>
+        {% with ''|center:parent.indent_level as range %}
+        {% for _ in range %}
+        <span class='level_indent'></span>
+        {% endfor %}
+        {% endwith %}
+        &#8866;({{ parent.structure.name }}) {{ parent.name }}
+    </div>
     {% endfor %}
     {% if action != "add" %}
-    <div class='level_{{ area.level|add:"1" }}'>&#8866; {{ area.num_children }} children
+    <div>
+        {% with ''|center:area.level as range %}
+        {% for _ in range %}
+        <span class='level_indent'></span>
+        {% endfor %}
+        {% endwith %}
+        &#8866; {{ area.num_children }} children
         {% if area.num_supplementary_children %}
         ({{ area.num_supplementary_children }} supplementary)
         {% endif %}
@@ -134,20 +147,23 @@
 {% endif %}
 
 {% if area.num_all_children %}
-<div class='object-view'>
+<div class='areas'>
     <p><b>Children:</b></p>
     <table>
         {% for area in areas_list %}
-        <tr {% if area.is_declared %}class='declared-row'{% endif %}>
+        <tr {% if area.is_declared %}class='declared-row'{% endif %} {% if area.is_supplementary %}class='supplementary'{% endif %}>
             <td>
+                {% with ''|center:area.indent_level as range %}
+                {% for _ in range %}
+                <span class='level_indent'></span>
+                {% endfor %}
+                {% endwith %}
+                <span id='area-{{ area.id }}'>
+                    &#8866;({{ area.structure.name }}) <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
                 {% if area.is_supplementary %}
-                <div class='supplementary'>
-                {% endif %}
-                <div class='level_{{ area.level }}' id='area-{{ area.id }}'>&#8866;({{ area.structure.name }})  <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
-                {% if area.is_supplementary %}
-                </div>
-                {% endif %}
-                    {% if not area.is_supplementary and user.is_authenticated %}
+                </span>
+                {% else %}
+                    {% if user.is_authenticated %}
                     &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
                     <div id='editarea-{{ area.id }}' class='edit-area'>
                     <a href='{% url 'area_edit' area.id %}'>edit</a>
@@ -160,12 +176,12 @@
                     |
                     <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
                     {% include 'govtrack/add-area.html' %}
-                </div>
+                    </div>
+                    {% endif %}
                 {% endif %}
-                </div>
             </td>
         </tr>
-    {% endfor %}
+        {% endfor %}
     </table>
 </div>
 {% endif %}

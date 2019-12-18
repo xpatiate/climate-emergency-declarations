@@ -12,7 +12,7 @@ import io
 import logging
 
 logger = logging.getLogger('cegov')
-DATE_FORMAT='%Y-%m-%d'
+DATE_FORMAT = '%Y-%m-%d'
 
 ## PUBLIC METHODS ##
 
@@ -48,7 +48,7 @@ def area_data(request, area_id):
 def country_population(request, country_code):
     country = Country.find_by_code(country_code)
     if not country:
-        raise Http404("No country for specified code")
+        raise Http404('No country for specified code')
     return HttpResponse(str(country.current_popcount), content_type='text/plain')
 
 def country_regenerate_timeline(request, country_code):
@@ -56,7 +56,7 @@ def country_regenerate_timeline(request, country_code):
     if request.user.is_authenticated:
         country = Country.find_by_code(country_code)
         if not country:
-            raise Http404("No country for specified code")
+            raise Http404('No country for specified code')
         country.generate_population_count()
         return HttpResponse(str(country.current_popcount), content_type='text/plain')
     else:
@@ -65,7 +65,7 @@ def country_regenerate_timeline(request, country_code):
 def country_population_timeline(request, country_code):
     country = Country.find_by_code(country_code)
     if not country:
-        raise Http404("No country for specified code")
+        raise Http404('No country for specified code')
     response = HttpResponse(content_type='text/csv')
     writer = csv.writer(response)
     for pc in country.popcounts:
@@ -77,7 +77,7 @@ def country_population_timeline(request, country_code):
 def country_declarations(request, country_code):
     country = Country.find_by_code(country_code)
     if not country:
-        raise Http404("No country for specified code")
+        raise Http404('No country for specified code')
     response = HttpResponse(content_type='text/csv')
     writer = csv.writer(response)
     writer.writerow(['Area', 'Location', 'Population', 'Date Declared', 'Declared Ancestors'])
@@ -168,7 +168,7 @@ def add_multi_areas(request, parent_id, structure_id):
             })
             if form.is_valid():
                 newarea = form.save()
-                logger.info("Created new area %s" % newarea)
+                logger.info('Created new area %s' % newarea)
                 if len(row) == 2:
                     newurl = row[1]
                     link_data = {
@@ -180,9 +180,9 @@ def add_multi_areas(request, parent_id, structure_id):
                     try:
                         newlink.full_clean()
                         newlink.save()
-                        logger.info("Created new link %s" % newlink)
+                        logger.info('Created new link %s' % newlink)
                     except ValidationError as ex:
-                        logger.error("couldn't save new link: %s" % ex)
+                        logger.error('couldn\'t save new link: %s' % ex)
     return redirect('area', area_id=parent_id)
 
 # Inbox methods
@@ -215,7 +215,7 @@ def add_multi_import_declarations(request, country_id):
                     'country': Country.objects.filter(id=country_id).first()
                 })
         except (AttributeError, ValueError, IndexError) as error:
-            return HttpResponse("Error: 400\nInvalid Input Data\n{}".format(error), status=400, content_type='text/plain')
+            return HttpResponse(f'Error: 400\nInvalid Input Data\n{error}', status=400, content_type='text/plain')
 
         for datum in data:
             ImportDeclaration(**datum).save()
