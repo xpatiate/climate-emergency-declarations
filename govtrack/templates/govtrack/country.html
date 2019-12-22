@@ -82,7 +82,7 @@
             <th>Population</th>
         </tr>
         {% for area in areas_list %}
-        <tr {% if area.is_declared %}class='declared-row'{% endif %} {% if area.is_supplementary %}class='supplementary'{% endif %}>
+        <tr class={% if area.is_declared %}'declared-row{% else %}'{% endif %} {% if area.is_supplementary %}supplementary'{% else %}'{% endif %}>
             <td>
                 {% with ''|center:area.indent_level as range %}
                 {% for _ in range %}
