@@ -1,4 +1,4 @@
-from django.forms import ModelForm
+from django.forms import ModelForm, Form
 import django.forms as forms
 from django.core.validators import URLValidator
 
@@ -63,3 +63,16 @@ class LinkForm(ModelForm):
         widgets = {
             'content_type': forms.HiddenInput(),
         }
+
+class SelectBulkAreaForm(Form):
+    prefix = 'bulk'
+    areas = forms.ModelMultipleChoiceField(queryset=Area.objects.all(), widget=forms.CheckboxSelectMultiple)
+    parent = forms.HiddenInput()
+
+class BulkAreaForm(ModelForm):
+    class Meta:
+        model = Area
+        fields = ['id', 'name', 'location', 'supplements']
+        #widgets = {
+        #    'id': forms.HiddenInput(),
+        #}

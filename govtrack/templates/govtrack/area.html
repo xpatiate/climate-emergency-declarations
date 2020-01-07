@@ -148,10 +148,16 @@
 
 {% if area.num_all_children %}
 <div class='areas'>
+    <div class='bulk-edit'>
+	 <a href='#'>bulk edit</a>
+    	<br><span class='bulk-edit-extra'><a id='bulk-edit-select' href='#'>select all</a></span>
+    </div>
+    <form class='bulk-edit-form' action='{% url 'bulkarea_edit' area.id %}' method='post'>
+    {% csrf_token %}
     <p><b>Children:</b></p>
-    <table>
+    <table> 
         {% for area in areas_list %}
-        <tr {% if area.is_declared %}class='declared-row'{% endif %} {% if area.is_supplementary %}class='supplementary'{% endif %}>
+	<tr {% if area.is_declared %}class='declared-row'{% endif %} {% if area.is_supplementary %}class='supplementary'{% endif %}>
             <td>
                 {% with ''|center:area.indent_level as range %}
                 {% for _ in range %}
@@ -180,11 +186,17 @@
                     {% endif %}
                 {% endif %}
             </td>
+	    <td><input type='checkbox' class='bulk-edit-item' name='bulk-areas' value='{{ area.id }}'></td>
         </tr>
         {% endfor %}
     </table>
+    <br>
+    <input type='submit' class='bulk-edit-go button-save' value='edit'>
+    <br>
+    </form>
 </div>
 {% endif %}
+
 
 {% endblock %}
 {% endif %}

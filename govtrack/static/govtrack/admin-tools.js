@@ -6,6 +6,10 @@ $(document).ready(() => {
     $('button.view-area').click(toggleEditOptions);
 
     $('div.delete-link').click(deleteThis);
+    $('div.bulk-edit').click(enableBulkEdit);
+    $('.bulk-edit-item').hover(highlightRow);
+    $('.bulk-edit-item').click(selectRow);
+    $('#bulk-edit-select').click(selectAll);
 
     let toggleInboxEl = $('.toggle-inbox');
     
@@ -20,6 +24,38 @@ $(document).ready(() => {
     $('.inbox-paste textarea').bind('paste', pasteInbox);
 });
 
+function selectAll(ev) {
+    $('.bulk-edit-item').prop('checked', true)
+    $('.bulk-edit-go').css('visibility','visible')
+    return false;
+}
+
+function highlightRow(ev) {
+    var el = ev.target;
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('hover-highlight')
+}
+function selectRow(ev) {
+    var el = ev.target;
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('select-highlight')
+    $('.bulk-edit-go').css('visibility','visible')
+}
+
+function enableBulkEdit(ev) {
+    var el = ev.target;
+    $('.bulk-edit-item').css('visibility','visible')
+    $('.bulk-edit-extra').css('visibility','visible')
+/*
+   var editBoxes = $('.bulk-edit-item')
+    editBoxes.each(function(i, box) {
+	console.log(box)
+	box.css('visibility','visible')
+    });
+    */
+    return false;
+}
+
 function toggleEditOptions(ev) {
     var el = ev.target;
     var editdivid = el.id.replace('view','edit');
@@ -33,6 +69,7 @@ function toggleEditOptions(ev) {
         showing[el.id] = 1;
         el.innerHTML = '-';
     }
+	return false;
 }
 
 function deleteThis(ev) {

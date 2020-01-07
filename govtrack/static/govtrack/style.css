@@ -169,7 +169,7 @@ tr.country-total {
     color: orange;
 }
 
-.edit-country a, .edit-area a, .edit-structure a, .edit-dec a {
+.edit-country a, .edit-area a, .edit-structure a, .edit-dec a, .bulk-edit a {
     color: orange;
 }
 
@@ -187,6 +187,40 @@ tr.country-total {
     font-size: small;
     padding-left: 20px;
     display: none;
+}
+.bulk-edit {
+    font-size: small;
+    float: right;
+}
+.bulk-edit-extra {
+    font-size: small;
+    float: right;
+    visibility: hidden;
+}
+.bulk-edit-item {
+    visibility: hidden;
+}
+.bulk-edit-go {
+    visibility: hidden;
+    float: right;
+}
+.bulk-edit-table {
+    border: 1px solid grey;
+    padding: 20px;
+}
+.bulk-meta-form {
+    padding: 10px;
+    width: 50%;
+    background: aliceblue;
+}
+.select-highlight {
+    background-color: peachpuff;
+}
+.hover-highlight {
+    background-color: papayawhip;
+}
+div.bulk-edit-table select {
+    font-size: small;
 }
 
 .inbox-paste textarea {

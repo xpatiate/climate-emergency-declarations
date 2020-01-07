@@ -1,0 +1,54 @@
+{% extends "govtrack/base.html" %}
+{% load humanize %}
+
+{% block title %}{{ country.name }} ({{ country.country_code }}){% endblock %}
+
+{% block content %}
+
+{% block heading %}
+<h3>{{ area.name }}</h3>
+<p><b>Type:</b> {{ area.structure.name }}</p>
+{% endblock %}
+
+{% if user.is_authenticated %}
+
+  <div class='bulk-meta-form'>
+    <h4>Apply to all</h4>
+    <fieldset>
+	    {{ form.location.label_tag }}<br>
+        {{ form.location }}
+        <input type='button' class='button-save' name='apply_location' value='set'>	
+        <input type='button' class='button-save' name='clear_location' value='clear'>	
+    </fieldset>
+    <br>
+    <fieldset>
+        {{ form.supplements.label_tag }}<br>
+        {{ form.supplements }}
+        <input type='button' class='button-save' id='apply_supplements' value='set'>	
+        <input type='button' class='button-save' id='clear_supplements' value='clear'>	
+    </fieldset>
+  </div>
+  <br>
+  <div class='bulk-edit-table'>
+  <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
+  {% csrf_token %}
+  <table>
+  {% for f in formset %}
+  <tr>
+	  <td>{{ f.name }} {{ f.country }} {{ f.structure }} {{ f.name.value }}</td>
+	  <td>{{ f.id }}</td>
+	  <td>{{ f.location }}</td>
+	  <td>{{ f.supplements }}</td>
+  </tr>
+  {% endfor %}
+  </table>
+  {{ formset.management_form }}
+    <input type='submit' name='save' value='save' class='button-save'>
+    <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
+  </form>
+  </div>
+{% endif %}
+
+
+
+{% endblock %}
