@@ -191,11 +191,15 @@ tr.country-total {
 .bulk-edit {
     font-size: small;
     float: right;
+    text-align: right;
 }
 .bulk-edit-extra {
     font-size: small;
     float: right;
-    visibility: hidden;
+    /*visibility: hidden;*/
+}
+#bulk-edit-select-all, #bulk-edit-select-none {
+    display: none;
 }
 .bulk-edit-item {
     visibility: hidden;

@@ -151,7 +151,13 @@
 <div class='areas'>
     <div class='bulk-edit'>
 	 <a href='#'>bulk edit</a>
-    	<br><span class='bulk-edit-extra'><a id='bulk-edit-select' href='#'>select all</a></span>
+    	<br>
+        <span class='bulk-edit-extra'>
+            <a id='bulk-edit-select-all' href='#'>select all</a>
+        </span>
+        <span class='bulk-edit-extra'>
+            <a id='bulk-edit-select-none' href='#'>select none</a>
+        </span>
     </div>
     <form class='bulk-edit-form' action='{% url 'bulkarea_edit' area.id %}' method='post'>
     {% csrf_token %}

@@ -17,15 +17,17 @@
     <fieldset>
 	    {{ form.location.label_tag }}<br>
         {{ form.location }}
-        <input type='button' class='button-save' name='apply_location' value='set'>	
-        <input type='button' class='button-save' name='clear_location' value='clear'>	
+        <input type='button' class='button-save' id='set_location' value='set'>
+        <input type='button' class='button-save' id='clear_location' value='clear'>
+        <input type='hidden' name='clear_location' value='false'>
     </fieldset>
     <br>
     <fieldset>
         {{ form.supplements.label_tag }}<br>
         {{ form.supplements }}
-        <input type='button' class='button-save' id='apply_supplements' value='add'>	
-        <input type='button' class='button-save' id='clear_supplements' value='clear'>	
+        <input type='button' class='button-save' id='add_supplements' value='add'>
+        <input type='button' class='button-save' id='remove_supplements' value='remove'>
+        <input type='hidden' name='supp_action' value=''>
     </fieldset>
   </div>
   <br>
@@ -36,13 +38,9 @@
   <input type='hidden' name='area_id_str' value='{{ area_id_str}}'>
   {% for a in area_list %}
   <tr>
-	  <!--<td>{{ f.name }} {{ f.country }} {{ f.structure }} {{ f.name.value }}</td>
-	  <td>{{ f.id }}</td>
-	  <td>{{ f.location.value }}</td>
-	  <td>{% for s in f.supplements.value %}{{ s }}{% endfor %}</td>-->
       <td>{{ a.name }}</td>
-      <td>{{ a.location }}</td>
-      <td>{% for s in a.supplements %}{{ s.name }}{% endfor %}</td>
+      <td><div class='area_location' id='area_{{ a.id}}_loc'>{{ a.location }}</div></td>
+      <td><div class='area_supp' id='area_{{ a.id}}_supp'>{{ a.supplements }}</div></td>
   </tr>
   {% endfor %}
   </table>

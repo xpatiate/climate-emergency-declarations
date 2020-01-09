@@ -9,7 +9,13 @@ $(document).ready(() => {
     $('div.bulk-edit').click(enableBulkEdit);
     $('.bulk-edit-item').hover(highlightRow);
     $('.bulk-edit-item').click(selectRow);
-    $('#bulk-edit-select').click(selectAll);
+    $('a#bulk-edit-select-all').click(selectAll);
+    $('a#bulk-edit-select-none').click(selectNone);
+
+    $('#set_location').click(setLocation)
+    $('#clear_location').click(clearLocation)
+    $('#add_supplements').click(addSupplements)
+    $('#remove_supplements').click(removeSupplements)
 
     let toggleInboxEl = $('.toggle-inbox');
     
@@ -25,7 +31,18 @@ $(document).ready(() => {
 });
 
 function selectAll(ev) {
+    var sall = $('a#bulk-edit-select-all')
+    sall.css('display', 'none')
+    var snone = $('a#bulk-edit-select-none')
+    snone.css('display', 'inline')
     $('.bulk-edit-item').prop('checked', true)
+    $('.bulk-edit-go').css('visibility','visible')
+    return false;
+}
+function selectNone(ev) {
+    $('a#bulk-edit-select-all').css('display', 'inline')
+    $('a#bulk-edit-select-none').css('display', 'none')
+    $('.bulk-edit-item').prop('checked', false)
     $('.bulk-edit-go').css('visibility','visible')
     return false;
 }
@@ -45,7 +62,7 @@ function selectRow(ev) {
 function enableBulkEdit(ev) {
     var el = ev.target;
     $('.bulk-edit-item').css('visibility','visible')
-    $('.bulk-edit-extra').css('visibility','visible')
+    $('#bulk-edit-select-all').css('display','inline')
 /*
    var editBoxes = $('.bulk-edit-item')
     editBoxes.each(function(i, box) {
@@ -222,4 +239,54 @@ function showMultiAddForm(target_id) {
         target.off('paste', getPastedHTML);
     }
     return false;
+}
+/*
+bulkedit functions:
+- location set: replace location in table display, set clear_location=false
+- location clear: delete location in table display, set clear_location=true
+- supplement remove: remove selected supps from table display, set supp_action=remove
+- supplement add: add selected supps to table display, set supp_action=add
+
+also fix up bulk-edit-select when checkboxes are previously selected
+change select all to select none
+*/
+
+
+
+function setLocation(ev) {
+    var newLocationInput = $('input#id_location')
+    var newLocation = newLocationInput[0].value
+    console.log("setting locs to " + newLocation)
+    $('#clear_location')[0].value = 'false'
+    let allLocs = $('.area_location')
+    allLocs.html(newLocation)
+    return false;
+}
+
+function clearLocation(ev) {
+    $("input#id_location")[0].value = ''
+    var clearLoc = $('#clear_location')
+    clearLoc[0].value = 'true'
+    $('.area_location').html('')
+    return false;
+}
+
+function addSupplements(ev) {
+    var addSupps = $("#id_supplements")[0]
+    var newSupps = addSupps.children("option:selected")
+    console.log(newSupps)
+    //addSupps.selectedOptions
+    $('.area_supp').each(function() {
+        var thisObj = $(this)
+        var thisSuppHTML = thisObj.html()
+        console.log(thisSuppHTML)
+        newSupps.forEach( function() {
+            thisObj.html(thisSuppHTML + '<li>' + this.text)
+        })
+
+    })
+    return false;
+}
+
+function removeSupplements(ev) {
 }

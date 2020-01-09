@@ -199,6 +199,7 @@ def bulkarea_save(request, area_id):
             if cdata['location']:
                 areas.update(location=cdata['location'])
             if cdata['supplements']:
+                logger.info(cdata['supplements'])
                 for area in areas:
                     for add_area in cdata['supplements']:
                         area.supplements.add(add_area)
@@ -220,10 +221,8 @@ def bulkarea_edit(request, area_id):
             { 
                 'id': a.id,
                 'name': a.name,
-                'location': a.location,
-                'country': a.country,
-                'structure': a.structure,
-                'supplements': a.supplements.all()
+                'location': a.location or '',
+                'supplements': a.supplement_list
                 }
                 for a in alldata['areas']
             ]
