@@ -101,6 +101,7 @@
     <p><b>Location:</b> {{ area.location|default_if_none:'' }}</p>
     <p><b>Population:</b> {{ area.population | intcomma }}</p>
     <p class='description'><b>Description:</b> {{ area.description | default_if_none:'' }}</p>
+    <p><b>Supplementary Parents:</b> {{ area.supplement_list }}</p>
     {% include 'govtrack/links.html' %}
 </div>
 

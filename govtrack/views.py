@@ -186,44 +186,36 @@ def structure_child(request, parent_id):
 def bulkarea_save(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     logger.info(f"saving bulk area data for {area}")
-    AreaFormSet = inlineformset_factory(
-                Area, Area, fk_name='parent',
-                fields=('name', 'location','supplements','country','structure'),
-                )
-    if request.method == 'POST':
-        logger.info("got post data, saving")
-        formset = AreaFormSet(request.POST)
-        if formset.is_valid():
-            instances = formset.save(commit=False)
-            logger.warn(f"formset saved! {instances}")
-            for instance in instances:
-                logger.warn(f"now saving instance {instance}")
-                # won't save because of something something parent WAAAAH
-                instance.save(update_fields=['location','supplements'])
-        else:
-            logger.warn(f"formset not valid: {formset.errors}")
-        return redirect('area', area_id=area_id)
+    if request.method == 'POST' and request.POST.get('save'):
+        idlist = request.POST.get('area_id_str').split(':')
+        for aid in idlist:
+            logger.info(aid)
+        masterform = BulkAreaForm(request.POST)
+        if masterform.is_valid():
+            cdata = masterform.cleaned_data
+            logger.info(f"clean data {cdata}")
+            areas = Area.objects.filter(id__in=idlist)
+            logger.info(areas)
+            if cdata['location']:
+                areas.update(location=cdata['location'])
+            if cdata['supplements']:
+                for area in areas:
+                    for add_area in cdata['supplements']:
+                        area.supplements.add(add_area)
+                    area.save()
+    return redirect('area', area_id=area_id)
 
 def bulkarea_edit(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     logger.info(area)
 
-    AreaFormSet = inlineformset_factory(
-                Area, Area, fk_name='parent',
-                fields=('name', 'location','supplements','country','structure'),
-                widgets={ 
-                    'name': HiddenInput(), 
-                    'country': HiddenInput(), 
-                    'structure': HiddenInput(), 
-                    }
-                )
     logger.warn("got area ids %s " % request.POST)
     bulkform = SelectBulkAreaForm(request.POST)
     bulkform.is_valid()
     alldata = bulkform.cleaned_data
+    num_areas = len(alldata['areas'])
+    logger.info(f"got {num_areas} areas")
 
-    #AreaFormSet = modelformset_factory(Area, extra=0, fields=('id','location','supplements'))
-    #AreaFormSet = formset_factory(BulkAreaForm, extra=0) #, fields=('id','location','supplements'))
     area_initial = [
             { 
                 'id': a.id,
@@ -236,22 +228,15 @@ def bulkarea_edit(request, area_id):
                 for a in alldata['areas']
             ]
     logger.info(f"area initial {area_initial}")
-    formset = AreaFormSet(initial=area_initial)
-    for f in formset:
-        f.fields['supplements'].queryset = area.parent.get_supplement_choices(exclude=area.id)
-    newform = AreaForm()
+    newform = BulkAreaForm()
     newform.fields['supplements'].queryset = area.parent.get_supplement_choices(exclude=area.id)
     return render(request, 'govtrack/bulkarea.html', {
         'area': area,
         'country': area.country,
         'form': newform,
-        'edit_list': alldata['areas'],
-        'formset': formset
+        'area_list': area_initial,
+        'area_id_str': ':'.join([ str(a['id']) for a in area_initial ]),
     })
-    # https://simpleisbetterthancomplex.com/article/2017/08/19/how-to-render-django-form-manually.html
-    # https://christiankaula.com/multi-object-edit-django-formsets.html
-    # https://dev.to/zxenia/django-inline-formsets-with-class-based-views-and-crispy-forms-14o6
-    # https://docs.djangoproject.com/en/2.1/topics/forms/modelforms/#inline-formsets
 
 
 def area_edit(request, area_id):

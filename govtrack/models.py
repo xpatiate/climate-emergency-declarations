@@ -375,6 +375,10 @@ class Area(Hierarchy, models.Model):
         return '%s (%s)' % (self.name, self.structure.name)
 
     @property
+    def supplement_list(self):
+        return ', '.join(sorted([s.name for s in self.supplements.all()]))
+
+    @property
     def num_children(self):
         return Area.objects.filter(parent=self.id).exclude(pk=self.id).count()
 

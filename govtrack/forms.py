@@ -72,7 +72,5 @@ class SelectBulkAreaForm(Form):
 class BulkAreaForm(ModelForm):
     class Meta:
         model = Area
-        fields = ['id', 'name', 'location', 'supplements']
-        #widgets = {
-        #    'id': forms.HiddenInput(),
-        #}
+        fields = ['location', 'supplements']
+

@@ -6,14 +6,14 @@
 {% block content %}
 
 {% block heading %}
-<h3>{{ area.name }}</h3>
-<p><b>Type:</b> {{ area.structure.name }}</p>
+<h4>Bulk edit selected child areas of {{area.name}}</h4>
+<br>
 {% endblock %}
 
 {% if user.is_authenticated %}
 
+  <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
   <div class='bulk-meta-form'>
-    <h4>Apply to all</h4>
     <fieldset>
 	    {{ form.location.label_tag }}<br>
         {{ form.location }}
@@ -24,29 +24,34 @@
     <fieldset>
         {{ form.supplements.label_tag }}<br>
         {{ form.supplements }}
-        <input type='button' class='button-save' id='apply_supplements' value='set'>	
+        <input type='button' class='button-save' id='apply_supplements' value='add'>	
         <input type='button' class='button-save' id='clear_supplements' value='clear'>	
     </fieldset>
   </div>
   <br>
   <div class='bulk-edit-table'>
-  <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
   {% csrf_token %}
   <table>
-  {% for f in formset %}
+  <tr><th>Area</th><th>Location</th><th>Supplementary parents</th></tr>
+  <input type='hidden' name='area_id_str' value='{{ area_id_str}}'>
+  {% for a in area_list %}
   <tr>
-	  <td>{{ f.name }} {{ f.country }} {{ f.structure }} {{ f.name.value }}</td>
+	  <!--<td>{{ f.name }} {{ f.country }} {{ f.structure }} {{ f.name.value }}</td>
 	  <td>{{ f.id }}</td>
-	  <td>{{ f.location }}</td>
-	  <td>{{ f.supplements }}</td>
+	  <td>{{ f.location.value }}</td>
+	  <td>{% for s in f.supplements.value %}{{ s }}{% endfor %}</td>-->
+      <td>{{ a.name }}</td>
+      <td>{{ a.location }}</td>
+      <td>{% for s in a.supplements %}{{ s.name }}{% endfor %}</td>
   </tr>
   {% endfor %}
   </table>
+  </div>
+  <br>
   {{ formset.management_form }}
     <input type='submit' name='save' value='save' class='button-save'>
     <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
   </form>
-  </div>
 {% endif %}
 
 
