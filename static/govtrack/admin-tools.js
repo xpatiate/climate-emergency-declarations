@@ -6,6 +6,17 @@ $(document).ready(() => {
     $('button.view-area').click(toggleEditOptions);
 
     $('div.delete-link').click(deleteThis);
+    $('a#bulk-edit-show').click(showBulkEdit);
+    $('a#bulk-edit-hide').click(hideBulkEdit);
+    $('.bulk-edit-item').hover(highlightRow);
+    $('.bulk-edit-item').click(selectRow);
+    $('a#bulk-edit-select-all').click(selectAll);
+    $('a#bulk-edit-select-none').click(selectNone);
+
+    $('#button_set_location').click(setLocation)
+    $('#button_clear_location').click(clearLocation)
+    $('#button_add_supplements').click(addSupplements)
+    $('#button_remove_supplements').click(removeSupplements)
 
     let toggleInboxEl = $('.toggle-inbox');
     
@@ -20,6 +31,63 @@ $(document).ready(() => {
     $('.inbox-paste textarea').bind('paste', pasteInbox);
 });
 
+function selectAll(ev) {
+    var sall = $('a#bulk-edit-select-all')
+    sall.css('display', 'none')
+    var snone = $('a#bulk-edit-select-none')
+    snone.css('display', 'inline')
+    $('.bulk-edit-item').prop('checked', true)
+    $.each($('.bulk-edit-item'),turnRowSelectionOn);
+    return false;
+}
+function selectNone(ev) {
+    $('a#bulk-edit-select-all').css('display', 'inline')
+    $('a#bulk-edit-select-none').css('display', 'none')
+    $('.bulk-edit-item').prop('checked', false)
+    $.each($('.bulk-edit-item'),turnRowSelectionOff);
+    return false;
+}
+
+function highlightRow(ev) {
+    var el = ev.target;
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('hover-highlight')
+}
+function selectRow(ev) {
+    var el = ev.target;
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('select-highlight')
+ }
+function turnRowSelectionOn(count, el) {
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('select-highlight', true)
+}
+function turnRowSelectionOff(count, el) {
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('select-highlight', false)
+}
+
+function showBulkEdit(ev) {
+    var el = ev.target;
+    $('.bulk-edit-item').css('visibility','visible')
+    $('#bulk-edit-select-all').css('display','inline')
+    $('#bulk-edit-show').css('display','none')
+    $('#bulk-edit-hide').css('display','inline')
+    $('.bulk-edit-go').css('visibility','visible')
+    return false;
+}
+
+function hideBulkEdit(ev) {
+    var el = ev.target;
+    $('.bulk-edit-item').css('visibility','hidden')
+    $('#bulk-edit-show').css('display','inline')
+    $('#bulk-edit-hide').css('display','none')
+    $('#bulk-edit-select-all').css('display','none')
+    $('#bulk-edit-select-none').css('display','none')
+    $('.bulk-edit-go').css('visibility','hidden')
+    return false;
+}
+
 function toggleEditOptions(ev) {
     var el = ev.target;
     var editdivid = el.id.replace('view','edit');
@@ -33,6 +101,7 @@ function toggleEditOptions(ev) {
         showing[el.id] = 1;
         el.innerHTML = '-';
     }
+	return false;
 }
 
 function deleteThis(ev) {
@@ -185,4 +254,66 @@ function showMultiAddForm(target_id) {
         target.off('paste', getPastedHTML);
     }
     return false;
+}
+
+function setLocation(ev) {
+    var newLocationInput = $('input#id_location')
+    var newLocation = newLocationInput[0].value
+    console.log("setting locs to " + newLocation)
+    $('#clear_location')[0].value = 'false'
+    let allLocs = $('.area_location')
+    allLocs.html(newLocation)
+    return false;
+}
+
+function clearLocation(ev) {
+    $("input#id_location")[0].value = ''
+    var clearLoc = $('#clear_location')
+    clearLoc[0].value = 'true'
+    $('.area_location').html('')
+    return false;
+}
+
+function addSupplements(ev) {
+    // find supplement name/s to add
+    var addSupps = $("#id_supplements")
+    var newSupps = addSupps.find(":selected")
+    // append them to displayed supplements
+    $('.area_supp').each(function() {
+        var thisObj = $(this)
+        newSupps.each( function(count, label) {
+            var thisSuppHTML = thisObj.html()
+            thisObj.html(thisSuppHTML + ', ' + label.text)
+        })
+
+    })
+    // store supplement IDs to add on submit
+    storeSuppIds('add', newSupps)
+    return false;
+}
+
+function removeSupplements(ev) {
+    var addSupps = $("#id_supplements")
+    var newSupps = addSupps.find(":selected")
+    $('.area_supp').each(function() {
+        var thisObj = $(this)
+        newSupps.each( function(count, label) {
+            console.log(thisObj)
+            console.log(thisObj.html())
+            thisObj.html(thisObj.html().replace(label.text, ''))
+            thisObj.html(thisObj.html().replace(', , ', ', '))
+        })
+
+    })
+    // store supplement IDs to remove on submit
+    storeSuppIds('remove', newSupps)
+    return false;
+}
+
+function storeSuppIds(action, selected) {
+    var supplist = $("#supp_list_" + action)
+    console.log(supplist.val())
+    selected.each( function(count, option) {
+        supplist.val(supplist.val() + option.value + ':')
+    })
 }
