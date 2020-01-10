@@ -17,17 +17,18 @@
     <fieldset>
 	    {{ form.location.label_tag }}<br>
         {{ form.location }}
-        <input type='button' class='button-save' id='set_location' value='set'>
-        <input type='button' class='button-save' id='clear_location' value='clear'>
-        <input type='hidden' name='clear_location' value='false'>
+        <input type='button' class='button-change' id='button_set_location' value='set'>
+        <input type='button' class='button-change' id='button_clear_location' value='clear'>
+        <input type='hidden' id='clear_location' name='clear_location' value='false'>
     </fieldset>
     <br>
     <fieldset>
         {{ form.supplements.label_tag }}<br>
         {{ form.supplements }}
-        <input type='button' class='button-save' id='add_supplements' value='add'>
-        <input type='button' class='button-save' id='remove_supplements' value='remove'>
-        <input type='hidden' name='supp_action' value=''>
+        <input type='button' class='button-change' id='button_add_supplements' value='add'>
+        <input type='button' class='button-change' id='button_remove_supplements' value='remove'>
+        <input type='hidden' id='supp_list_add' name='supp_list_add' value=''>
+        <input type='hidden' id='supp_list_remove' name='supp_list_remove' value=''>
     </fieldset>
   </div>
   <br>

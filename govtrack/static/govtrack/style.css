@@ -57,10 +57,14 @@ tr.country-total {
 }
 
 .button-save {
-    background-color: green;
+    background-color: seagreen;
     color: white;
 }
 
+.button-change {
+    background-color: mediumseagreen;
+    color: white;
+}
 .view-area:focus, .view-structure:focus {
     outline: 0;
 }

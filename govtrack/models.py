@@ -372,7 +372,7 @@ class Area(Hierarchy, models.Model):
 
     @property
     def fullname(self):
-        return '%s (%s)' % (self.name, self.structure.name)
+        return '%s' % self.name
 
     @property
     def supplement_list(self):

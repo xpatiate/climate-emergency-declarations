@@ -198,12 +198,29 @@ def bulkarea_save(request, area_id):
             logger.info(areas)
             if cdata['location']:
                 areas.update(location=cdata['location'])
-            if cdata['supplements']:
-                logger.info(cdata['supplements'])
-                for area in areas:
-                    for add_area in cdata['supplements']:
+            if request.POST.get('clear_location','') == 'true':
+                areas.update(location='')
+            supps_to_add_str = request.POST.get('supp_list_add')
+            supps_to_rm_str = request.POST.get('supp_list_remove')
+            supps_to_add = supps_to_add_str.split(':')
+            supps_to_rm = supps_to_rm_str.split(':')
+            logger.info(f"adding supps {supps_to_add_str} {supps_to_add}")
+            logger.info(f"rming supps {supps_to_rm_str} {supps_to_rm}")
+
+            for area in areas:
+                all_current_supps = list(area.supplements.all().values_list('id', flat=True))
+                logger.info(f"current supps: { all_current_supps }")
+                for add_area in supps_to_add:
+                    if add_area and int(add_area) not in all_current_supps:
+                        logger.info(f"adding area {add_area} to supps {all_current_supps}")
                         area.supplements.add(add_area)
-                    area.save()
+                for rm_area in supps_to_rm:
+                    if rm_area and int(rm_area) in all_current_supps:
+                        logger.info(f"rming area {rm_area} from supps {all_current_supps}")
+                        area.supplements.remove(rm_area)
+                area.save()
+                all_latest_supps = list(area.supplements.all().values_list('id', flat=True))
+                logger.info(f"updated supps: { all_latest_supps }")
     return redirect('area', area_id=area_id)
 
 def bulkarea_edit(request, area_id):
