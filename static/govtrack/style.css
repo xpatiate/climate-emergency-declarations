@@ -314,5 +314,5 @@ input[type='text'] {
 }
 
 select[multiple] {
-    height: 200px;
+    resize: both;
 }
