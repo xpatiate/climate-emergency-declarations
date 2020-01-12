@@ -39,7 +39,7 @@
   <input type='hidden' name='area_id_str' value='{{ area_id_str}}'>
   {% for a in area_list %}
   <tr>
-      <td>{{ a.name }}</td>
+      <td><a class='link-area' href='{% url 'area' a.id %}'>{{ a.name }}</a></td>
       <td><div class='area_location' id='area_{{ a.id}}_loc'>{{ a.location }}</div></td>
       <td><div class='area_supp' id='area_{{ a.id}}_supp'>{{ a.supplements }}</div></td>
   </tr>

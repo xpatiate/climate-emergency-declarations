@@ -76,6 +76,10 @@ tr.country-total {
 .supplementary {
     font-style: italic;
     background-color: rgb(240,240,240);
+    color: purple;
+}
+.supplementary a {
+    color: purple;
 }
 
 .declarations {
@@ -308,4 +312,8 @@ input[type='text'] {
 
 .paste-text {
     display: none;
+}
+
+select[multiple] {
+    height: 200px;
 }
