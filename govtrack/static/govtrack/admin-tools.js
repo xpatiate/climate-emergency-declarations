@@ -245,14 +245,17 @@ function getPastedHTML(ev) {
 // Simple function to display the textarea when link is clicked,
 // and attach a paste event listener
 function showMultiAddForm(target_id) {
-    var target = $( '#' + target_id);
-    if (target.css('display') != 'inline') {
-        target.css('display', 'inline');
-        target.on('paste', getPastedHTML);
-    } else {
-        target.css('display', 'none');
-        target.off('paste', getPastedHTML);
-    }
+    var etypes = ['form', 'text']
+    $.each( etypes, function(count, thing) {
+        var target = $( '#' + thing + '_' +  target_id);
+        if (target.css('display') != 'inline') {
+            target.css('display', 'inline');
+            target.on('paste', getPastedHTML);
+        } else {
+            target.css('display', 'none');
+            target.off('paste', getPastedHTML);
+        }
+    });
     return false;
 }
 
