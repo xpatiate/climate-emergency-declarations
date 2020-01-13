@@ -244,7 +244,7 @@ def bulkarea_edit(request, area_id):
                 for a in alldata['areas']
             ]
     newform = BulkAreaForm()
-    newform.fields['supplements'].queryset = area.get_supplement_choices().order_by('sort_name')
+    newform.fields['supplements'].queryset = area.get_supplement_choices()
     return render(request, 'govtrack/bulkarea.html', {
         'area': area,
         'country': area.country,
@@ -285,7 +285,7 @@ def area_edit(request, area_id):
             return redirect('area', area_id=area.id)
 
     # Show form
-    form.fields['supplements'].queryset = area.parent.get_supplement_choices(exclude=area.id)
+    form.fields['supplements'].queryset = area.get_supplement_choices(exclude=area.id)
     return render(request, 'govtrack/area.html', {
         'action': 'edit',
         'area': area,

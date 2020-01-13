@@ -326,6 +326,7 @@ class Area(Hierarchy, models.Model):
     admin_notes = models.TextField(null=True, blank=True)
     parent = models.ForeignKey('self',
         on_delete=models.CASCADE)
+    agglomeration = models.BooleanField(default=False)
     supplements = models.ManyToManyField('self',
         symmetrical=False, related_name='supplement',
         blank=True)
@@ -628,8 +629,9 @@ class Area(Hierarchy, models.Model):
             exclude_list.append(kwargs.get('exclude'))
         arealist = Area.objects.filter(
             country_id=self.country.id,
-            structure__level__lte=(self.structure.level+1)
-            ).exclude(id__in=exclude_list).order_by('structure__level','sort_name')
+            #structure__level__lte=(self.structure.level+1)
+            agglomeration=True,
+            ).exclude(id__in=exclude_list).order_by('sort_name')
         return arealist
 
     def __str__(self):

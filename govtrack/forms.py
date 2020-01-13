@@ -26,7 +26,7 @@ class AreaForm(ModelForm):
     
     class Meta:
         model = Area
-        fields = ['name','sort_name','structure','country','location', 'population','parent','supplements','description','admin_notes']
+        fields = ['name','sort_name','structure','country','agglomeration', 'location', 'population','parent','supplements','description','admin_notes']
         widgets = {
             'structure': forms.HiddenInput(),
             'parent': forms.HiddenInput(),
