@@ -359,8 +359,9 @@ class Area(Hierarchy, models.Model):
         super().save(*args, **kwargs)
         self.__original_population = self.population
 
-        if changed_pop:
-            self.regen_from_oldest_dec()
+        # TODO: do this in a lambda
+        #if changed_pop:
+        #    self.regen_from_oldest_dec()
 
     @property
     def declarations(self):

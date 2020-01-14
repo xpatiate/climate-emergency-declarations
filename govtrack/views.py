@@ -285,7 +285,6 @@ def area_edit(request, area_id):
             return redirect('area', area_id=area.id)
 
     # Show form
-    form.fields['supplements'].queryset = area.get_supplement_choices(exclude=area.id)
     return render(request, 'govtrack/area.html', {
         'action': 'edit',
         'area': area,
@@ -349,7 +348,6 @@ def area_child(request, parent_id, structure_id):
     }
     records = parent.direct_ancestors
     form = AreaForm(initial=areadata)
-    form.fields['supplements'].queryset = parent.get_supplement_choices()
 
     return render(request, 'govtrack/area.html', {
         'action': 'add',
