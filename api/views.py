@@ -254,6 +254,7 @@ def import_declaration_pro(request, parent_id, structure_id, import_declaration_
             # from the date of this declaration onwards
             # TODO: trigger a lambda
             #area.country.generate_population_count(declaration.event_date)
+            pass
 
         Link(**{
             'content_type_id': Declaration.content_type_id(),
@@ -284,6 +285,7 @@ def declaration_from_import(request, area_id, import_declaration_id):
             # from the date of this declaration onwards
             # TODO: trigger a lambda
             #area.country.generate_population_count(declaration.event_date)
+            pass
 
         Link(**{
             'content_type_id': Declaration.content_type_id(),

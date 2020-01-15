@@ -210,19 +210,27 @@ def bulkarea_save(request, area_id):
             for area in areas:
                 all_current_supps = list(area.supplements.all().values_list('id', flat=True))
                 logger.info(f"current supps: { all_current_supps }")
+                a_changed = False
                 for add_area in supps_to_add:
                     if add_area and int(add_area) not in all_current_supps:
-                        logger.info(f"adding area {add_area} to supps {all_current_supps}")
-                        area.supplements.add(add_area)
+                        if int(add_area) == int(area.id):
+                            logger.info(f"Can't add area {add_area} to {area.id} are you crazy?")
+                        else:
+                            logger.info(f"adding area {add_area} to supps {all_current_supps} for {area.id}: {add_area == area.id}")
+                            area.supplements.add(add_area)
+                            a_changed = True
                 for rm_area in supps_to_rm:
                     if rm_area and int(rm_area) in all_current_supps:
                         logger.info(f"rming area {rm_area} from supps {all_current_supps}")
                         area.supplements.remove(rm_area)
-                logger.info(f"about to save area {area.id}")
-                area.save()
-                logger.info(f"done saving area {area.id}")
+                        a_changed = True
+                if a_changed:
+                    logger.info(f"about to save area {area.id}")
+                    area.save()
+                    logger.info(f"done saving area {area.id}")
                 all_latest_supps = list(area.supplements.all().values_list('id', flat=True))
                 logger.info(f"updated supps: { all_latest_supps }")
+            logger.info(f"Completed updating supps for { area }")
     return redirect('area', area_id=area_id)
 
 def bulkarea_edit(request, area_id):
@@ -236,17 +244,24 @@ def bulkarea_edit(request, area_id):
     num_areas = len(alldata['areas'])
     logger.info(f"got {num_areas} areas")
 
+    supp_set = set()
     area_initial = [
             { 
                 'id': a.id,
                 'name': a.name,
                 'location': a.location or '',
-                'supplements': a.supplement_list
+                'supplements': a.supplement_list,
+                'supplement_ids': [s.id for s in a.supplements.all()]
                 }
                 for a in alldata['areas']
             ]
+    combined_supps = [ s for a in area_initial for s in a['supplement_ids'] ]
+    supp_set.update(combined_supps)
+    logger.info(f"all existing supps: {supp_set}")
     newform = BulkAreaForm()
-    newform.fields['supplements'].queryset = area.get_supplement_choices()
+    main_supps = area.get_supplement_choices()
+    add_supps = Area.objects.filter(id__in=supp_set)
+    newform.fields['supplements'].queryset = main_supps | add_supps
     return render(request, 'govtrack/bulkarea.html', {
         'area': area,
         'country': area.country,
