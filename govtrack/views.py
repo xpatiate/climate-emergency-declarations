@@ -218,7 +218,9 @@ def bulkarea_save(request, area_id):
                     if rm_area and int(rm_area) in all_current_supps:
                         logger.info(f"rming area {rm_area} from supps {all_current_supps}")
                         area.supplements.remove(rm_area)
+                logger.info(f"about to save area {area.id}")
                 area.save()
+                logger.info(f"done saving area {area.id}")
                 all_latest_supps = list(area.supplements.all().values_list('id', flat=True))
                 logger.info(f"updated supps: { all_latest_supps }")
     return redirect('area', area_id=area_id)

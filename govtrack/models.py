@@ -703,8 +703,9 @@ class Declaration(models.Model):
         super().save(*args, **kwargs)
         self.__event_date = self.event_date
 
-        if changed:
-            self.area.country.generate_population_count(fromdate=self.event_date)
+        # TODO: trigger a lambda
+        #if changed:
+        #    self.area.country.generate_population_count(fromdate=self.event_date)
 
     @property
     def status_name(self):
@@ -790,7 +791,8 @@ def supplements_changed(sender, **kwargs):
         update = True
     if (kwargs['action'] == 'post_clear'):
         update = True
-    if update:
-        kwargs['instance'].country.generate_population_count()
+    # TODO: trigger a lambda
+    #if update:
+    #    kwargs['instance'].country.generate_population_count()
 
 m2m_changed.connect(supplements_changed, sender=Area.supplements.through)

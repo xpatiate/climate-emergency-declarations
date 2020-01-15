@@ -188,6 +188,8 @@ def add_multi_areas(request, parent_id, structure_id):
 # Inbox methods
 def add_multi_import_declarations(request, country_id):
     if request.user.is_authenticated:
+        # TODO only enter here if POST - even a GET request
+        # results in popcounts being regenerated
         try:
             lines = request.POST.get('paste_data').split('\n')
             data = []
@@ -250,7 +252,8 @@ def import_declaration_pro(request, parent_id, structure_id, import_declaration_
         if declaration.affects_population_count:
             # Regenerate all stored population counts for the country,
             # from the date of this declaration onwards
-            area.country.generate_population_count(declaration.event_date)
+            # TODO: trigger a lambda
+            #area.country.generate_population_count(declaration.event_date)
 
         Link(**{
             'content_type_id': Declaration.content_type_id(),
@@ -279,7 +282,8 @@ def declaration_from_import(request, area_id, import_declaration_id):
         if declaration.affects_population_count:
             # Regenerate all stored population counts for the country,
             # from the date of this declaration onwards
-            area.country.generate_population_count(declaration.event_date)
+            # TODO: trigger a lambda
+            #area.country.generate_population_count(declaration.event_date)
 
         Link(**{
             'content_type_id': Declaration.content_type_id(),
