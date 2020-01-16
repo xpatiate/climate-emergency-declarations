@@ -202,8 +202,8 @@ def bulkarea_save(request, area_id):
                 areas.update(location='')
             supps_to_add_str = request.POST.get('supp_list_add')
             supps_to_rm_str = request.POST.get('supp_list_remove')
-            supps_to_add = supps_to_add_str.split(':')
-            supps_to_rm = supps_to_rm_str.split(':')
+            supps_to_add = set(supps_to_add_str.split(':'))
+            supps_to_rm = set(supps_to_rm_str.split(':'))
             logger.info(f"adding supps {supps_to_add_str} {supps_to_add}")
             logger.info(f"rming supps {supps_to_rm_str} {supps_to_rm}")
 
@@ -237,12 +237,13 @@ def bulkarea_edit(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     logger.info(area)
 
-    logger.warn("got area ids %s " % request.POST)
     bulkform = SelectBulkAreaForm(request.POST)
     bulkform.is_valid()
     alldata = bulkform.cleaned_data
-    num_areas = len(alldata['areas'])
-    logger.info(f"got {num_areas} areas")
+    num_areas = len(alldata.get('areas', []))
+    logger.info(f"got {num_areas} areas to bulk edit")
+    if num_areas == 0:
+        return redirect('area', area_id=area_id)
 
     supp_set = set()
     area_initial = [

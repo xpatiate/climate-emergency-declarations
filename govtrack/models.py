@@ -26,10 +26,12 @@ class Hierarchy():
             # will have a different area as their 'actual' parent
             if self != child.parent:
                 child.is_supplementary = True
-            if self.is_supplementary:
-                child.is_supplementary = True
+                child.indent_level = self.indent_level + 1
+            #if self.is_supplementary:
+            #    child.is_supplementary = True
             itemlist.append(child)
-            child.build_hierarchy(itemlist) 
+            if not child.is_supplementary:
+                child.build_hierarchy(itemlist)
         return itemlist
 
 class PopulationCounter():
@@ -343,6 +345,7 @@ class Area(Hierarchy, models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__original_population = self.population
+        self.indent_level = self.structure.indent_level
 
     @classmethod
     def content_type_id(cls):
@@ -529,9 +532,9 @@ class Area(Hierarchy, models.Model):
     def level(self):
         return self.structure.level
 
-    @property
-    def indent_level(self):
-        return self.structure.indent_level
+#    @property
+#    def indent_level(self):
+#        return self.structure.indent_level
 
     @property
     def api_link(self):
