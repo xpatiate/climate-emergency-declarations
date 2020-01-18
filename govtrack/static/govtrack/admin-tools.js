@@ -344,18 +344,14 @@ function redrawSuppNames() {
 function storeSuppIds(action, selected, opposite) {
     var supplist = $("#supp_list_" + action)
     var idlist = readIds(supplist.val())
-    var added = false
     selected.each( function(count, option) {
         // add ids to the selection action list
         if (!isInArray(option.value, idlist)) {
             idlist.push(option.value)
-            added = true
         }
     })
     supplist.val(serialiseIds(idlist))
-    if (added) {
-        redrawSuppNames()
-    }
+    redrawSuppNames()
     // and remove ID from the opposite action list
     var opplist = $("#supp_list_" + opposite)
     var oppIdList = readIds(opplist.val())
