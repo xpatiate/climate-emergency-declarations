@@ -308,13 +308,15 @@ function removeSupplements(ev) {
 }
 
 // update the displayed list of supplementary parent names
-function redrawSuppNames() {
+function redrawSuppNames( actionLists ) {
     var newSupps = []
     var suppNames = window.supplementNames
-    var addHolder = $("#supp_list_add")[0]
-    var ids_to_add = readIds(addHolder.value)
-    var rmHolder = $("#supp_list_rm")[0]
-    var ids_to_rm = readIds(rmHolder.value)
+    //var addHolder = $("#supp_list_add")[0]
+    //var ids_to_add = readIds(addHolder.value)
+    var ids_to_add = actionLists['add']
+    //var rmHolder = $("#supp_list_rm")[0]
+    //var ids_to_rm = readIds(rmHolder.value)
+    var ids_to_rm = actionLists['rm']
     $('.area_supp').each(function() {
         var thisObj = $(this)
         var name_list = thisObj.html().split(', ')
@@ -335,7 +337,10 @@ function redrawSuppNames() {
                 name_list = new_list
             }
         })
-        thisObj.html(name_list.sort().join(', '))        
+        var sortedNames = $.grep(name_list, function(e) {
+            return e.length > 0
+            }).sort()
+        thisObj.html(sortedNames.join(', '))
     })
 }
 
@@ -351,7 +356,6 @@ function storeSuppIds(action, selected, opposite) {
         }
     })
     supplist.val(serialiseIds(idlist))
-    redrawSuppNames()
     // and remove ID from the opposite action list
     var opplist = $("#supp_list_" + opposite)
     var oppIdList = readIds(opplist.val())
@@ -359,6 +363,10 @@ function storeSuppIds(action, selected, opposite) {
         return !isInArray(oppId, idlist)
     })
     opplist.val(serialiseIds(newList))
+    var actionLists = {}
+    actionLists[action] = idlist
+    actionLists[opposite] = newList
+    redrawSuppNames( actionLists )
 }
 
 // turn a list of ids into a serialised string
