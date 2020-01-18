@@ -201,7 +201,7 @@ def bulkarea_save(request, area_id):
             if request.POST.get('clear_location','') == 'true':
                 areas.update(location='')
             supps_to_add_str = request.POST.get('supp_list_add')
-            supps_to_rm_str = request.POST.get('supp_list_remove')
+            supps_to_rm_str = request.POST.get('supp_list_rm')
             supps_to_add = set(supps_to_add_str.split(':'))
             supps_to_rm = set(supps_to_rm_str.split(':'))
             logger.info(f"adding supps {supps_to_add_str} {supps_to_add}")
@@ -261,14 +261,17 @@ def bulkarea_edit(request, area_id):
     logger.info(f"all existing supps: {supp_set}")
     newform = BulkAreaForm()
     main_supps = area.get_supplement_choices()
-    add_supps = Area.objects.filter(id__in=supp_set)
-    newform.fields['supplements'].queryset = main_supps | add_supps
+    current_supps = Area.objects.filter(id__in=supp_set)
+    newform.fields['supplements_add'].choices = [ (s.id, s.name) for s in main_supps ]
+    newform.fields['supplements_rm'].choices = [ (s.id, s.name) for s in current_supps ]
+    logger.info(f"areas: {area_initial}")
+    area_ids = [ str(a['id']) for a in area_initial ]
     return render(request, 'govtrack/bulkarea.html', {
         'area': area,
         'country': area.country,
         'form': newform,
         'area_list': area_initial,
-        'area_id_str': ':'.join([ str(a['id']) for a in area_initial ]),
+        'area_id_str': ':'.join(area_ids),
     })
 
 

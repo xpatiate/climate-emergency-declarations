@@ -69,8 +69,14 @@ class SelectBulkAreaForm(Form):
     areas = forms.ModelMultipleChoiceField(queryset=Area.objects.all(), widget=forms.CheckboxSelectMultiple)
     parent = forms.HiddenInput()
 
-class BulkAreaForm(ModelForm):
-    class Meta:
-        model = Area
-        fields = ['location', 'supplements']
+class BulkAreaForm(Form):
+    location = forms.CharField(required=False)
+    supplements_add = forms.MultipleChoiceField(
+        label='Add supplementary parents',
+        required=False
+        )
+    supplements_rm = forms.MultipleChoiceField(
+        label='Remove supplementary parents',
+        required=False
+        )
 

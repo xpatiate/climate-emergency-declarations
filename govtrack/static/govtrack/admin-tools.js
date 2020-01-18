@@ -17,6 +17,8 @@ $(document).ready(() => {
     $('#button_clear_location').click(clearLocation)
     $('#button_add_supplements').click(addSupplements)
     $('#button_remove_supplements').click(removeSupplements)
+    window.supplementNames = {}
+    parseSuppNames()
 
     let toggleInboxEl = $('.toggle-inbox');
     
@@ -31,78 +33,6 @@ $(document).ready(() => {
     $('.inbox-paste textarea').bind('paste', pasteInbox);
 });
 
-function selectAll(ev) {
-    var sall = $('a#bulk-edit-select-all')
-    sall.css('display', 'none')
-    var snone = $('a#bulk-edit-select-none')
-    snone.css('display', 'inline')
-    $('.bulk-edit-item').prop('checked', true)
-    $.each($('.bulk-edit-item'),turnRowSelectionOn);
-    return false;
-}
-function selectNone(ev) {
-    $('a#bulk-edit-select-all').css('display', 'inline')
-    $('a#bulk-edit-select-none').css('display', 'none')
-    $('.bulk-edit-item').prop('checked', false)
-    $.each($('.bulk-edit-item'),turnRowSelectionOff);
-    return false;
-}
-
-function highlightRow(ev) {
-    var el = ev.target;
-    var tableRow = $(el.parentElement.parentElement);
-    tableRow.toggleClass('hover-highlight')
-}
-function selectRow(ev) {
-    var el = ev.target;
-    var tableRow = $(el.parentElement.parentElement);
-    tableRow.toggleClass('select-highlight')
- }
-function turnRowSelectionOn(count, el) {
-    var tableRow = $(el.parentElement.parentElement);
-    tableRow.toggleClass('select-highlight', true)
-}
-function turnRowSelectionOff(count, el) {
-    var tableRow = $(el.parentElement.parentElement);
-    tableRow.toggleClass('select-highlight', false)
-}
-
-function showBulkEdit(ev) {
-    var el = ev.target;
-    $('.bulk-edit-item').css('visibility','visible')
-    $('#bulk-edit-select-all').css('display','inline')
-    $('#bulk-edit-show').css('display','none')
-    $('#bulk-edit-hide').css('display','inline')
-    $('.bulk-edit-go').css('visibility','visible')
-    return false;
-}
-
-function hideBulkEdit(ev) {
-    var el = ev.target;
-    $('.bulk-edit-item').css('visibility','hidden')
-    $('#bulk-edit-show').css('display','inline')
-    $('#bulk-edit-hide').css('display','none')
-    $('#bulk-edit-select-all').css('display','none')
-    $('#bulk-edit-select-none').css('display','none')
-    $('.bulk-edit-go').css('visibility','hidden')
-    return false;
-}
-
-function toggleEditOptions(ev) {
-    var el = ev.target;
-    var editdivid = el.id.replace('view','edit');
-    var editdiv = $( '#' + editdivid );
-    if (showing[el.id] == 1) {
-        editdiv.css('display','none');
-        showing[el.id] = 0;
-        el.innerHTML = '*';
-    } else {
-        editdiv.css('display','block');
-        showing[el.id] = 1;
-        el.innerHTML = '-';
-    }
-	return false;
-}
 
 function deleteThis(ev) {
     ev.preventDefault()
@@ -259,10 +189,84 @@ function showMultiAddForm(target_id) {
     return false;
 }
 
+/* BULK AREA EDIT FUNCTIONS */
+
+function selectAll(ev) {
+    var sall = $('a#bulk-edit-select-all')
+    sall.css('display', 'none')
+    var snone = $('a#bulk-edit-select-none')
+    snone.css('display', 'inline')
+    $('.bulk-edit-item').prop('checked', true)
+    $.each($('.bulk-edit-item'),turnRowSelectionOn);
+    return false;
+}
+function selectNone(ev) {
+    $('a#bulk-edit-select-all').css('display', 'inline')
+    $('a#bulk-edit-select-none').css('display', 'none')
+    $('.bulk-edit-item').prop('checked', false)
+    $.each($('.bulk-edit-item'),turnRowSelectionOff);
+    return false;
+}
+
+function highlightRow(ev) {
+    var el = ev.target;
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('hover-highlight')
+}
+function selectRow(ev) {
+    var el = ev.target;
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('select-highlight')
+ }
+function turnRowSelectionOn(count, el) {
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('select-highlight', true)
+}
+function turnRowSelectionOff(count, el) {
+    var tableRow = $(el.parentElement.parentElement);
+    tableRow.toggleClass('select-highlight', false)
+}
+
+function showBulkEdit(ev) {
+    var el = ev.target;
+    $('.bulk-edit-item').css('visibility','visible')
+    $('#bulk-edit-select-all').css('display','inline')
+    $('#bulk-edit-show').css('display','none')
+    $('#bulk-edit-hide').css('display','inline')
+    $('.bulk-edit-go').css('visibility','visible')
+    return false;
+}
+
+function hideBulkEdit(ev) {
+    var el = ev.target;
+    $('.bulk-edit-item').css('visibility','hidden')
+    $('#bulk-edit-show').css('display','inline')
+    $('#bulk-edit-hide').css('display','none')
+    $('#bulk-edit-select-all').css('display','none')
+    $('#bulk-edit-select-none').css('display','none')
+    $('.bulk-edit-go').css('visibility','hidden')
+    return false;
+}
+
+function toggleEditOptions(ev) {
+    var el = ev.target;
+    var editdivid = el.id.replace('view','edit');
+    var editdiv = $( '#' + editdivid );
+    if (showing[el.id] == 1) {
+        editdiv.css('display','none');
+        showing[el.id] = 0;
+        el.innerHTML = '*';
+    } else {
+        editdiv.css('display','block');
+        showing[el.id] = 1;
+        el.innerHTML = '-';
+    }
+	return false;
+}
+
 function setLocation(ev) {
     var newLocationInput = $('input#id_location')
     var newLocation = newLocationInput[0].value
-    console.log("setting locs to " + newLocation)
     $('#clear_location')[0].value = 'false'
     let allLocs = $('.area_location')
     allLocs.html(newLocation)
@@ -277,46 +281,125 @@ function clearLocation(ev) {
     return false;
 }
 
+// add selected areas as supplementary parents
 function addSupplements(ev) {
-    // find supplement name/s to add
-    var addSupps = $("#id_supplements")
+    var addSupps = $("#id_supplements_add")
     var newSupps = addSupps.find(":selected")
-    // append them to displayed supplements
-    $('.area_supp').each(function() {
-        var thisObj = $(this)
-        newSupps.each( function(count, label) {
-            var thisSuppHTML = thisObj.html()
-            thisObj.html(thisSuppHTML + ', ' + label.text)
-        })
-
+    storeSuppIds('add', newSupps, 'rm')
+    // add this option to the 'to-remove' select menu
+    var rmSupp = $("#id_supplements_rm")
+    var existingOpts = $("#id_supplements_rm option").map(function() { return $(this).val(); }).get();
+    newSupps.each( function(count, adding) {
+        if (!isInArray(adding.value, existingOpts)) {
+            rmSupp.append(new Option(adding.text, adding.value))
+        }
     })
-    // store supplement IDs to add on submit
-    storeSuppIds('add', newSupps)
-    return false;
+    $("#id_supplements_add option:selected").prop('selected' , false)
+    return false
 }
 
+// remove selected areas as supplementary parents
 function removeSupplements(ev) {
-    var addSupps = $("#id_supplements")
-    var newSupps = addSupps.find(":selected")
+    var rmSupps = $("#id_supplements_rm")
+    var newSupps = rmSupps.find(":selected")
+    storeSuppIds('rm', newSupps, 'add')
+    $("#id_supplements_rm option:selected").prop('selected' , false)
+    return false
+}
+
+// update the displayed list of supplementary parent names
+function redrawSuppNames() {
+    var newSupps = []
+    var suppNames = window.supplementNames
+    var addHolder = $("#supp_list_add")[0]
+    var ids_to_add = readIds(addHolder.value)
+    var rmHolder = $("#supp_list_rm")[0]
+    var ids_to_rm = readIds(rmHolder.value)
     $('.area_supp').each(function() {
         var thisObj = $(this)
-        newSupps.each( function(count, label) {
-            console.log(thisObj)
-            console.log(thisObj.html())
-            thisObj.html(thisObj.html().replace(label.text, ''))
-            thisObj.html(thisObj.html().replace(', , ', ', '))
+        var name_list = thisObj.html().split(', ')
+
+        ids_to_add.forEach( function(s_id) {
+            var this_name = suppNames[s_id]
+            if (!isInArray(this_name, name_list)) {
+                name_list.push(this_name)
+            }
         })
 
+        ids_to_rm.forEach( function(s_id) {
+            var this_name = suppNames[s_id]
+            if (isInArray(this_name, name_list)) {
+                var new_list = name_list.filter(function(name) {
+                    return name != this_name
+                })
+                name_list = new_list
+            }
+        })
+        thisObj.html(name_list.sort().join(', '))        
     })
-    // store supplement IDs to remove on submit
-    storeSuppIds('remove', newSupps)
-    return false;
 }
 
-function storeSuppIds(action, selected) {
+// add selected options to the appropriate add/remove hidden field,
+// and remove from the other one
+function storeSuppIds(action, selected, opposite) {
     var supplist = $("#supp_list_" + action)
-    console.log(supplist.val())
+    var idlist = readIds(supplist.val())
+    var added = false
     selected.each( function(count, option) {
-        supplist.val(supplist.val() + option.value + ':')
+        // add ids to the selection action list
+        if (!isInArray(option.value, idlist)) {
+            idlist.push(option.value)
+            added = true
+        }
+    })
+    supplist.val(serialiseIds(idlist))
+    if (added) {
+        redrawSuppNames()
+    }
+    // and remove ID from the opposite action list
+    var opplist = $("#supp_list_" + opposite)
+    var oppIdList = readIds(opplist.val())
+    var newList = oppIdList.filter(function(oppId) {
+        return !isInArray(oppId, idlist)
+    })
+    opplist.val(serialiseIds(newList))
+}
+
+// turn a list of ids into a serialised string
+function serialiseIds(idlist) {
+    var unique_ids = []
+    $.each(idlist, function(i, e) {
+        if (!isInArray(e, unique_ids)) unique_ids.push(e);
+    });
+    return unique_ids.join(':')
+}
+
+// turn a serialised string of ids into a list
+function readIds(idstr) {
+    if (idstr.length) {
+        var idlist = idstr.split(':')
+        var idsWithValues = $.grep(idlist, function(e) { 
+            return e.length > 0
+            })
+        return idsWithValues
+    }
+    return []
+}
+
+// read options from the supplementary parents menus and make a lookup hash
+function parseSuppNames() {
+    var suppnames = window.supplementNames
+    var elements = ["#id_supplements_add", "#id_supplements_rm"]
+    elements.forEach( function(el) {
+        var options = $(el + " option")
+        var values = $.map(options, function(option) {
+            suppnames[option.value] = option.text
+        })
     })
 }
+
+function isInArray(value, valList) {
+    return $.inArray(value, valList) > -1
+}
+
+/* END BULK AREA EDIT */

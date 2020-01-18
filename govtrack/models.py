@@ -21,6 +21,7 @@ class Hierarchy():
             itemlist = []
         if len(itemlist) == 0:
             itemlist = [self]
+
         for child in self.all_children:
             # Children that are included here via supplementary relationships 
             # will have a different area as their 'actual' parent
@@ -43,7 +44,6 @@ class PopulationCounter():
         total = 0
         area.proxy_declared = False
         queue = [area]
-
         while queue:
             this = queue.pop(0)
             is_agglom = Area.objects.filter(supplements=this.id).exists()
@@ -412,14 +412,14 @@ class Area(Hierarchy, models.Model):
         # both as prime parent and supplementary parent
         combined = Area.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
-        ).exclude(pk=self.id).order_by('structure', 'sort_name')
+        ).distinct().exclude(pk=self.id).order_by('structure', 'sort_name')
         return combined
 
     @property
     def num_all_children(self):
         return Area.objects.filter(
             Q(parent=self.id) | Q(supplements=self.id)
-        ).exclude(pk=self.id).count()
+        ).distinct().exclude(pk=self.id).count()
 
     @property
     def num_supplementary_children(self):

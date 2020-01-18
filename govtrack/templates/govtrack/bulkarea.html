@@ -23,12 +23,16 @@
     </fieldset>
     <br>
     <fieldset>
-        {{ form.supplements.label_tag }}<br>
-        {{ form.supplements }}
+        {{ form.supplements_add.label_tag }}<br>
+        {{ form.supplements_add }}
         <input type='button' class='button-change' id='button_add_supplements' value='add'>
-        <input type='button' class='button-change' id='button_remove_supplements' value='remove'>
         <input type='hidden' id='supp_list_add' name='supp_list_add' value=''>
-        <input type='hidden' id='supp_list_remove' name='supp_list_remove' value=''>
+    </fieldset>
+    <fieldset>
+        {{ form.supplements_rm.label_tag }}<br>
+        {{ form.supplements_rm }}
+        <input type='button' class='button-change' id='button_remove_supplements' value='remove'>
+        <input type='hidden' id='supp_list_rm' name='supp_list_rm' value=''>
     </fieldset>
   </div>
   <br>
