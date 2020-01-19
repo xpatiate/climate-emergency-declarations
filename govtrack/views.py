@@ -235,6 +235,7 @@ def bulkarea_save(request, area_id):
 
 def bulkarea_edit(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
+    parent = area.parent
     logger.info(area)
 
     bulkform = SelectBulkAreaForm(request.POST)
@@ -244,7 +245,17 @@ def bulkarea_edit(request, area_id):
     logger.info(f"got {num_areas} areas to bulk edit")
     if num_areas == 0:
         return redirect('area', area_id=area_id)
-
+    if request.method == 'POST' and request.POST.get('delete'):
+        logger.info(f"Deleting {num_areas} areas!!!")
+        (num_deleted, types_deleted) = alldata['areas'].delete()
+        logger.info(f"Deleted {num_deleted} areas: {types_deleted}")
+        try:
+            # main area still exists, redirect there
+            Area.objects.get(pk=area_id)
+            return redirect('area', area_id=area_id)
+        except Area.DoesNotExist:
+            # redirect to parent
+            return redirect('area', area_id=parent.id)
     supp_set = set()
     area_initial = [
             { 

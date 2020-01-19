@@ -17,6 +17,7 @@ $(document).ready(() => {
     $('#button_clear_location').click(clearLocation)
     $('#button_add_supplements').click(addSupplements)
     $('#button_remove_supplements').click(removeSupplements)
+    $('#bulk_delete_button').click(confirmBulkDelete)
     window.supplementNames = {}
     parseSuppNames()
 
@@ -33,6 +34,23 @@ $(document).ready(() => {
     $('.inbox-paste textarea').bind('paste', pasteInbox);
 });
 
+function confirmBulkDelete(ev) {
+    var checkBoxes = $("input[name='bulk-areas']:checked")
+    var numChecked = checkBoxes.length
+    if (numChecked > 0) {
+        var confStr = 'Are you sure you want to delete ' 
+        if (numChecked == 1) {
+            confStr += 'this area and any dependents'
+        }
+        else {
+            confStr += 'these ' + numChecked + ' areas and their dependents'
+        }
+        confStr += '? This cannot be undone.'
+        const response = confirm(confStr)
+        return response
+    }
+    return false
+}
 
 function deleteThis(ev) {
     ev.preventDefault()
@@ -295,6 +313,7 @@ function addSupplements(ev) {
         }
     })
     $("#id_supplements_add option:selected").prop('selected' , false)
+    sortSelects()
     return false
 }
 
@@ -303,18 +322,35 @@ function removeSupplements(ev) {
     var rmSupps = $("#id_supplements_rm")
     var newSupps = rmSupps.find(":selected")
     storeSuppIds('rm', newSupps, 'add')
-    $("#id_supplements_rm option:selected").prop('selected' , false)
+    $("#id_supplements_rm option:selected").remove()
+    sortSelects()
     return false
 }
 
+// sort the options in both select menus
+function sortSelects() {
+    ['#id_supplements_add', '#id_supplements_rm'].forEach(
+        function(selectId) {
+        var options = $(selectId + " option");   // Collect options
+        options.detach().sort(function(a,b) {    // Detach from select, then Sort
+            var at = $(a).text();
+            var bt = $(b).text();
+            return (at > bt)?1:((at < bt)?-1:0); // Do the sort
+        });
+        options.appendTo(selectId);
+        }
+    );
+}
 // update the displayed list of supplementary parent names
-function redrawSuppNames() {
+function redrawSuppNames( actionLists ) {
     var newSupps = []
     var suppNames = window.supplementNames
-    var addHolder = $("#supp_list_add")[0]
-    var ids_to_add = readIds(addHolder.value)
-    var rmHolder = $("#supp_list_rm")[0]
-    var ids_to_rm = readIds(rmHolder.value)
+    //var addHolder = $("#supp_list_add")[0]
+    //var ids_to_add = readIds(addHolder.value)
+    var ids_to_add = actionLists['add']
+    //var rmHolder = $("#supp_list_rm")[0]
+    //var ids_to_rm = readIds(rmHolder.value)
+    var ids_to_rm = actionLists['rm']
     $('.area_supp').each(function() {
         var thisObj = $(this)
         var name_list = thisObj.html().split(', ')
@@ -335,7 +371,10 @@ function redrawSuppNames() {
                 name_list = new_list
             }
         })
-        thisObj.html(name_list.sort().join(', '))        
+        var sortedNames = $.grep(name_list, function(e) {
+            return e.length > 0
+            }).sort()
+        thisObj.html(sortedNames.join(', '))
     })
 }
 
@@ -351,7 +390,6 @@ function storeSuppIds(action, selected, opposite) {
         }
     })
     supplist.val(serialiseIds(idlist))
-    redrawSuppNames()
     // and remove ID from the opposite action list
     var opplist = $("#supp_list_" + opposite)
     var oppIdList = readIds(opplist.val())
@@ -359,6 +397,10 @@ function storeSuppIds(action, selected, opposite) {
         return !isInArray(oppId, idlist)
     })
     opplist.val(serialiseIds(newList))
+    var actionLists = {}
+    actionLists[action] = idlist
+    actionLists[opposite] = newList
+    redrawSuppNames( actionLists )
 }
 
 // turn a list of ids into a serialised string
