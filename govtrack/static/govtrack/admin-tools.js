@@ -17,6 +17,7 @@ $(document).ready(() => {
     $('#button_clear_location').click(clearLocation)
     $('#button_add_supplements').click(addSupplements)
     $('#button_remove_supplements').click(removeSupplements)
+    $('#bulk_delete_button').click(confirmBulkDelete)
     window.supplementNames = {}
     parseSuppNames()
 
@@ -33,6 +34,23 @@ $(document).ready(() => {
     $('.inbox-paste textarea').bind('paste', pasteInbox);
 });
 
+function confirmBulkDelete(ev) {
+    var checkBoxes = $("input[name='bulk-areas']:checked")
+    var numChecked = checkBoxes.length
+    if (numChecked > 0) {
+        var confStr = 'Are you sure you want to delete ' 
+        if (numChecked == 1) {
+            confStr += 'this area and any dependents'
+        }
+        else {
+            confStr += 'these ' + numChecked + ' areas and their dependents'
+        }
+        confStr += '? This cannot be undone.'
+        const response = confirm(confStr)
+        return response
+    }
+    return false
+}
 
 function deleteThis(ev) {
     ev.preventDefault()
@@ -295,6 +313,7 @@ function addSupplements(ev) {
         }
     })
     $("#id_supplements_add option:selected").prop('selected' , false)
+    sortSelects()
     return false
 }
 
@@ -303,10 +322,25 @@ function removeSupplements(ev) {
     var rmSupps = $("#id_supplements_rm")
     var newSupps = rmSupps.find(":selected")
     storeSuppIds('rm', newSupps, 'add')
-    $("#id_supplements_rm option:selected").prop('selected' , false)
+    $("#id_supplements_rm option:selected").remove()
+    sortSelects()
     return false
 }
 
+// sort the options in both select menus
+function sortSelects() {
+    ['#id_supplements_add', '#id_supplements_rm'].forEach(
+        function(selectId) {
+        var options = $(selectId + " option");   // Collect options
+        options.detach().sort(function(a,b) {    // Detach from select, then Sort
+            var at = $(a).text();
+            var bt = $(b).text();
+            return (at > bt)?1:((at < bt)?-1:0); // Do the sort
+        });
+        options.appendTo(selectId);
+        }
+    );
+}
 // update the displayed list of supplementary parent names
 function redrawSuppNames( actionLists ) {
     var newSupps = []
