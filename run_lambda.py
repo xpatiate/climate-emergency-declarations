@@ -16,6 +16,6 @@ def main(event, context):
             "forget to activate a virtual environment?"
         ) from exc
     print("going to execute from commandline")
-    execute_from_command_line('generate_timeline')
+    execute_from_command_line(['','generate_timeline'])
 
 
