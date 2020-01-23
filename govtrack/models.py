@@ -5,8 +5,11 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 import django.urls
 
+import boto3
+import json
 import datetime
 import logging
+import os
 
 logger = logging.getLogger('cegov')
 poplog = logging.getLogger('popcount')
@@ -88,6 +91,8 @@ class Country(models.Model):
     description = models.TextField(null=True, blank=True)
     admin_notes = models.TextField(null=True, blank=True)
     links = GenericRelation(Link, null=True, related_query_name='link')
+    popcount_ready = models.PositiveSmallIntegerField(default=0)
+    popcount_since = models.DateField(null=True, blank=True)
 
     @classmethod
     def content_type_id(cls):
@@ -95,6 +100,7 @@ class Country(models.Model):
 
     @classmethod
     def find_by_code(cls, country_code):
+        logger.info(f"Looking up country with code {country_code}")
         return Country.objects.get(country_code=country_code)
 
     @property
@@ -202,6 +208,62 @@ class Country(models.Model):
             pass
         return 0
 
+    def popcount_update_needed(self, since=None):
+        self.popcount_ready = 0
+        self.popcount_needed_since(since)
+        self.save()
+
+    def popcount_update_running(self):
+        self.popcount_ready = 2
+        self.save()
+
+    def popcount_update_complete(self):
+        self.popcount_ready = 1
+        self.popcount_since = None
+        self.save()
+
+    # Keep track of the earliest date that a popcount is needed from
+    def popcount_needed_since(self, since=None):
+        if not since:
+            since = self.earliest_declaration
+        if not self.popcount_since or self.popcount_since > since:
+            self.popcount_since = since
+
+
+    def trigger_population_recount(self):
+        # mark as update in progress
+        self.popcount_update_running()
+
+        aws_region=os.environ.get('AWS_REGION', '')
+        aws_lambda=os.environ.get('AWS_LAMBDA_NAME', '')
+        response = {'errstr': 'cannot trigger recount'}
+        if aws_region and aws_lambda:
+            # create lambda client
+            client = boto3.client('lambda',
+                region_name=aws_region,
+                aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+                aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
+                )
+            logger.info(f"client {client}")
+
+            if client:
+                payload = {
+                    'task': 'generate_timeline',
+                    'country_code': self.country_code,
+                    'since_date': self.popcount_since
+                    }
+                logger.info(f"payload {payload}")
+                response = client.invoke(
+                    FunctionName=aws_lambda,
+                    InvocationType='Event',
+                    Payload=json.dumps(payload)
+                    )
+                logger.info(f"response {response}")
+        else:
+            logger.info(f"Missing region {aws_region} or lambda name {aws_lambda}")
+        return response
+
+
     def generate_population_count(self, fromdate=None):
         '''Recalculate all stored population counts from the given date onwards.'''
         logger.info('Counting population update from %s' % fromdate)
@@ -244,6 +306,9 @@ class Country(models.Model):
             # because we can't break down population change by declaration at this stage
             for decln in date_dict[cdate]:
                 pop = PopCount.create(self, decln, date_pop)
+
+        # mark as update complete
+        self.popcount_update_complete()
 
     def __str__(self):
         return self.name
@@ -362,9 +427,8 @@ class Area(Hierarchy, models.Model):
         super().save(*args, **kwargs)
         self.__original_population = self.population
 
-        # TODO: do this in a lambda
-        #if changed_pop:
-        #    self.regen_from_oldest_dec()
+        if changed_pop:
+            self.popcount_update_needed()
 
     @property
     def declarations(self):
@@ -391,6 +455,14 @@ class Area(Hierarchy, models.Model):
     def children(self):
         children = Area.objects.filter(parent=self.id).exclude(pk=self.id).order_by('structure', 'sort_name')
         return children
+
+    @property
+    def earliest_declaration(self):
+        fromdate = None
+        decs = self.declarations
+        if decs:
+            fromdate=decs.latest('-event_date').event_date
+        return fromdate
 
     def regen_from_oldest_dec(self):
         decs = self.declarations
@@ -708,9 +780,8 @@ class Declaration(models.Model):
         super().save(*args, **kwargs)
         self.__event_date = self.event_date
 
-        # TODO: trigger a lambda
-        #if changed:
-        #    self.area.country.generate_population_count(fromdate=self.event_date)
+        if changed:
+            self.area.country.popcount_update_needed(self.event_date)
 
     @property
     def status_name(self):
@@ -796,8 +867,7 @@ def supplements_changed(sender, **kwargs):
         update = True
     if (kwargs['action'] == 'post_clear'):
         update = True
-    # TODO: trigger a lambda
-    #if update:
-    #    kwargs['instance'].country.generate_population_count()
+    if update:
+        kwargs['instance'].country.popcount_update_needed()
 
 m2m_changed.connect(supplements_changed, sender=Area.supplements.through)

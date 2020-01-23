@@ -51,6 +51,18 @@ def country_population(request, country_code):
         raise Http404('No country for specified code')
     return HttpResponse(str(country.current_popcount), content_type='text/plain')
 
+def country_trigger_recount(request, country_code):
+    status=403
+    if request.user.is_authenticated:
+        country = Country.find_by_code(country_code)
+        if not country:
+            raise Http404('No country for specified code')
+        logger.info(f"triggering recount for country {country}")
+        response = country.trigger_population_recount()
+        return HttpResponse(response, content_type='application/json')
+    else:
+        return HttpResponse(status=status)
+
 def country_regenerate_timeline(request, country_code):
     status=403
     if request.user.is_authenticated:
@@ -250,11 +262,10 @@ def import_declaration_pro(request, parent_id, structure_id, import_declaration_
         declaration.save()
 
         if declaration.affects_population_count:
-            # Regenerate all stored population counts for the country,
+            # Trigger a task to regenerate all stored population counts 
+            # for the country,
             # from the date of this declaration onwards
-            # TODO: trigger a lambda
-            #area.country.generate_population_count(declaration.event_date)
-            pass
+            area.country.popcount_update_needed(declaration.event_date)
 
         Link(**{
             'content_type_id': Declaration.content_type_id(),
@@ -283,8 +294,7 @@ def declaration_from_import(request, area_id, import_declaration_id):
         if declaration.affects_population_count:
             # Regenerate all stored population counts for the country,
             # from the date of this declaration onwards
-            # TODO: trigger a lambda
-            #area.country.generate_population_count(declaration.event_date)
+            area.country.popcount_update_needed(declaration.event_date)
             pass
 
         Link(**{
