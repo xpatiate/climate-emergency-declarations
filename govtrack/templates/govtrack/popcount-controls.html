@@ -1,0 +1,5 @@
+            {% if country.popcount_needed %}
+            <div class='popcount-status'><a id='do_update_popcount' data-url='{{ country_api_trigger_link }}' href='#'>update popcount</a></div>
+            {% elif country.popcount_running %}
+            <div class='popcount-status popcount-running'>popcount running...</div>
+            {% endif %}

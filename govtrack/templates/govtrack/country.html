@@ -27,6 +27,7 @@
             {% if import_declaration_list %}
             <div><a class='toggle-inbox'>hide inbox</a></div>
             {% endif %}
+            {% include 'govtrack/popcount-controls.html' %}
         </div>
         {% if country.admin_notes %}
         <div class='admin-view'>

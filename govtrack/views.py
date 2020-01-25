@@ -48,6 +48,7 @@ def area(request, area_id):
         'import_declaration_list': import_declarations,
         'links': area.links.all(),
         'area_api_link': request.build_absolute_uri( area.api_link ),
+        'country_api_trigger_link': request.build_absolute_uri( area.country.api_recount_link ),
     })
 
 def countries(request):
@@ -101,6 +102,7 @@ def country(request, country_id, action='view'):
         'form': form,
         'linkform': linkform,
         'country_api_link': request.build_absolute_uri( country.api_link ),
+        'country_api_trigger_link': request.build_absolute_uri( country.api_recount_link ),
         })
 
 def structure_edit(request, structure_id):
@@ -431,7 +433,7 @@ def declaration_add(request, area_id):
                 if dec.affects_population_count:
                     # Regenerate all stored population counts for the country,
                     # from the date of this declaration onwards
-                    dec.area.country.generate_population_count(dec.event_date)
+                    dec.area.country.popcount_update_needed(dec.event_date)
         if do_redir:
             return redirect('area', area_id=area_id)
     return render(request, 'govtrack/declare.html', {

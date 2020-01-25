@@ -8,6 +8,7 @@
 {% if country_list %}
     <table class='countries'>
       <tr>
+        <th></th>
         <th>Country</th>
         <th align='right'>Population</th>
         <th align='right'>Declared<br/>Population</th>
@@ -19,6 +20,7 @@
       </tr>
     {% for country in country_list %}
         <tr>
+        <td>{% if country.popcount_needed %}*{% endif %}</td>
         <td><a href="{% url 'country' country.id %}">{{ country.name }}</a></td>
         <td align='right'>{{ country.population | intcomma }}</td>
         <td align='right'>{{ country.area_population | intcomma }}</td>

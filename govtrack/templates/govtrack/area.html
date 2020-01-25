@@ -87,6 +87,7 @@
                 <li><a href='{% url 'area_child' area.id ctype.id  %}'>add {{ ctype.name }}</a></li>
                 {% endfor %}
             </div>
+            {% include 'govtrack/popcount-controls.html' %}
         </div>
         {% if user.is_authenticated and area.admin_notes %}
         <div class='admin-view'>

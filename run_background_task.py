@@ -15,7 +15,7 @@ def handler(event, context):
     print("Called with event data " + str(event))
     task = event.get('task','')
 
-    if task == 'generate-timeline':
+    if task == 'generate_timeline':
         generate_timeline(event, context)
 
 def generate_timeline(event, context):

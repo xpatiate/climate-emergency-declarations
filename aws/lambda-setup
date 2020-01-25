@@ -25,3 +25,21 @@ cd .venv/lib/python3.6/site-packages
 zip -r ~/cegov/django-function.zip *
 cd ~/cegov
 zip -r django-function.zip ced_bg govtrack run_lambda.py manage.py
+
+
+## Creating the lambda
+
+Create one lambda for each Elastic Beanstalk environment/database
+
+Make django-function.zip as above and upload to Se
+Create lambda in console and specify S3 path for code
+Set env vars matching those in EB
+Set handler as `run_background_task.handler`
+Set pre-created execution role lambda-ex
+Set timeout to 10 mins
+Set runtime to python 3.7 as that's what awslambda-psycopg2 supports
+Create a test event with args matching payload in trigger_population_recount
+
+Lambda code must be in sync with what's deployed to EB so database schema matches
+
+Set env vars in EB AWS_REGION and AWS_LAMBDA_NAME (where lambda name is the overall name of the function, not path.method)

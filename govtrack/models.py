@@ -107,6 +107,22 @@ class Country(models.Model):
     def api_link(self):
         return django.urls.reverse('api_country_population', args=[self.country_code])
 
+    @property
+    def api_recount_link(self):
+        return django.urls.reverse('api_country_trigger_recount', args=[self.country_code])
+
+    @property
+    def earliest_declaration(self):
+        fromdate = None
+        filter_args = {
+            'status': 'D',
+            'area__country': self.id,
+        }
+        decs = Declaration.objects.filter(**filter_args).order_by('-event_date')
+        if decs:
+            fromdate=decs.latest('-event_date').event_date
+        return fromdate
+
     def active_declarations(self, **kwargs):
         '''Return a list of declarations for a country which are active
         at a specified (or current) date.'''
@@ -209,9 +225,10 @@ class Country(models.Model):
         return 0
 
     def popcount_update_needed(self, since=None):
-        self.popcount_ready = 0
-        self.popcount_needed_since(since)
-        self.save()
+        if self.num_declarations > 0:
+            self.popcount_ready = 0
+            self.popcount_needed_since(since)
+            self.save()
 
     def popcount_update_running(self):
         self.popcount_ready = 2
@@ -219,7 +236,7 @@ class Country(models.Model):
 
     def popcount_update_complete(self):
         self.popcount_ready = 1
-        self.popcount_since = None
+        self.popcount_since = self.earliest_declaration
         self.save()
 
     # Keep track of the earliest date that a popcount is needed from
@@ -229,6 +246,11 @@ class Country(models.Model):
         if not self.popcount_since or self.popcount_since > since:
             self.popcount_since = since
 
+    def popcount_needed(self):
+        return self.popcount_ready == 0
+
+    def popcount_running(self):
+        return self.popcount_ready == 2
 
     def trigger_population_recount(self):
         # mark as update in progress
@@ -250,7 +272,7 @@ class Country(models.Model):
                 payload = {
                     'task': 'generate_timeline',
                     'country_code': self.country_code,
-                    'since_date': self.popcount_since
+                    'since_date': self.popcount_since.isoformat()
                     }
                 logger.info(f"payload {payload}")
                 response = client.invoke(
@@ -260,7 +282,9 @@ class Country(models.Model):
                     )
                 logger.info(f"response {response}")
         else:
-            logger.info(f"Missing region {aws_region} or lambda name {aws_lambda}")
+            logger.info(f"AWS details [{aws_region}] [{aws_lambda}] not specified, running locally")
+            self.generate_population_count(self.popcount_since.isoformat())
+            response = {"complete": 1}
         return response
 
 
@@ -428,7 +452,7 @@ class Area(Hierarchy, models.Model):
         self.__original_population = self.population
 
         if changed_pop:
-            self.popcount_update_needed()
+            self.country.popcount_update_needed()
 
     @property
     def declarations(self):
@@ -455,14 +479,6 @@ class Area(Hierarchy, models.Model):
     def children(self):
         children = Area.objects.filter(parent=self.id).exclude(pk=self.id).order_by('structure', 'sort_name')
         return children
-
-    @property
-    def earliest_declaration(self):
-        fromdate = None
-        decs = self.declarations
-        if decs:
-            fromdate=decs.latest('-event_date').event_date
-        return fromdate
 
     def regen_from_oldest_dec(self):
         decs = self.declarations

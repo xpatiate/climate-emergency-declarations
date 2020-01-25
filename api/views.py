@@ -136,6 +136,7 @@ def area_del(request, area_id):
         status=200
         area = get_object_or_404(Area, pk=area_id)
         area.delete()
+        area.country.popcount_update_needed()
     return HttpResponse(status=status)
 
 def declaration_del(request, declaration_id):
@@ -144,6 +145,7 @@ def declaration_del(request, declaration_id):
         status=200
         declaration = get_object_or_404(Declaration, pk=declaration_id)
         declaration.delete()
+        declaration.area.country.popcount_update_needed(declaration.event_date)
     return HttpResponse(status=status)
 
 def link_del(request, link_id):

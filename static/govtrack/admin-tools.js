@@ -4,6 +4,7 @@ var showing = {};
 $(document).ready(() => {
     $('button.view-structure').click(toggleEditOptions);
     $('button.view-area').click(toggleEditOptions);
+    $('a#do_update_popcount').click(triggerRecount);
 
     $('div.delete-link').click(deleteThis);
     $('a#bulk-edit-show').click(showBulkEdit);
@@ -76,6 +77,27 @@ function deleteThis(ev) {
         oReq.open("GET", apiUrl);
         oReq.send();
     }
+}
+
+function triggerRecount(ev) {
+    ev.preventDefault()
+    var el = ev.target;
+    var parentDiv = el.parentElement;
+    var apiUrl = el.dataset.url
+    console.log('making API call to ' + apiUrl);
+    var oReq = new XMLHttpRequest();
+    oReq.onreadystatechange = () => {
+        if (oReq.readyState === 4) {
+            console.log(oReq);
+            if (oReq.status != '200') {
+                alert("operation failed");
+            }
+        }
+    }
+    oReq.open("GET", apiUrl);
+    oReq.send();
+    $('.popcount-status').html('popcount running...')
+    $('.popcount-status').addClass('popcount-running')
 };
 
 function toggleInbox() {
