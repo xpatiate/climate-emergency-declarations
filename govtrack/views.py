@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpR
 from django.forms.models import formset_factory, modelformset_factory, inlineformset_factory
 from django.forms import HiddenInput
 from django.http import JsonResponse, HttpResponseBadRequest
+import django.urls
 
 from .models import Declaration, Country, Area, Structure, Link, ImportDeclaration
 from .forms import StructureForm, AreaForm, DeclarationForm, LinkForm, CountryForm, SelectBulkAreaForm, BulkAreaForm
@@ -31,7 +32,9 @@ def index(request):
                 'declared_population': c.current_popcount
             },
             dlist))
-    return render(request, 'govtrack/index.html', {'countries': countries})
+    return render(request, 'govtrack/index.html', {
+        'countries': countries
+        })
 
 def area(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
@@ -53,10 +56,19 @@ def area(request, area_id):
 
 def countries(request):
     clist = Country.objects.order_by('name')
+    update_needed = False
     for c in clist:
         c.inbox_count = ImportDeclaration.objects.filter(country=c).count()
         c.area_population = c.current_popcount
-    return render(request, 'govtrack/countries.html', {'country_list': clist})
+        if c.is_popcount_needed:
+            update_needed = True
+    return render(request, 'govtrack/countries.html', {
+        'country_list': clist,
+        'update_needed': update_needed,
+        'update_url': request.build_absolute_uri(
+            django.urls.reverse('api_trigger_all_recounts')
+            )
+        })
 
 def country(request, country_id, action='view'):
     country = get_object_or_404(Country, pk=country_id)

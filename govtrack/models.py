@@ -246,10 +246,12 @@ class Country(models.Model):
         if not self.popcount_since or self.popcount_since > since:
             self.popcount_since = since
 
-    def popcount_needed(self):
+    @property
+    def is_popcount_needed(self):
         return self.popcount_ready == 0
 
-    def popcount_running(self):
+    @property
+    def is_popcount_running(self):
         return self.popcount_ready == 2
 
     def trigger_population_recount(self):
@@ -267,23 +269,27 @@ class Country(models.Model):
                 aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
                 )
             logger.info(f"client {client}")
+            since_date_str = ''
+            if self.popcount_since:
+                since_date_str = self.popcount_since.isoformat()
 
             if client:
                 payload = {
                     'task': 'generate_timeline',
                     'country_code': self.country_code,
-                    'since_date': self.popcount_since.isoformat()
+                    'since_date': since_date_str
                     }
                 logger.info(f"payload {payload}")
-                response = client.invoke(
+                l_response = client.invoke(
                     FunctionName=aws_lambda,
                     InvocationType='Event',
                     Payload=json.dumps(payload)
                     )
-                logger.info(f"response {response}")
+                logger.info(f"response {l_response}")
+                response = l_response.get('ResponseMetadata')
         else:
             logger.info(f"AWS details [{aws_region}] [{aws_lambda}] not specified, running locally")
-            self.generate_population_count(self.popcount_since.isoformat())
+            self.generate_population_count(since_date_str)
             response = {"complete": 1}
         return response
 

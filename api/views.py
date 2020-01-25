@@ -51,6 +51,18 @@ def country_population(request, country_code):
         raise Http404('No country for specified code')
     return HttpResponse(str(country.current_popcount), content_type='text/plain')
 
+def trigger_all_recounts(request):
+    status=403
+    if request.user.is_authenticated:
+        countries = Country.objects.filter(popcount_ready=0)
+        response = {'_triggered': len(countries)}
+        for country in countries:
+            logger.info(f"triggering recount for country {country}")
+            response[country.country_code] = country.trigger_population_recount()
+        return JsonResponse(response, content_type='application/json')
+    else:
+        return HttpResponse(status=status)
+
 def country_trigger_recount(request, country_code):
     status=403
     if request.user.is_authenticated:
@@ -59,7 +71,7 @@ def country_trigger_recount(request, country_code):
             raise Http404('No country for specified code')
         logger.info(f"triggering recount for country {country}")
         response = country.trigger_population_recount()
-        return HttpResponse(response, content_type='application/json')
+        return JsonResponse(dict(response), content_type='application/json')
     else:
         return HttpResponse(status=status)
 

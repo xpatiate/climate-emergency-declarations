@@ -14,6 +14,7 @@ urlpatterns = [
     path('country/<str:country_code>/population_timeline', views.country_population_timeline, name='api_country_pop_time'),
     path('country/<str:country_code>/regenerate_timeline', views.country_regenerate_timeline, name='api_country_regen_time'),
     path('country/<str:country_code>/trigger_recount', views.country_trigger_recount, name='api_country_trigger_recount'),
+    path('popcount/regenerate', views.trigger_all_recounts, name='api_trigger_all_recounts'),
     path('area/del/<int:area_id>', views.area_del, name='api_area_del'),
     path('area/<int:area_id>/row', views.area_data, name='api_area_data'),
     path('structure/del/<int:structure_id>', views.structure_del, name='api_structure_del'),

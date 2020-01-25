@@ -5,6 +5,7 @@ $(document).ready(() => {
     $('button.view-structure').click(toggleEditOptions);
     $('button.view-area').click(toggleEditOptions);
     $('a#do_update_popcount').click(triggerRecount);
+    $('a#update_all_popcounts').click(triggerAllRecounts);
 
     $('div.delete-link').click(deleteThis);
     $('a#bulk-edit-show').click(showBulkEdit);
@@ -78,6 +79,26 @@ function deleteThis(ev) {
         oReq.send();
     }
 }
+
+function triggerAllRecounts(ev) {
+    ev.preventDefault()
+    var el = ev.target;
+    var apiUrl = el.dataset.url
+    console.log('making API call to ' + apiUrl);
+    var oReq = new XMLHttpRequest();
+    oReq.onreadystatechange = () => {
+        if (oReq.readyState === 4) {
+            console.log(oReq);
+            if (oReq.status != '200') {
+                alert("operation failed");
+            }
+        }
+    }
+    oReq.open("GET", apiUrl);
+    oReq.send();
+    $(el).html('')
+    $('.update-needed').html('')
+};
 
 function triggerRecount(ev) {
     ev.preventDefault()
