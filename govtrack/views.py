@@ -262,6 +262,7 @@ def bulkarea_edit(request, area_id):
     if request.method == 'POST' and request.POST.get('delete'):
         logger.info(f"Deleting {num_areas} areas!!!")
         (num_deleted, types_deleted) = alldata['areas'].delete()
+        area.country.popcount_update_needed()
         logger.info(f"Deleted {num_deleted} areas: {types_deleted}")
         try:
             # main area still exists, redirect there
@@ -355,7 +356,9 @@ def area_child(request, parent_id, structure_id):
             do_redir = False
             form = AreaForm(request.POST)
             if form.is_valid():
+                logger.info("Calling form save")
                 area = form.save()
+                logger.info(f"Now got area {area.id}")
                 do_redir = True
                 area_id = area.id
                 new_link_url = request.POST.get('link-url')

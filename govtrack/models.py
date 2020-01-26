@@ -93,6 +93,10 @@ class Country(models.Model):
     links = GenericRelation(Link, null=True, related_query_name='link')
     popcount_ready = models.PositiveSmallIntegerField(default=0)
     popcount_since = models.DateField(null=True, blank=True)
+    # redundant field for perf reasons,
+    # equal to self.popcounts.latest('date').population
+    current_popcount = models.PositiveIntegerField(default=0)
+
 
     @classmethod
     def content_type_id(cls):
@@ -216,7 +220,7 @@ class Country(models.Model):
         return PopCount.objects.filter(country=self).order_by('date')
 
     @property
-    def current_popcount(self):
+    def not_current_popcount(self):
         try:
             latest = self.popcounts.latest('date')
             return latest.population
@@ -225,7 +229,9 @@ class Country(models.Model):
         return 0
 
     def popcount_update_needed(self, since=None):
+        logger.info(f"Need an update for {self.country_code}?")
         if self.num_declarations > 0:
+            logger.info("yep")
             self.popcount_ready = 0
             self.popcount_needed_since(since)
             self.save()
@@ -261,6 +267,7 @@ class Country(models.Model):
         aws_region=os.environ.get('AWS_REGION', '')
         aws_lambda=os.environ.get('AWS_LAMBDA_NAME', '')
         response = {'errstr': 'cannot trigger recount'}
+        since_date_str = ''
         if aws_region and aws_lambda:
             # create lambda client
             client = boto3.client('lambda',
@@ -269,7 +276,6 @@ class Country(models.Model):
                 aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
                 )
             logger.info(f"client {client}")
-            since_date_str = ''
             if self.popcount_since:
                 since_date_str = self.popcount_since.isoformat()
 
@@ -327,6 +333,7 @@ class Country(models.Model):
         logger.info('got change dates: %s' % change_dates)
 
         root = self.get_root_area()
+        latest = 0
         for cdate in change_dates:
             # Calculate the population as at this date
             pc = PopulationCounter()
@@ -336,6 +343,9 @@ class Country(models.Model):
             # because we can't break down population change by declaration at this stage
             for decln in date_dict[cdate]:
                 pop = PopCount.create(self, decln, date_pop)
+                latest = pop.population
+
+        self.current_popcount = latest
 
         # mark as update complete
         self.popcount_update_complete()
@@ -453,6 +463,7 @@ class Area(Hierarchy, models.Model):
         changed_pop = False
         if self.population != self.__original_population:
             changed_pop = True
+        logger.info(f"has population changed? {self.__original_population} -> {self.population} == {changed_pop}")
         
         super().save(*args, **kwargs)
         self.__original_population = self.population

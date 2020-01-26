@@ -148,7 +148,8 @@ def area_del(request, area_id):
         status=200
         area = get_object_or_404(Area, pk=area_id)
         area.delete()
-        area.country.popcount_update_needed()
+        if area.population > 0:
+            area.country.popcount_update_needed()
     return HttpResponse(status=status)
 
 def declaration_del(request, declaration_id):
