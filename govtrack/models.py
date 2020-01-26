@@ -303,6 +303,7 @@ class Country(models.Model):
     def generate_population_count(self, fromdate=None):
         '''Recalculate all stored population counts from the given date onwards.'''
         logger.info('Counting population update from %s' % fromdate)
+        start_time = datetime.datetime.now()
         filter_args = {
             'country': self,
         }
@@ -338,6 +339,7 @@ class Country(models.Model):
             # Calculate the population as at this date
             pc = PopulationCounter()
             date_pop = pc.declared_population(root, date=cdate)
+            logger.info(f"pop at date {cdate} is {date_pop}")
             # Note we add a unique popcount for each declaration on this date,
             # but they all have the same population,
             # because we can't break down population change by declaration at this stage
@@ -346,6 +348,9 @@ class Country(models.Model):
                 latest = pop.population
 
         self.current_popcount = latest
+        end_time = datetime.datetime.now()
+        delta = str(end_time - start_time)
+        logger.info(f"Popcount for {self.country_code} took {delta}")
 
         # mark as update complete
         self.popcount_update_complete()
@@ -463,7 +468,6 @@ class Area(Hierarchy, models.Model):
         changed_pop = False
         if self.population != self.__original_population:
             changed_pop = True
-        logger.info(f"has population changed? {self.__original_population} -> {self.population} == {changed_pop}")
         
         super().save(*args, **kwargs)
         self.__original_population = self.population

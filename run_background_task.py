@@ -1,6 +1,12 @@
+import os
+import sys
+
+# look for modules in current dir + /lib
+CWD = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(CWD, "lib"))
+
 from django.conf import settings
 import ced_bg.settings as app_settings
-import sys
 
 settings.configure(
     INSTALLED_APPS=app_settings.INSTALLED_APPS,
@@ -28,7 +34,7 @@ def generate_timeline(event, context):
         print(f"Finished generating population count for {event['country_code']}")
     except KeyError as ex:
         print(f"No country code specified: {ex}")
-    except Country.DoesNotExist() as ex:
+    except Country.DoesNotExist as ex:
         print(f"No country found with code {event['country_code']} {ex}")
     print("All done")
 

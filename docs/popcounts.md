@@ -3,11 +3,10 @@ To estimate the population affected by climate emergency declarations, the syste
 Popcounts apply to a country as a whole and do not give any information about populations within areas of a country.
 
 The following admin actions will result in the popcount series being regenerated:
-* altering the population for a country
 * altering the population for any area within a country (even if that area is not itself declared, it may be part of a larger structure which means its change could result in adjusted overall count)
 * adding or removing supplementary parents for an area
-* deleting an area
-* adding an area
+* deleting an area which has population > 0
+* adding an area which has population > 0
 * adding a declaration
 * deleting a declaration
 
