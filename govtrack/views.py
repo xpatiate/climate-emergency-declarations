@@ -114,7 +114,7 @@ def country(request, country_id, action='view'):
         'form': form,
         'linkform': linkform,
         'country_api_link': request.build_absolute_uri( country.api_link ),
-        'country_api_trigger_link': request.build_absolute_uri( country.api_recount_link ),
+        'country_api_trigger_link': country.api_recount_link,
         })
 
 def structure_edit(request, structure_id):
