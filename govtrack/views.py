@@ -51,7 +51,7 @@ def area(request, area_id):
         'import_declaration_list': import_declarations,
         'links': area.links.all(),
         'area_api_link': request.build_absolute_uri( area.api_link ),
-        'country_api_trigger_link': request.build_absolute_uri( area.country.api_recount_link ),
+        'country_api_trigger_link': area.country.api_recount_link,
     })
 
 def countries(request):
