@@ -1,0 +1,38 @@
+{% load humanize %}
+        <tr class='{% if area.is_declared %}declared-row{% endif %} {% if area.is_supplementary %}supplementary{% endif %}'>
+            <td>
+                {% with ''|center:area.indent_level as range %}
+                {% for _ in range %}
+                <span class='level_indent'></span>
+                {% endfor %}
+                {% endwith %}
+                <span id='area-{{ area.id }}'>
+                    &#8866;({{ area.structure.name }}) <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
+                {% if area.is_supplementary %}
+                </span>
+                {% else %}
+                    {% if user.is_authenticated %}
+                    &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
+                    <div id='editarea-{{ area.id }}' class='edit-area'>
+                    <a href='{% url 'area_edit' area.id %}'>edit</a>
+                    {% if area.level > 1 %}
+                    |
+                    {% with view='api_area_del' object=area %}
+                    {% include 'govtrack/delete.html' %}
+                    {% endwith %}
+                    {% endif %}
+                    |
+                    <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
+                    {% include 'govtrack/add-area.html' %}
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </td>
+            <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
+            <td align='right'>
+                {{ area.population | intcomma }}
+            </td>
+            {% if show_bulk_edit %}
+	        <td align='right'><input type='checkbox' class='bulk-edit-item' name='bulk-areas' value='{{ area.id }}'></td>
+            {% endif %}
+        </tr>

@@ -65,9 +65,7 @@ def countries(request):
     return render(request, 'govtrack/countries.html', {
         'country_list': clist,
         'update_needed': update_needed,
-        'update_url': request.build_absolute_uri(
-            django.urls.reverse('api_trigger_all_recounts')
-            )
+        'update_url': django.urls.reverse('api_trigger_all_recounts')
         })
 
 def country(request, country_id, action='view'):
