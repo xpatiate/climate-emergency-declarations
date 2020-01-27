@@ -212,6 +212,7 @@ def bulkarea_save(request, area_id):
                 areas.update(location=cdata['location'])
             if request.POST.get('clear_location','') == 'true':
                 areas.update(location='')
+            add_link = cdata['link']
             supps_to_add_str = request.POST.get('supp_list_add')
             supps_to_rm_str = request.POST.get('supp_list_rm')
             supps_to_add = set(supps_to_add_str.split(':'))
@@ -220,6 +221,8 @@ def bulkarea_save(request, area_id):
             logger.info(f"rming supps {supps_to_rm_str} {supps_to_rm}")
 
             for area in areas:
+                if add_link:
+                    area.add_link(add_link)
                 all_current_supps = list(area.supplements.all().values_list('id', flat=True))
                 logger.info(f"current supps: { all_current_supps }")
                 a_changed = False

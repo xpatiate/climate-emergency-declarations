@@ -23,6 +23,13 @@
     </fieldset>
     <br>
     <fieldset>
+	    {{ form.link.label_tag }}<br>
+        {{ form.link }}
+        <input type='button' class='button-change' id='button_set_link' value='set'>
+        <input type='button' class='button-change' id='button_undo_link' value='undo'>
+    </fieldset>
+    <br>
+    <fieldset>
         {{ form.supplements_add.label_tag }}<br>
         {{ form.supplements_add }}
         <input type='button' class='button-change' id='button_add_supplements' value='add'>
@@ -38,14 +45,20 @@
   <br>
   <div class='bulk-edit-table'>
   {% csrf_token %}
-  <table>
-  <tr><th>Area</th><th>Location</th><th>Supplementary parents</th></tr>
+  <table class='table-responsive'>
+  <tr>
+    <th>Area</th>
+    <th>Location</th>
+    <th>Link</th>
+    <th>Supplementary parents</th>
+    </tr>
   <input type='hidden' name='area_id_str' value='{{ area_id_str}}'>
   {% for a in area_list %}
   <tr>
       <td><a class='link-area' href='{% url 'area' a.id %}'>{{ a.name }}</a></td>
       <td><div class='area_location' id='area_{{ a.id}}_loc'>{{ a.location }}</div></td>
-      <td><div class='area_supp' id='area_{{ a.id}}_supp'>{{ a.supplements }}</div></td>
+      <td class='bulk_area_text'><div class='area_link' id='area_{{ a.id}}_link' data-toggle='tooltip'></div></td>
+      <td class='bulk_area_text'><div class='area_supp' id='area_{{ a.id}}_supp' data-toggle='tooltip'>{{ a.supplements }}</div></td>
   </tr>
   {% endfor %}
   </table>

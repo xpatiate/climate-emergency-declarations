@@ -247,6 +247,18 @@ tr.country-total {
 div.bulk-edit-table select {
     font-size: small;
 }
+div.bulk-edit-table table {
+    width: 100%;
+}
+td.bulk_area_text {
+    max-width: 200px;
+    overflow: hidden;
+}
+td.bulk_area_text div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: small;
+}
 
 .inbox-paste textarea {
     width: 100%;

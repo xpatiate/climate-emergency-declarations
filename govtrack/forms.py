@@ -71,6 +71,7 @@ class SelectBulkAreaForm(Form):
 
 class BulkAreaForm(Form):
     location = forms.CharField(required=False)
+    link = forms.CharField(required=False, label='Add link', validators=[URLValidator()])
     supplements_add = forms.MultipleChoiceField(
         label='Add supplementary parents',
         required=False

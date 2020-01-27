@@ -749,6 +749,11 @@ class Area(Hierarchy, models.Model):
             ).exclude(id__in=exclude_list).order_by('sort_name')
         return arealist
 
+    def add_link(self, url):
+        link_urls = self.links.values_list('url', flat=True)
+        if url not in link_urls:
+            self.links.create(url=url)
+
     def __str__(self):
         return self.fullname
 

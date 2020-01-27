@@ -17,6 +17,8 @@ $(document).ready(() => {
 
     $('#button_set_location').click(setLocation)
     $('#button_clear_location').click(clearLocation)
+    $('#button_set_link').click(setLink)
+    $('#button_undo_link').click(undoLink)
     $('#button_add_supplements').click(addSupplements)
     $('#button_remove_supplements').click(removeSupplements)
     $('#bulk_delete_button').click(confirmBulkDelete)
@@ -342,6 +344,24 @@ function clearLocation(ev) {
     return false;
 }
 
+function setLink(ev) {
+    var newLinkInput = $('input#id_link')
+    var newLink = newLinkInput[0].value
+    let allLocs = $('.area_link')
+    allLocs.html(newLink)
+    allLocs.prop('title', newLink)
+    return false;
+}
+
+function undoLink(ev) {
+    var newLinkInput = $('input#id_link')
+    newLinkInput[0].value = ''
+    let allLocs = $('.area_link')
+    allLocs.html('')
+    allLocs.prop('title', '')
+    return false;
+}
+
 // add selected areas as supplementary parents
 function addSupplements(ev) {
     var addSupps = $("#id_supplements_add")
@@ -418,6 +438,7 @@ function redrawSuppNames( actionLists ) {
             return e.length > 0
             }).sort()
         thisObj.html(sortedNames.join(', '))
+        thisObj.prop('title',sortedNames.join(', '))
     })
 }
 
