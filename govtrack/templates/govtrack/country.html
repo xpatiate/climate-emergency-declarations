@@ -17,7 +17,7 @@
 <input type='submit' name='save' value='save' class='button-save'>
 <input type='submit' value='cancel' class='button-cancel' formnovalidate>
 {% else %}
-<div class='object-view'>
+<div class='panel object-view'>
     {% if user.is_authenticated %}
     <div class='admin-corner'>
         <div id='editcountry-{{ country.id }}' class='edit-country'>
@@ -43,7 +43,7 @@
     {% include 'govtrack/links.html' %}
 </div>
 
-<div class='parent-tree'>
+<div class='panel parent-tree'>
     {% for struct in structure_list %}
     <div id='structure-{{ struct.id }}'>
         {% with ''|center:struct.indent_level as range %}
@@ -75,7 +75,7 @@
 {% endif %}
 
 <h3>Areas</h3>
-<div class="areas">
+<div class="panel areas">
     <table>
         <tr>
             <th>Area</th>

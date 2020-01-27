@@ -1,6 +1,21 @@
+/* adjust some bootstrap 4 defaults */
 body {
-  padding-top: 50px;
   background-image: url('draft.png');
+  font-size: 0.9rem;
+}
+.navbar {
+    margin-bottom: 20px;
+}
+a {
+    color: #337ab7;
+}
+/* end bootstrap adjust */
+
+/* general appearance */
+.panel {
+    border: 1px solid lightgrey;
+    padding: 15px;
+    margin-bottom: 20px;
 }
 
 td, th {
@@ -75,17 +90,14 @@ tr.country-total {
 
 .supplementary {
     font-style: italic;
-    background-color: rgb(240,240,240);
+    background-color: #e9ecef;
 }
 .supplementary a {
     color: purple;
 }
 
 .declarations {
-    border: 1px solid lightgrey;
-    background: rgb(240,240,240);
-    margin-bottom: 20px;
-    padding: 15px;
+    background: #e9ecef;
 }
 
 .dec-summary {
@@ -93,18 +105,13 @@ tr.country-total {
 }
 
 .object-view {
-    border: 1px solid lightgrey;
-    padding: 15px;
     margin: 20px 0px;
     overflow: auto;
     background-color: white;
 }
 
 .parent-tree {
-    border: 1px solid lightgrey;
-    background: rgb(240,240,240);
-    margin-bottom: 20px;
-    padding: 15px;
+    background: #e9ecef;
 }
 
 .level_indent {
@@ -113,7 +120,6 @@ tr.country-total {
 }
 
 .areas {
-    border: 1px solid lightgrey;
     background: white;
     padding: 15px 10px;
     margin: 20px 0px;

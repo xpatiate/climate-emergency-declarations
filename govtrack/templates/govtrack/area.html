@@ -14,7 +14,7 @@
 {% endif %}
 {% endblock %}
 
-<div class='parent-tree'>
+<div class='panel parent-tree'>
     {% for parent in parents_list reversed %}
     <div>
         {% with ''|center:parent.indent_level as range %}
@@ -68,7 +68,7 @@
 {% else %}
 {% block view %}
 
-<div class='object-view'>
+<div class='panel object-view'>
     {% if user.is_authenticated %}
     <div class='admin-corner'>
         <div class='edit-area' style="display: block;">
@@ -112,7 +112,7 @@
 {% include 'govtrack/inbox-list.html' %}
 {% endif %}
 
-<div class='declarations'>
+<div class='panel declarations'>
     <h4>Declarations</h4>
     <ul>
         {% for dec in area.declarations %}
@@ -134,20 +134,6 @@
         {% endif %}
     </ul>
 </div>
-
-{% if area.id != area.parent.id %}
-<br>
-<p class='bottom-nav'>
-    {% for parent in area.direct_ancestors %}
-    {% if forloop.first %}
-    {{ area.name }} -&gt; 
-    {% else %}
-    <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
-    {% if not forloop.last %} -&gt; {% endif %}
-    {% endif %}
-    {% endfor %}
-</p>
-{% endif %}
 
 {% if area.num_all_children %}
 <div class='areas'>
@@ -190,6 +176,20 @@
     {% csrf_token %}
     </form>
 </div>
+{% endif %}
+
+{% if area.id != area.parent.id %}
+<nav aria-label="breadcrumb">
+  <ol class='breadcrumb'>
+    {% for parent in area.direct_ancestors %}
+    {% if forloop.first %}
+    <li class='breadcrumb-item active' aria-current='page'>{{ area.name }}</li>
+    {% else %}
+    <li class='breadcrumb-item'><a href='{% url 'area' parent.id %}'>{{ parent.name }}</a></a>
+    {% endif %}
+    {% endfor %}
+  </ol>
+</nav>
 {% endif %}
 
 

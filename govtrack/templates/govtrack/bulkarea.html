@@ -13,7 +13,7 @@
 {% if user.is_authenticated %}
 
   <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
-  <div class='bulk-meta-form'>
+  <div class='panel bulk-meta-form'>
     <fieldset>
 	    {{ form.location.label_tag }}<br>
         {{ form.location }}
