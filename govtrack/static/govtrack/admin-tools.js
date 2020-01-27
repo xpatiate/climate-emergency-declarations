@@ -22,6 +22,7 @@ $(document).ready(() => {
     $('#button_add_supplements').click(addSupplements)
     $('#button_remove_supplements').click(removeSupplements)
     $('#bulk_delete_button').click(confirmBulkDelete)
+    $('#bulk_edit_button').click(submitBulkEdit)
     window.supplementNames = {}
     parseSuppNames()
 
@@ -39,8 +40,7 @@ $(document).ready(() => {
 });
 
 function confirmBulkDelete(ev) {
-    var checkBoxes = $("input[name='bulk-areas']:checked")
-    var numChecked = checkBoxes.length
+    var numChecked = collectBulkEditAreas()
     if (numChecked > 0) {
         var confStr = 'Are you sure you want to delete ' 
         if (numChecked == 1) {
@@ -51,9 +51,33 @@ function confirmBulkDelete(ev) {
         }
         confStr += '? This cannot be undone.'
         const response = confirm(confStr)
-        return response
+        if (response == true) {
+          $('#bulk_edit_action').val('delete')
+          $('#bulk_edit_form').submit()
+        }
     }
     return false
+}
+
+function submitBulkEdit(ev) {
+  // get all checked checkboxes, add to a hidden field
+    var numChecked = collectBulkEditAreas()
+    if (numChecked > 0) {
+          $('#bulk_edit_action').val('edit')
+          $('#bulk_edit_form').submit()
+    }
+    return false
+}
+
+function collectBulkEditAreas() {
+    var checkBoxes = $("input[name='bulk-areas']:checked")
+    var idlist = []
+    checkBoxes.each(function(count, box) {
+      idlist.push(box.value)
+    });
+    console.log(idlist)
+    $('#bulk_area_id_str').val(idlist.join(':'))
+    return idlist.length
 }
 
 function deleteThis(ev) {
@@ -350,6 +374,7 @@ function setLink(ev) {
     let allLocs = $('.area_link')
     allLocs.html(newLink)
     allLocs.prop('title', newLink)
+    $('#do_set_link').val('true')
     return false;
 }
 
@@ -359,6 +384,7 @@ function undoLink(ev) {
     let allLocs = $('.area_link')
     allLocs.html('')
     allLocs.prop('title', '')
+    $('#do_set_link').val('false')
     return false;
 }
 

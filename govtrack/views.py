@@ -5,7 +5,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 import django.urls
 
 from .models import Declaration, Country, Area, Structure, Link, ImportDeclaration
-from .forms import StructureForm, AreaForm, DeclarationForm, LinkForm, CountryForm, SelectBulkAreaForm, BulkAreaForm
+from .forms import StructureForm, AreaForm, DeclarationForm, LinkForm, CountryForm, BulkAreaForm
 
 import csv
 import datetime
@@ -45,7 +45,6 @@ def area(request, area_id):
     return render(request, 'govtrack/area.html', {
         'area': area,
         'country': area.country,
-        'bulkform': SelectBulkAreaForm(),
         'parents_list': area.direct_ancestors,
         'areas_list': records,
         'import_declaration_list': import_declarations,
@@ -212,7 +211,10 @@ def bulkarea_save(request, area_id):
                 areas.update(location=cdata['location'])
             if request.POST.get('clear_location','') == 'true':
                 areas.update(location='')
+            # Only add the link if they actually clicked 'Set' on the page
             add_link = cdata['link']
+            if request.POST.get('do_set_link','') != 'true':
+                add_link = ''
             supps_to_add_str = request.POST.get('supp_list_add')
             supps_to_rm_str = request.POST.get('supp_list_rm')
             supps_to_add = set(supps_to_add_str.split(':'))
@@ -246,6 +248,9 @@ def bulkarea_save(request, area_id):
                 all_latest_supps = list(area.supplements.all().values_list('id', flat=True))
                 logger.info(f"updated supps: { all_latest_supps }")
             logger.info(f"Completed updating supps for { area }")
+        else:
+            # TODO: ideally would return an error here and preserve other settings
+            logger.info(f"Problem with form: {masterform.errors}")
     return redirect('area', area_id=area_id)
 
 def bulkarea_edit(request, area_id):
@@ -253,16 +258,19 @@ def bulkarea_edit(request, area_id):
     parent = area.parent
     logger.info(area)
 
-    bulkform = SelectBulkAreaForm(request.POST)
-    bulkform.is_valid()
-    alldata = bulkform.cleaned_data
-    num_areas = len(alldata.get('areas', []))
+    edit_areas = []
+    if request.method != 'POST':
+        return redirect('area', area_id=area_id)
+    area_id_str = request.POST.get('area_id_str')
+    edit_areas = area_id_str.split(':')
+    num_areas = len(edit_areas)
     logger.info(f"got {num_areas} areas to bulk edit")
     if num_areas == 0:
         return redirect('area', area_id=area_id)
-    if request.method == 'POST' and request.POST.get('delete'):
+    if request.POST.get('action') == 'delete':
         logger.info(f"Deleting {num_areas} areas!!!")
-        (num_deleted, types_deleted) = alldata['areas'].delete()
+        del_areas = Area.objects.filter(id__in=edit_areas)
+        (num_deleted, types_deleted) = del_areas.delete()
         area.country.popcount_update_needed()
         logger.info(f"Deleted {num_deleted} areas: {types_deleted}")
         try:
@@ -272,7 +280,9 @@ def bulkarea_edit(request, area_id):
         except Area.DoesNotExist:
             # redirect to parent
             return redirect('area', area_id=parent.id)
+
     supp_set = set()
+    area_obj = Area.objects.filter(id__in=edit_areas).order_by('sort_name')
     area_initial = [
             { 
                 'id': a.id,
@@ -281,7 +291,7 @@ def bulkarea_edit(request, area_id):
                 'supplements': a.supplement_list,
                 'supplement_ids': [s.id for s in a.supplements.all()]
                 }
-                for a in alldata['areas']
+                for a in area_obj
             ]
     combined_supps = [ s for a in area_initial for s in a['supplement_ids'] ]
     supp_set.update(combined_supps)
@@ -291,14 +301,13 @@ def bulkarea_edit(request, area_id):
     current_supps = Area.objects.filter(id__in=supp_set)
     newform.fields['supplements_add'].choices = [ (s.id, s.name) for s in main_supps ]
     newform.fields['supplements_rm'].choices = [ (s.id, s.name) for s in current_supps ]
-    logger.info(f"areas: {area_initial}")
-    area_ids = [ str(a['id']) for a in area_initial ]
+
     return render(request, 'govtrack/bulkarea.html', {
         'area': area,
         'country': area.country,
         'form': newform,
         'area_list': area_initial,
-        'area_id_str': ':'.join(area_ids),
+        'area_id_str': area_id_str
     })
 
 

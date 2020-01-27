@@ -151,8 +151,6 @@
 
 {% if area.num_all_children %}
 <div class='areas'>
-    <form class='bulk-edit-form' action='{% url 'bulkarea_edit' area.id %}' method='post'>
-    {% csrf_token %}
     <p><b>Descendants</b></p>
     <table>
       <tr>
@@ -182,10 +180,14 @@
         {% endfor %}
     </table>
     <br>
-    <input name='edit' type='submit' class='bulk-edit-go button-save' value='edit'>
+    <form id='bulk_edit_form' class='bulk-edit-form' action='{% url 'bulkarea_edit' area.id %}' method='post'>
+    <input type='button' class='bulk-edit-go button-save' id='bulk_edit_button' value='edit'>
     <span class='bulk-edit-go' style='width: 30px;'>&nbsp;</span>
-    <input name='delete' type='submit' class='bulk-edit-go button-save' id='bulk_delete_button' value='delete'>
+    <input type='button' class='bulk-edit-go button-save' id='bulk_delete_button' value='delete'>
+    <input type='hidden' name='action' value='' id='bulk_edit_action'>
+    <input type='hidden' id='bulk_area_id_str' name='area_id_str' value=''>
     <br>
+    {% csrf_token %}
     </form>
 </div>
 {% endif %}
