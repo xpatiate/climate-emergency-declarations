@@ -20,4 +20,5 @@ urlpatterns = [
     path('structure/del/<int:structure_id>', views.structure_del, name='api_structure_del'),
     path('declaration/del/<int:declaration_id>', views.declaration_del, name='api_declaration_del'),
     path('link/del/<int:link_id>', views.link_del, name='api_link_del'),
+    path('world/population_timeline', views.world_population_timeline, name='api_world_pop_time'),
 ]

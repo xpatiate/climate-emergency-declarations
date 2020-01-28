@@ -91,10 +91,21 @@ def country_population_timeline(request, country_code):
     if not country:
         raise Http404('No country for specified code')
     response = HttpResponse(content_type='text/csv')
+    writer.writerow(['Date', 'Country', 'Government', 'Location', 'Population', 'Declaration Status', 'Declared Population'])
     writer = csv.writer(response)
     for pc in country.popcounts:
         area = pc.declaration.area
-        writer.writerow([pc.declaration.event_date, country.name, area.name, area.population, pc.status, pc.population])
+        writer.writerow([pc.declaration.event_date, country.name, area.name, area.location, area.population, pc.status, pc.population])
+    return response
+
+def world_population_timeline(request):
+    response = HttpResponse(content_type='text/csv')
+    writer = csv.writer(response)
+    all_popcounts = PopCount.objects.order_by('date')
+    writer.writerow(['Date', 'Country', 'Government', 'Location', 'Population', 'Declaration Status', 'Declared Population'])
+    for pc in all_popcounts:
+        area = pc.declaration.area
+        writer.writerow([pc.declaration.event_date, area.country.name, area.name, area.location, area.population, pc.status, pc.population])
     return response
 
 # unused
