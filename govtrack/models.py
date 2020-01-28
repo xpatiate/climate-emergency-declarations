@@ -219,15 +219,6 @@ class Country(models.Model):
     def popcounts(self):
         return PopCount.objects.filter(country=self).order_by('date')
 
-    @property
-    def not_current_popcount(self):
-        try:
-            latest = self.popcounts.latest('date')
-            return latest.population
-        except PopCount.DoesNotExist as ex:
-            pass
-        return 0
-
     def popcount_update_needed(self, since=None):
         logger.info(f"Need an update for {self.country_code}?")
         if self.num_declarations > 0:

@@ -12,6 +12,7 @@ urlpatterns = [
     path('country/<str:country_code>/population', views.country_population, name='api_country_population'),
     path('country/<str:country_code>/declarations', views.country_declarations, name='api_country_declarations'),
     path('country/<str:country_code>/population_timeline', views.country_population_timeline, name='api_country_pop_time'),
+    path('country/<str:country_code>/pop_by_location', views.country_pop_by_location, name='api_country_pop_location'),
     path('country/<str:country_code>/regenerate_timeline', views.country_regenerate_timeline, name='api_country_regen_time'),
     path('country/<str:country_code>/trigger_recount', views.country_trigger_recount, name='api_country_trigger_recount'),
     path('popcount/regenerate', views.trigger_all_recounts, name='api_trigger_all_recounts'),

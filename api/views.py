@@ -10,6 +10,7 @@ import datetime
 import html
 import io
 import logging
+from datetime import timedelta
 
 logger = logging.getLogger('cegov')
 DATE_FORMAT = '%Y-%m-%d'
@@ -91,21 +92,45 @@ def country_population_timeline(request, country_code):
     if not country:
         raise Http404('No country for specified code')
     response = HttpResponse(content_type='text/csv')
-    writer.writerow(['Date', 'Country', 'Government', 'Location', 'Population', 'Declaration Status', 'Declared Population'])
     writer = csv.writer(response)
+    writer.writerow(['Date', 'Country', 'Government', 'Location', 'Population', 'Declaration Status', 'Declared Population'])
     for pc in country.popcounts:
         area = pc.declaration.area
         writer.writerow([pc.declaration.event_date, country.name, area.name, area.location, area.population, pc.status, pc.population])
     return response
 
+def country_pop_by_location(request, country_code):
+    country = Country.find_by_code(country_code)
+    if not country:
+        raise Http404('No country for specified code')
+    response = HttpResponse(content_type='text/plain')
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Country', 'Location', 'Declared Population'])
+    cpops = country.popcounts
+    start_date = cpops[0].declaration.event_date
+    logger.info(f"start date {start_date}")
+    current_pop = 0
+    last_date = cpops[0].declaration.event_date
+    day_diff = timedelta(days=1)
+    for pc in cpops:
+        dec_date = pc.date
+        while dec_date > last_date + day_diff:
+            last_date += day_diff
+            writer.writerow([last_date, country.name, '', current_pop])
+        area = pc.declaration.area
+        writer.writerow([pc.date, country.name, area.location, pc.population])
+        current_pop = pc.population
+        last_date = dec_date
+    return response
+
 def world_population_timeline(request):
-    response = HttpResponse(content_type='text/csv')
+    response = HttpResponse(content_type='text/plain')
     writer = csv.writer(response)
     all_popcounts = PopCount.objects.order_by('date')
-    writer.writerow(['Date', 'Country', 'Government', 'Location', 'Population', 'Declaration Status', 'Declared Population'])
+    writer.writerow(['Date', 'Country', 'Government', 'Declared Population'])
     for pc in all_popcounts:
         area = pc.declaration.area
-        writer.writerow([pc.declaration.event_date, area.country.name, area.name, area.location, area.population, pc.status, pc.population])
+        writer.writerow([pc.date, area.country.name, area.name, pc.population])
     return response
 
 # unused
