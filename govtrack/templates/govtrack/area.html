@@ -14,7 +14,7 @@
 {% endif %}
 {% endblock %}
 
-<div class='parent-tree'>
+<div class='panel parent-tree'>
     {% for parent in parents_list reversed %}
     <div>
         {% with ''|center:parent.indent_level as range %}
@@ -68,7 +68,7 @@
 {% else %}
 {% block view %}
 
-<div class='object-view'>
+<div class='panel object-view'>
     {% if user.is_authenticated %}
     <div class='admin-corner'>
         <div class='edit-area' style="display: block;">
@@ -87,6 +87,7 @@
                 <li><a href='{% url 'area_child' area.id ctype.id  %}'>add {{ ctype.name }}</a></li>
                 {% endfor %}
             </div>
+            {% include 'govtrack/popcount-controls.html' %}
         </div>
         {% if user.is_authenticated and area.admin_notes %}
         <div class='admin-view'>
@@ -111,7 +112,7 @@
 {% include 'govtrack/inbox-list.html' %}
 {% endif %}
 
-<div class='declarations'>
+<div class='panel declarations'>
     <h4>Declarations</h4>
     <ul>
         {% for dec in area.declarations %}
@@ -134,22 +135,15 @@
     </ul>
 </div>
 
-{% if area.id != area.parent.id %}
-<br>
-<p class='bottom-nav'>
-    {% for parent in area.direct_ancestors %}
-    {% if forloop.first %}
-    {{ area.name }} -&gt; 
-    {% else %}
-    <a href='{% url 'area' parent.id %}'>{{ parent.name }}</a>
-    {% if not forloop.last %} -&gt; {% endif %}
-    {% endif %}
-    {% endfor %}
-</p>
-{% endif %}
-
 {% if area.num_all_children %}
 <div class='areas'>
+    <p><b>Descendants</b></p>
+    <table>
+      <tr>
+        <th>Area</th>
+        <th>Declared?</th>
+        <th>Population</th>
+        <td>
     {% if user.is_authenticated %}
     <div class='bulk-edit'>
 	 <a id='bulk-edit-show' href='#'>bulk edit</a>
@@ -163,51 +157,39 @@
         </span>
     </div>
     {% endif %}
-    <form class='bulk-edit-form' action='{% url 'bulkarea_edit' area.id %}' method='post'>
-    {% csrf_token %}
-    <p><b>Children:</b></p>
-    <table> 
+        </td>
+      </tr>
         {% for area in areas_list %}
-	<tr class='{% if area.is_declared %}declared-row{% endif %} {% if area.is_supplementary %}supplementary{% endif %}'>
-            <td>
-                {% with ''|center:area.indent_level as range %}
-                {% for _ in range %}
-                <span class='level_indent'></span>
-                {% endfor %}
-                {% endwith %}
-                <span id='area-{{ area.id }}'>
-                    &#8866;({{ area.structure.name }}) <a class='link-area' href='{% url 'area' area.id %}'>{{ area.name }}</a>
-                {% if area.is_supplementary %}
-                </span>
-                {% else %}
-                    {% if user.is_authenticated %}
-                    &nbsp;<button class='view-area' id='viewarea-{{ area.id }}'>*</button>
-                    <div id='editarea-{{ area.id }}' class='edit-area'>
-                    <a href='{% url 'area_edit' area.id %}'>edit</a>
-                    {% if area.level > 1 %}
-                    |
-                    {% with view='api_area_del' object=area %}
-                    {% include 'govtrack/delete.html' %}
-                    {% endwith %}
-                    {% endif %}
-                    |
-                    <a class='dec-from-inbox' data-url='{% url 'api_import_declaration_dec' area.id 0 %}'>declare from inbox</a>
-                    {% include 'govtrack/add-area.html' %}
-                    </div>
-                    {% endif %}
-                {% endif %}
-            </td>
-	    <td><input type='checkbox' class='bulk-edit-item' name='bulk-areas' value='{{ area.id }}'></td>
-        </tr>
+          {% with show_bulk_edit=True %}
+          {% include 'govtrack/area-table-row.html' %}
+          {% endwith %}
         {% endfor %}
     </table>
     <br>
-    <input name='edit' type='submit' class='bulk-edit-go button-save' value='edit'>
+    <form id='bulk_edit_form' class='bulk-edit-form' action='{% url 'bulkarea_edit' area.id %}' method='post'>
+    <input type='button' class='bulk-edit-go button-save' id='bulk_edit_button' value='edit'>
     <span class='bulk-edit-go' style='width: 30px;'>&nbsp;</span>
-    <input name='delete' type='submit' class='bulk-edit-go button-save' id='bulk_delete_button' value='delete'>
+    <input type='button' class='bulk-edit-go button-save' id='bulk_delete_button' value='delete'>
+    <input type='hidden' name='action' value='' id='bulk_edit_action'>
+    <input type='hidden' id='bulk_area_id_str' name='area_id_str' value=''>
     <br>
+    {% csrf_token %}
     </form>
 </div>
+{% endif %}
+
+{% if area.id != area.parent.id %}
+<nav aria-label="breadcrumb">
+  <ol class='breadcrumb'>
+    {% for parent in area.direct_ancestors %}
+    {% if forloop.first %}
+    <li class='breadcrumb-item active' aria-current='page'>{{ area.name }}</li>
+    {% else %}
+    <li class='breadcrumb-item'><a href='{% url 'area' parent.id %}'>{{ parent.name }}</a></a>
+    {% endif %}
+    {% endfor %}
+  </ol>
+</nav>
 {% endif %}
 
 

@@ -64,13 +64,9 @@ class LinkForm(ModelForm):
             'content_type': forms.HiddenInput(),
         }
 
-class SelectBulkAreaForm(Form):
-    prefix = 'bulk'
-    areas = forms.ModelMultipleChoiceField(queryset=Area.objects.all(), widget=forms.CheckboxSelectMultiple)
-    parent = forms.HiddenInput()
-
 class BulkAreaForm(Form):
     location = forms.CharField(required=False)
+    link = forms.CharField(required=False, label='Add link', validators=[URLValidator()])
     supplements_add = forms.MultipleChoiceField(
         label='Add supplementary parents',
         required=False

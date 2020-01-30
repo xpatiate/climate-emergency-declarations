@@ -16,6 +16,9 @@
         <th align='right'>Declarations</th>
         <th align='right'>Inbox Items</th>
         <th align='right'>Inbox Link</th>
+        {% if update_needed %}
+        <th><a href='#' data-url="{{ update_url }}" id='update_all_popcounts'>Update<br/>popcounts</a></th>
+        {% endif %}
       </tr>
     {% for country in country_list %}
         <tr>
@@ -28,6 +31,9 @@
         <td align='right'>{% if country.inbox_count %}{{ country.inbox_count }}{% endif %}</td>
         <td align='right'><a href="{% url 'inbox' country.id %}">go to inbox</a></td>
         </td>
+        {% if update_needed %}
+        <td align='middle'>{% if country.is_popcount_needed %}<span class='update-needed'>*</span>{% endif %}</td>
+        {% endif %}
         </tr>
     {% endfor %}
     </table>

@@ -1,0 +1,45 @@
+# make a role 
+aws --profile=xpatiate iam create-role --role-name lambda-ex --assume-role-policy-document file://trust-policy.json
+
+# add permission to execute lambdas
+aws --profile=xpatiate iam attach-role-policy --role-name lambda-ex --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+# in console, edited role and attached AmazonS3ReadOnlyAccess
+
+# create a function
+aws --profile=xpatiate lambda create-function --function-name uploaded-function --zip-file=fileb://cli-function.zip --runtime=python3.8 --role=arn:aws:iam::109167404158:role/lambda-ex --handler=index.lambda_handler --region=us-east-2
+
+# create a django function
+aws --profile=xpatiate lambda create-function --function-name generate-timeline --zip-file=https://cegov-lambda-function-code.s3.us-east-2.amazonaws.com/django-function.zip --runtime=python3.8 --role=arn:aws:iam::109167404158:role/lambda-ex --handler=run_lambda.main --region=us-east-2
+
+
+https://github.com/jkehler/awslambda-psycopg2
+
+to make django-function.zip
+
+rm ~/cegov/django-function.zip
+cd ~/cegov
+cp ~/repo/awslambda-psycopg2/psycopg2-3.6 psycopg2
+zip -r ~/cegov/django-function.zip  psycopg2
+cd .venv/lib/python3.6/site-packages
+zip -r ~/cegov/django-function.zip *
+cd ~/cegov
+zip -r django-function.zip ced_bg govtrack run_lambda.py manage.py
+
+
+## Creating the lambda
+
+Create one lambda for each Elastic Beanstalk environment/database
+
+Make django-function.zip as above and upload to Se
+Create lambda in console and specify S3 path for code
+Set env vars matching those in EB
+Set handler as `run_background_task.handler`
+Set pre-created execution role lambda-ex
+Set timeout to 10 mins
+Set runtime to python 3.7 as that's what awslambda-psycopg2 supports
+Create a test event with args matching payload in trigger_population_recount
+
+Lambda code must be in sync with what's deployed to EB so database schema matches
+
+Set env vars in EB AWS_REGION and AWS_LAMBDA_NAME (where lambda name is the overall name of the function, not path.method)

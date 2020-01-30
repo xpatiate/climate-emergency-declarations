@@ -13,39 +13,74 @@
 {% if user.is_authenticated %}
 
   <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
-  <div class='bulk-meta-form'>
-    <fieldset>
+  <div class='panel bulk-meta-form'>
+    <div class='card'>
+    <button class='btn' type='button' data-toggle='collapse' data-target='#fieldset_location' aria-expanded="false" aria-controls="fieldset_location">Location</button>
+    </div>
+    <fieldset class='collapse' id='fieldset_location'>
+    <div class='card-body'>
 	    {{ form.location.label_tag }}<br>
         {{ form.location }}
         <input type='button' class='button-change' id='button_set_location' value='set'>
         <input type='button' class='button-change' id='button_clear_location' value='clear'>
         <input type='hidden' id='clear_location' name='clear_location' value='false'>
+    </div>
     </fieldset>
     <br>
-    <fieldset>
+    <div class='card'>
+    <button class='btn' type='button' data-toggle='collapse' data-target='#fieldset_link' aria-expanded="false" aria-controls="fieldset_link">Link</button>
+    </div>
+    <fieldset class='collapse' id='fieldset_link'>
+    <div class='card-body'>
+	    {{ form.link.label_tag }}<br>
+        {{ form.link }}
+        <input type='button' class='button-change' id='button_set_link' value='set'>
+        <input type='button' class='button-change' id='button_undo_link' value='undo'>
+        <input type='hidden' id='do_set_link' name='do_set_link' value='false'>
+    </div>
+    </fieldset>
+    <br>
+    <div class='card'>
+    <button class='btn' type='button' data-toggle='collapse' data-target='#fieldset_add_supp' aria-expanded="false" aria-controls="fieldset_add_supp">Add Supplementary Parents</button>
+    </div>
+    <fieldset class='collapse' id='fieldset_add_supp'>
+    <div class='card-body'>
         {{ form.supplements_add.label_tag }}<br>
         {{ form.supplements_add }}
         <input type='button' class='button-change' id='button_add_supplements' value='add'>
         <input type='hidden' id='supp_list_add' name='supp_list_add' value=''>
+    </div>
     </fieldset>
-    <fieldset>
+    <br>
+    <div class='card'>
+    <button class='btn' type='button' data-toggle='collapse' data-target='#fieldset_rm_supp' aria-expanded="false" aria-controls="fieldset_rm_supp">Remove Supplementary Parents</button>
+    </div>
+    <fieldset class='collapse' id='fieldset_rm_supp'>
+    <div class='card-body'>
         {{ form.supplements_rm.label_tag }}<br>
         {{ form.supplements_rm }}
         <input type='button' class='button-change' id='button_remove_supplements' value='remove'>
         <input type='hidden' id='supp_list_rm' name='supp_list_rm' value=''>
+    </div>
     </fieldset>
   </div>
   <br>
   <div class='bulk-edit-table'>
   {% csrf_token %}
-  <table>
-  <tr><th>Area</th><th>Location</th><th>Supplementary parents</th></tr>
+  <table class='table-responsive'>
+  <tr>
+    <th>Area</th>
+    <th>Location</th>
+    <th>Link</th>
+    <th>Supplementary parents</th>
+    </tr>
   <input type='hidden' name='area_id_str' value='{{ area_id_str}}'>
   {% for a in area_list %}
   <tr>
       <td><a class='link-area' href='{% url 'area' a.id %}'>{{ a.name }}</a></td>
       <td><div class='area_location' id='area_{{ a.id}}_loc'>{{ a.location }}</div></td>
-      <td><div class='area_supp' id='area_{{ a.id}}_supp'>{{ a.supplements }}</div></td>
+      <td class='bulk_area_text'><div class='area_link' id='area_{{ a.id}}_link' data-toggle='tooltip'></div></td>
+      <td class='bulk_area_text'><div class='area_supp' id='area_{{ a.id}}_supp' data-toggle='tooltip'>{{ a.supplements }}</div></td>
   </tr>
   {% endfor %}
   </table>

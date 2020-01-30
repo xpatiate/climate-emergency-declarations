@@ -10,6 +10,7 @@ import datetime
 import html
 import io
 import logging
+from datetime import timedelta
 
 logger = logging.getLogger('cegov')
 DATE_FORMAT = '%Y-%m-%d'
@@ -51,6 +52,30 @@ def country_population(request, country_code):
         raise Http404('No country for specified code')
     return HttpResponse(str(country.current_popcount), content_type='text/plain')
 
+def trigger_all_recounts(request):
+    status=403
+    if request.user.is_authenticated:
+        countries = Country.objects.filter(popcount_ready=0)
+        response = {'_triggered': len(countries)}
+        for country in countries:
+            logger.info(f"triggering recount for country {country}")
+            response[country.country_code] = country.trigger_population_recount()
+        return JsonResponse(response, content_type='application/json')
+    else:
+        return HttpResponse(status=status)
+
+def country_trigger_recount(request, country_code):
+    status=403
+    if request.user.is_authenticated:
+        country = Country.find_by_code(country_code)
+        if not country:
+            raise Http404('No country for specified code')
+        logger.info(f"triggering recount for country {country}")
+        response = country.trigger_population_recount()
+        return JsonResponse(dict(response), content_type='application/json')
+    else:
+        return HttpResponse(status=status)
+
 def country_regenerate_timeline(request, country_code):
     status=403
     if request.user.is_authenticated:
@@ -68,9 +93,44 @@ def country_population_timeline(request, country_code):
         raise Http404('No country for specified code')
     response = HttpResponse(content_type='text/csv')
     writer = csv.writer(response)
+    writer.writerow(['Date', 'Country', 'Government', 'Location', 'Population', 'Declaration Status', 'Declared Population'])
     for pc in country.popcounts:
         area = pc.declaration.area
-        writer.writerow([pc.declaration.event_date, country.name, area.name, area.population, pc.status, pc.population])
+        writer.writerow([pc.declaration.event_date, country.name, area.name, area.location, area.population, pc.status, pc.population])
+    return response
+
+def country_pop_by_location(request, country_code):
+    country = Country.find_by_code(country_code)
+    if not country:
+        raise Http404('No country for specified code')
+    response = HttpResponse(content_type='text/plain')
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Country', 'Location', 'Declared Population'])
+    cpops = country.popcounts
+    start_date = cpops[0].declaration.event_date
+    logger.info(f"start date {start_date}")
+    current_pop = 0
+    last_date = cpops[0].declaration.event_date
+    day_diff = timedelta(days=1)
+    for pc in cpops:
+        dec_date = pc.date
+        while dec_date > last_date + day_diff:
+            last_date += day_diff
+            writer.writerow([last_date, country.name, '', current_pop])
+        area = pc.declaration.area
+        writer.writerow([pc.date, country.name, area.location, pc.population])
+        current_pop = pc.population
+        last_date = dec_date
+    return response
+
+def world_population_timeline(request):
+    response = HttpResponse(content_type='text/plain')
+    writer = csv.writer(response)
+    all_popcounts = PopCount.objects.order_by('date')
+    writer.writerow(['Date', 'Country', 'Government', 'Declared Population'])
+    for pc in all_popcounts:
+        area = pc.declaration.area
+        writer.writerow([pc.date, area.country.name, area.name, pc.population])
     return response
 
 # unused
@@ -124,6 +184,8 @@ def area_del(request, area_id):
         status=200
         area = get_object_or_404(Area, pk=area_id)
         area.delete()
+        if area.population > 0:
+            area.country.popcount_update_needed()
     return HttpResponse(status=status)
 
 def declaration_del(request, declaration_id):
@@ -132,6 +194,7 @@ def declaration_del(request, declaration_id):
         status=200
         declaration = get_object_or_404(Declaration, pk=declaration_id)
         declaration.delete()
+        declaration.area.country.popcount_update_needed(declaration.event_date)
     return HttpResponse(status=status)
 
 def link_del(request, link_id):
@@ -250,11 +313,10 @@ def import_declaration_pro(request, parent_id, structure_id, import_declaration_
         declaration.save()
 
         if declaration.affects_population_count:
-            # Regenerate all stored population counts for the country,
+            # Trigger a task to regenerate all stored population counts 
+            # for the country,
             # from the date of this declaration onwards
-            # TODO: trigger a lambda
-            #area.country.generate_population_count(declaration.event_date)
-            pass
+            area.country.popcount_update_needed(declaration.event_date)
 
         Link(**{
             'content_type_id': Declaration.content_type_id(),
@@ -283,8 +345,7 @@ def declaration_from_import(request, area_id, import_declaration_id):
         if declaration.affects_population_count:
             # Regenerate all stored population counts for the country,
             # from the date of this declaration onwards
-            # TODO: trigger a lambda
-            #area.country.generate_population_count(declaration.event_date)
+            area.country.popcount_update_needed(declaration.event_date)
             pass
 
         Link(**{
