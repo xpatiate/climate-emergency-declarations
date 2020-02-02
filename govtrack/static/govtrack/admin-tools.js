@@ -45,6 +45,7 @@ $(document).ready(() => {
 
 function setupClone(ev) {
     var cloneSrc = ev.target
+    cancelClone()
     var cloneRow = $(cloneSrc).parents('.structure-row')
     cloneRow.addClass('clone-src')
     var cloneId = cloneSrc.dataset.id
