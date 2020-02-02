@@ -88,10 +88,11 @@ def country(request, country_id, action='view'):
             all_links = src.links.all()
             new_parents = Structure.objects.filter(id__in=idlist)
             for new_parent in new_parents:
-                logger.info(f"cloning structure {src} as child of {new_parent}")
+                logger.info(f"cloning structure {src.id}/{src} as child of {new_parent.id}/{new_parent}")
                 new_struct = deepcopy(src)
                 new_struct.id = None
                 new_struct.parent = new_parent
+                new_struct.level = new_parent.level + 1
                 new_struct.save()
                 for link in all_links:
                     new_struct.links.create(url=link.url)
