@@ -1,3 +1,4 @@
+from copy import deepcopy
 from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpResponse
 from django.forms.models import formset_factory, modelformset_factory, inlineformset_factory
 from django.forms import HiddenInput
@@ -80,7 +81,22 @@ def country(request, country_id, action='view'):
     # If POST received, save form
     if request.method == 'POST':
         action='view'
-        if request.POST.get('save'):
+        if request.POST.get('clone'):
+            idlist = request.POST.getlist('clone-parents')
+            src_id = request.POST.get('clone-source')
+            src = Structure.objects.get(pk=src_id)
+            all_links = src.links.all()
+            new_parents = Structure.objects.filter(id__in=idlist)
+            for new_parent in new_parents:
+                logger.info(f"cloning structure {src} as child of {new_parent}")
+                new_struct = deepcopy(src)
+                new_struct.id = None
+                new_struct.parent = new_parent
+                new_struct.save()
+                for link in all_links:
+                    new_struct.links.create(url=link.url)
+                new_struct.save()
+        elif request.POST.get('save'):
             form = CountryForm(request.POST, instance=country)
             linkform = LinkForm(request.POST, initial=link_initial)
             if form.is_valid():
@@ -129,8 +145,12 @@ def structure_edit(request, structure_id):
             linkform = LinkForm(request.POST, initial=link_initial)
             if form.is_valid():
                 form.save()
-                if linkform.has_changed() and linkform.is_valid():
-                    linkform.save()
+                do_redir = True
+                if linkform.has_changed():
+                    if linkform.is_valid():
+                        linkform.save()
+                    else:
+                        do_redir = False
         if do_redir:
             return redirect('country', country_id=structure.country.id)
 

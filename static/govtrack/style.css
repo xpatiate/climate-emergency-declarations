@@ -113,6 +113,9 @@ tr.country-total {
 .parent-tree {
     background: #e9ecef;
 }
+.parent-tree table {
+    width: 100%;
+}
 
 .level_indent {
     display: inline-block;
@@ -265,6 +268,22 @@ td.bulk_area_text div {
     text-overflow: ellipsis;
     font-size: small;
 }
+
+.clone-action {
+    display: none;
+}
+td.clone-action {
+    text-align: right;
+}
+.clone-src {
+    background-color: aliceblue;
+}
+.clone-parent-item {
+    visibility: hidden;
+}
+
+
+/* Inbox */
 
 .inbox-paste textarea {
     width: 100%;
