@@ -44,7 +44,16 @@
 </div>
 
 <div class='panel parent-tree'>
+    <form action='' method='post'>
+    {% csrf_token %}
+    <table>
+    <tr>
+    <td></td>
+    <td class='clone-action'>Clone '<span id='clone-src-name'></span>' as a child of:</td>
+    </tr>
     {% for struct in structure_list %}
+    <tr>
+    <td class='structure-row'>
     <div id='structure-{{ struct.id }}'>
         {% with ''|center:struct.indent_level as range %}
         {% for _ in range %}
@@ -63,10 +72,24 @@
             |
             {% endif %}
             <a href='{% url 'structure_child' struct.id %}'>add child</a>
+            |
+            <a href='#' class='setup-clone' data-name='{{ struct.name }}' data-id='{{ struct.id }}'>clone</a>
         </div>
         {% endif %}
-    </div>
+    </td>
+    <td align='right'><input type='checkbox' class='clone-parent-item' name='clone-parents' value='{{ struct.id }}'></td>
+    </tr>
     {% endfor %}
+    <tr>
+    <td></td>
+    <td class='clone-action'>
+        <input type='button' id='cancel-clone' class='button-cancel' value='cancel'>
+        <input type='submit' class='button-save' name='clone' value='clone'>
+        <input type='hidden' name='clone-source' id='clone-src-id' value=''>
+    </td>
+    </tr>
+    </table>
+    </form>
 </div>
 
 {% if user.is_authenticated and import_declaration_list %}

@@ -14,6 +14,10 @@ $(document).ready(() => {
     $('.bulk-edit-item').click(selectRow);
     $('a#bulk-edit-select-all').click(selectAll);
     $('a#bulk-edit-select-none').click(selectNone);
+    $('a.setup-clone').click(setupClone);
+    $('#cancel-clone').click(cancelClone);
+    $('.clone-parent-item').hover(highlightRow);
+    $('.clone-parent-item').click(selectRow);
 
     $('#button_set_location').click(setLocation)
     $('#button_clear_location').click(clearLocation)
@@ -38,6 +42,33 @@ $(document).ready(() => {
     
     $('.inbox-paste textarea').bind('paste', pasteInbox);
 });
+
+function setupClone(ev) {
+    var cloneSrc = ev.target
+    cancelClone()
+    var cloneRow = $(cloneSrc).parents('.structure-row')
+    cloneRow.addClass('clone-src')
+    var cloneId = cloneSrc.dataset.id
+    var cloneName = cloneSrc.dataset.name
+    $('#clone-src-name').html(cloneName)
+    $('.clone-action').css('display','block')
+    $('.clone-parent-item').each(function(count, item) {
+      if (item.value != cloneId) {
+        $(item).css('visibility','visible')
+      }
+    });
+    $('#clone-src-id').val(cloneId)
+    return false;
+}
+function cancelClone(ev) {
+    $('.structure-row').removeClass('clone-src')
+    $('.clone-action').css('display','none')
+    $('.clone-parent-item').css('visibility','hidden')
+    $('.clone-parent-item').prop('checked', false)
+    $.each($('.clone-parent-item'),turnRowSelectionOff);
+    $('#clone-src-name').html('')
+    $('#clone-src-id').val(0)
+}
 
 function confirmBulkDelete(ev) {
     var numChecked = collectBulkEditAreas()
@@ -95,7 +126,7 @@ function deleteThis(ev) {
             if (oReq.readyState === 4) {
                 console.log(oReq);
                 if (oReq.status == '200') {
-                    window.location.reload();
+                    window.location.href = window.location.href;
                 } else {
                     alert("operation failed");
                 }
@@ -315,7 +346,6 @@ function turnRowSelectionOff(count, el) {
 }
 
 function showBulkEdit(ev) {
-    var el = ev.target;
     $('.bulk-edit-item').css('visibility','visible')
     $('#bulk-edit-select-all').css('display','inline')
     $('#bulk-edit-show').css('display','none')
@@ -325,7 +355,6 @@ function showBulkEdit(ev) {
 }
 
 function hideBulkEdit(ev) {
-    var el = ev.target;
     $('.bulk-edit-item').css('visibility','hidden')
     $('#bulk-edit-show').css('display','inline')
     $('#bulk-edit-hide').css('display','none')
