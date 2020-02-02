@@ -63,6 +63,8 @@ function cancelClone(ev) {
     $('.structure-row').removeClass('clone-src')
     $('.clone-action').css('display','none')
     $('.clone-parent-item').css('visibility','hidden')
+    $('.clone-parent-item').prop('checked', false)
+    $.each($('.clone-parent-item'),turnRowSelectionOff);
     $('#clone-src-name').html('')
     $('#clone-src-id').val(0)
 }
