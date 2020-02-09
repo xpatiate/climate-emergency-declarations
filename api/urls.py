@@ -1,4 +1,5 @@
 from django.urls import path
+from rest_framework.urlpatterns import format_suffix_patterns
 
 from . import views
 
@@ -22,4 +23,8 @@ urlpatterns = [
     path('declaration/del/<int:declaration_id>', views.declaration_del, name='api_declaration_del'),
     path('link/del/<int:link_id>', views.link_del, name='api_link_del'),
     path('world/population_timeline', views.world_population_timeline, name='api_world_pop_time'),
+    # DRF API paths
+    path('area/', views.AreaList.as_view()),
+    path('area/<int:pk>', views.AreaDetail.as_view()),
+    path('area/<int:pk>/children/', views.AreaChildren.as_view()),
 ]

@@ -3,3 +3,4 @@ psycopg2>=2.7,<3.0
 bs4
 uwsgi
 boto3
+django-rest-framework
