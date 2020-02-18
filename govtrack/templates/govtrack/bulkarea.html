@@ -6,13 +6,91 @@
 {% block content %}
 
 {% block heading %}
-<h4>Bulk edit selected child areas of {{area.name}}</h4>
+<h4>Bulk {{ action }} selected child areas of {{area.name}}</h4>
 <br>
 {% endblock %}
 
 {% if user.is_authenticated %}
-
   <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
+  {% csrf_token %}
+{% if action == 'move' %}
+<div class='panel parent-tree'>
+    <table>
+    {% for struct in structure_list %}
+    <tr>
+    <td class='structure-row'>
+    <div id='structure-{{ struct.id }}'>
+        {% with ''|center:struct.indent_level as range %}
+        {% for _ in range %}
+        <span class='level_indent'></span>
+        {% endfor %}
+        {% endwith %}
+        &#8866; {{ struct.name }} ({{ struct.num_areas }})
+    </td>
+    <td align='right'><input type='checkbox' class='clone-parent-item' name='clone-parents' value='{{ struct.id }}'></td>
+    </tr>
+    {% endfor %}
+    </table>
+    </div>
+    <div class='panel'>
+      <div>
+	    Make all areas children of this parent:<br/>
+      </div>
+      <br/>
+      <div id='move_areas' style='display: block; background-color: pink;'>
+      <hr />
+      </div>
+      <script>
+        const moveParentData = {{ new_parent_data|safe }};
+        window.numChildLevels = {{ child_levels }};
+        const domContainer = document.querySelector('#move_areas');
+        ReactDOM.render(e(MoveAreas), domContainer);
+      </script>
+    </div>
+    <div class='panel'>
+    <table>
+      <thead>
+       <tr>
+         <th>From parent</th>
+         <th>From structure</th>
+         <th>Area</th>
+         <th>To parent</th>
+         <th>To structure</th>
+       </tr>
+     <tbody>
+  {% for a in area_list %}
+  <tr>
+      <td>{{ a.parent_name }}</td>
+      <td>{{ a.structure.name }}</td>
+      <td><a class='link-area' href='{% url 'area' a.id %}'>{{ a.name }}</a></td>
+      <td><div id='show-new-parent-0-{{ a.id }}'></div></td>
+      <td><div id='show-new-structure-0-{{ a.id }}'></div></td>
+  </tr>
+      {% for d in a.descendants %}
+  <tr>
+      <td></td>
+      <td></td>
+      <td>
+        {% with ''|center:d.indent_level as range %}    
+            {% for _ in range %}    
+            <span class='level_indent_micro'></span>
+            {% endfor %}    
+            {% endwith %}
+        <i>({{ d.structure.name }}) {{ d.name }}</i>
+      </td>
+      <td><div id='show-new-parent-{{ d.indent_level }}-{{ a.id }}'></div></td>
+      <td><div id='show-new-structure-{{ d.indent_level }}-{{ a.id }}'></div></td>
+  </tr>
+      {% endfor %}
+  {% endfor %}
+     </tbody>
+  </table>
+  <br>
+    <input type='submit' name='move' value='move' class='button-save'>
+    <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
+</div>
+{% elif action == 'edit' %}
+
   <div class='panel bulk-meta-form'>
     <div class='card'>
     <button class='btn' type='button' data-toggle='collapse' data-target='#fieldset_location' aria-expanded="false" aria-controls="fieldset_location">Location</button>
@@ -66,7 +144,6 @@
   </div>
   <br>
   <div class='bulk-edit-table'>
-  {% csrf_token %}
   <table class='table-responsive'>
   <tr>
     <th>Area</th>
@@ -88,6 +165,7 @@
   <br>
     <input type='submit' name='save' value='save' class='button-save'>
     <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
+{% endif %}
   </form>
 {% endif %}
 

@@ -11,6 +11,7 @@ from .forms import StructureForm, AreaForm, DeclarationForm, LinkForm, CountryFo
 import csv
 import datetime
 import html
+import json
 import logging 
 logger = logging.getLogger('cegov')
 
@@ -302,9 +303,143 @@ def bulkarea_edit(request, area_id):
             # redirect to parent
             return redirect('area', area_id=parent.id)
 
-    supp_set = set()
+    action = request.POST.get('action')
+    structure = None
+
     area_obj = Area.objects.filter(id__in=edit_areas).order_by('sort_name')
-    area_initial = [
+    tmpl_data = {
+        'action': action,
+        'area': area,
+        'country': area.country,
+        'area_id_str': area_id_str
+    }
+    if action == 'move':
+        tmpl_data['structure_list'] = area.country.get_root_structure().build_hierarchy()
+        # for each area, get a list of all descendants
+        # if any of its descendants are in edit_areas, do not list as descendants
+        # then show each area with its descendants (direct only)
+        # and with structure names
+        area_list = []
+        # find the max number of descendants for all areas
+        max_level = 0
+        for a in area_obj:
+            desc_list = []
+            print(f"{a.id} min level {max_level} a.level {a.level}")
+            if max_level <= a.height:
+                max_level = a.height
+            print(f"{a.id} now min level {max_level} a.level {a.level}")
+            for d in a.descendants:
+                logger.info(f"a {a.id} has desc {d.id}, is in edit_areas? {edit_areas}")
+                if str(d.id) in edit_areas:
+                    logger.info(f"yep {d.id} is in {edit_areas}")
+                    continue
+                else:
+                    desc_list.append(d)
+            area_list.append({
+                'id': a.id,
+                'name': a.name,
+                'structure': a.structure,
+                'parent_name': a.parent.name,
+                'descendants': desc_list,
+                'height': a.height
+            })
+        tmpl_data['area_list'] = area_list
+        newform = BulkAreaForm()
+        all_areas = Area.objects.filter(country=area.country)
+        print(f"have {len(all_areas)} areas in country")
+        # Potential parents must have a structure with at least [max_level] descendants
+        possible_parents = list(filter(lambda p: p.structure.height > max_level, all_areas))
+        print(f"have {len(possible_parents)} possible parents with nld >= {max_level}")
+        newform.fields['new_parent'].choices = [ (p.id, f"({p.structure}) {p.name}") for p in possible_parents ]
+        new_parent_data = [{
+            'id': p.id,
+            'name': p.name,
+            'structure_id': p.structure.id,
+            'structure_name': p.structure.name,
+            } for p in possible_parents]
+        tmpl_data['form'] = newform
+        tmpl_data['child_levels'] = (max_level + 1)
+        tmpl_data['new_parent_data'] = json.dumps(new_parent_data)
+
+        # So we know now the areas that could be the new parent of the moving areas
+        # and the structures of those new parents
+        # We need to figure out which of those target structures has multiple children
+        # and limit to only those with one child structure at each level
+        # or else allow the user to select a structure
+        potential_parent_structures = set([p.structure for p in possible_parents])
+        print(potential_parent_structures)
+        #tmpl_data['parent_structures'] = [
+        #    {'id': s.id, 'name': s.name} for s in potential_parent_structures
+        #    ]
+
+
+        # XXX would it be best to have this in a single big tree structure?
+        # if so how best to get it there?
+#        structure_data = []
+#        level_count = max_level
+#        for struct in potential_parent_structures:
+#            struct_data = {
+#                'id': struct.id,
+#                'name': struct.name,
+#                'height': struct.height,
+#                'children': []
+#            }
+#            for child in children:
+#                if child.height > (level_count-1):
+#                    struct_data['children'].append({
+#                        'id': struct.id,
+#                        'name': struct.name,
+#                        'height': struct.height,
+#                    })
+#            structure_data.append(struct_data)
+
+        # what structure data do we actually need
+
+        # first they choose the new parent, so we need to be able to
+        # find the structure associated with that parent
+
+        # so all potential parent structures need to be searchable by id
+        # and they may not all be at the same level
+
+        # we don't need kids at this point
+        # we probably don't need to even prepopulate any structure data
+        # if we can call an API for the selected one
+
+        # then they choose a parent so we know the chosen parent structure
+
+        # look at the chosen structure
+        # * check that it has as many desc_levels as max_level (it should because that was a limit on potential parents)
+
+        # Then, for each level in max_level:
+        # * does the chosen structure at top level have multiple kids
+        # * if not, assume that one, go to next level down
+        # * if so, user must choose one
+
+        # so for top level struct we need to find it by ID then know its kids by ID
+        # and if there are multiple kids, have name for them as well
+        # plus how many kids the kids have because need maxlevel
+    
+
+        # So find top level structure and kids
+        # then for each kid record its subtree height
+
+        # let's try not prepopulating all structure data
+        # and instead fetching them as needed from an API
+
+        # So, in template:
+        # display dropdown containing potential parents (calculated in python)
+        # empty div for display of structure components
+
+        # When a new parent is selected:
+
+
+        # what we do about about moving areas that have supplementary rships? just keep those rships?
+
+        
+
+
+    else:
+        area_initial = [
             { 
                 'id': a.id,
                 'name': a.name,
@@ -314,22 +449,19 @@ def bulkarea_edit(request, area_id):
                 }
                 for a in area_obj
             ]
-    combined_supps = [ s for a in area_initial for s in a['supplement_ids'] ]
-    supp_set.update(combined_supps)
-    logger.info(f"all existing supps: {supp_set}")
-    newform = BulkAreaForm()
-    main_supps = area.get_supplement_choices()
-    current_supps = Area.objects.filter(id__in=supp_set)
-    newform.fields['supplements_add'].choices = [ (s.id, s.name) for s in main_supps ]
-    newform.fields['supplements_rm'].choices = [ (s.id, s.name) for s in current_supps ]
+        tmpl_data['area_list'] = area_initial
+        supp_set = set()
+        combined_supps = [ s for a in area_initial for s in a['supplement_ids'] ]
+        supp_set.update(combined_supps)
+        logger.info(f"all existing supps: {supp_set}")
+        newform = BulkAreaForm()
+        main_supps = area.get_supplement_choices()
+        current_supps = Area.objects.filter(id__in=supp_set)
+        newform.fields['supplements_add'].choices = [ (s.id, s.name) for s in main_supps ]
+        newform.fields['supplements_rm'].choices = [ (s.id, s.name) for s in current_supps ]
+        tmpl_data['form'] = newform
 
-    return render(request, 'govtrack/bulkarea.html', {
-        'area': area,
-        'country': area.country,
-        'form': newform,
-        'area_list': area_initial,
-        'area_id_str': area_id_str
-    })
+    return render(request, 'govtrack/bulkarea.html', tmpl_data)
 
 
 def area_edit(request, area_id):

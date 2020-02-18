@@ -121,6 +121,14 @@ tr.country-total {
     display: inline-block;
     width: 20px;
 }
+.level_indent_micro {
+    display: inline-block;
+    width: 4px;
+}
+.move-structure {
+    font-weight: bold;
+    padding: 10px;
+}
 
 .areas {
     background: white;

@@ -4,3 +4,4 @@ bs4
 uwsgi
 boto3
 django-rest-framework
+django-cors-headers
