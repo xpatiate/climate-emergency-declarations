@@ -38,6 +38,34 @@ class Hierarchy():
                 child.build_hierarchy(itemlist)
         return itemlist
 
+    @property
+    def descendants(self):
+        self.descendant_list = set()
+        return self.get_descendants( set() )
+
+    def get_descendants(self, desclist):
+        for child in self.children:
+            desclist.add(child)
+            desclist.update(child.get_descendants(desclist))
+        return desclist
+
+    @property
+    def num_descendant_levels(self):
+        all_levels = [d.level for d in self.descendants]
+        if all_levels:
+            deepest = max(all_levels)
+            return deepest - self.level
+        else:
+            return 0
+
+    @property
+    def height(self):
+        return self.num_descendant_levels
+
+    @property
+    def num_children(self):
+        return self.__class__.objects.filter(parent=self.id).exclude(pk=self.id).count()
+
 class PopulationCounter():
     '''Utility class to perform population counting on tree structures.'''
 
@@ -416,6 +444,10 @@ class Structure(Hierarchy, models.Model):
     def indent_level(self):
         return max(0, self.level - 1)
 
+    def make_tree(self, level_count=None):
+        if not level_count:
+            level_count = self.num_descendant_levels
+
     def __str__(self):
         return self.fullname
 
@@ -482,10 +514,6 @@ class Area(Hierarchy, models.Model):
     @property
     def supplement_list(self):
         return ', '.join(sorted([s.name for s in self.supplements.all()]))
-
-    @property
-    def num_children(self):
-        return Area.objects.filter(parent=self.id).exclude(pk=self.id).count()
 
     @property
     def children(self):
@@ -566,17 +594,6 @@ class Area(Hierarchy, models.Model):
     def declared_population(self):
         popcounter = PopulationCounter()
         return popcounter.declared_population(self)
-
-    @property
-    def descendants(self):
-        self.descendant_list = set()
-        return self.get_descendants( set() )
-
-    def get_descendants(self, desclist):
-        for child in self.children:
-            desclist.add(child)
-            desclist.update(child.get_descendants(desclist))
-        return desclist
 
     @property
     def all_descendants(self):
