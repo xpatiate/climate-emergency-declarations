@@ -11,9 +11,10 @@
 {% endblock %}
 
 {% if user.is_authenticated %}
-  <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
-  {% csrf_token %}
 {% if action == 'move' %}
+  <form action='{% url 'bulkarea_move' area.id %}' method='POST'>
+  {% csrf_token %}
+  <input type='hidden' name='area_id_str' value='{{ area_id_str}}'>
 <div class='panel parent-tree'>
     <table>
     {% for struct in structure_list %}
@@ -27,25 +28,46 @@
         {% endwith %}
         &#8866; {{ struct.name }} ({{ struct.num_areas }})
     </td>
-    <td align='right'><input type='checkbox' class='clone-parent-item' name='clone-parents' value='{{ struct.id }}'></td>
     </tr>
     {% endfor %}
     </table>
     </div>
-    <div class='panel'>
+      <script>
+        const moveParentDataSameStruct = {{ new_parent_data_same_struct|safe }};
+        const moveParentDataAllStructs = {{ new_parent_data_all_structs|safe }};
+        window.numChildLevels = {{ child_levels }};
+        </script>
+    <div class='row'>
+      <div class='col-sm'>
+        {% if same_structure %}
+        <div id='move-area-form' class='panel move-form-active'>
       <div>
-	    Make all areas children of this parent:<br/>
+	    Move areas to a new parent, keeping all structures: <br/>
       </div>
       <br/>
-      <div id='move_areas' style='display: block; background-color: pink;'>
+      <div id='move_area_controls' style='display: block; background-color: pink;'>
       <hr />
       </div>
       <script>
-        const moveParentData = {{ new_parent_data|safe }};
-        window.numChildLevels = {{ child_levels }};
-        const domContainer = document.querySelector('#move_areas');
-        ReactDOM.render(e(MoveAreas), domContainer);
+        const moveAreaContainer = document.querySelector('#move_area_controls');
+        ReactDOM.render(e(MoveAreas), moveAreaContainer);
       </script>
+        </div>
+        {% endif %}
+      </div>
+      <div class='col-sm'>
+        <div id='move-structure-form' style='visibility: visible' class='panel
+            {% if same_structure %}move-form-inactive{% else %}move-form-active{% endif %}'</div>
+	    Move areas to a new parent with different structures: <br/>
+      <div id='move_structure_controls' style='display: block; background-color: pink;'>
+      <hr />
+      </div>
+      <script>
+        const moveStructureContainer = document.querySelector('#move_structure_controls');
+        ReactDOM.render(e(MoveStructures), moveStructureContainer);
+      </script>
+        </div>
+      </div>
     </div>
     <div class='panel'>
     <table>
@@ -54,8 +76,7 @@
          <th>From parent</th>
          <th>From structure</th>
          <th>Area</th>
-         <th>To parent</th>
-         <th>To structure</th>
+         <th>Destination</th>
        </tr>
      <tbody>
   {% for a in area_list %}
@@ -63,23 +84,21 @@
       <td>{{ a.parent_name }}</td>
       <td>{{ a.structure.name }}</td>
       <td><a class='link-area' href='{% url 'area' a.id %}'>{{ a.name }}</a></td>
-      <td><div id='show-new-parent-0-{{ a.id }}'></div></td>
-      <td><div id='show-new-structure-0-{{ a.id }}'></div></td>
+      <td><div class='show-destination-1'></div></td>
   </tr>
       {% for d in a.descendants %}
   <tr>
       <td></td>
       <td></td>
       <td>
-        {% with ''|center:d.indent_level as range %}    
+        {% with ''|center:d.rel_level as range %}
             {% for _ in range %}    
             <span class='level_indent_micro'></span>
             {% endfor %}    
             {% endwith %}
         <i>({{ d.structure.name }}) {{ d.name }}</i>
       </td>
-      <td><div id='show-new-parent-{{ d.indent_level }}-{{ a.id }}'></div></td>
-      <td><div id='show-new-structure-{{ d.indent_level }}-{{ a.id }}'></div></td>
+      <td><i><div class='show-destination-{{ d.rel_level }}'></div></i></td>
   </tr>
       {% endfor %}
   {% endfor %}
@@ -90,6 +109,8 @@
     <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
 </div>
 {% elif action == 'edit' %}
+  <form action='{% url 'bulkarea_save' area.id %}' method='POST'>
+  {% csrf_token %}
 
   <div class='panel bulk-meta-form'>
     <div class='card'>

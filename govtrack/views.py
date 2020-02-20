@@ -216,6 +216,22 @@ def structure_child(request, parent_id):
         })
 
 
+def bulkarea_move(request, area_id):
+    area = get_object_or_404(Area, pk=area_id)
+    logger.info(f"moving bulk area data for {area}")
+    if request.method == 'POST' and request.POST.get('move'):
+        logger.info(request.POST)
+        idlist = request.POST.get('area_id_str').split(':')
+        for aid in idlist:
+            logger.info(aid)
+        # get area ids to be moved
+        # get parent to move them to
+        # get ids of structures for child levels
+        idlist = request.POST.get('area_id_str','').split(':')
+        for aid in idlist:
+            logger.info(aid)
+    return redirect('area', area_id=area_id)
+
 def bulkarea_save(request, area_id):
     area = get_object_or_404(Area, pk=area_id)
     logger.info(f"saving bulk area data for {area}")
@@ -322,18 +338,23 @@ def bulkarea_edit(request, area_id):
         area_list = []
         # find the max number of descendants for all areas
         max_level = 0
+        uniq_structures = set()
         for a in area_obj:
+            uniq_structures.add(a.structure)
             desc_list = []
             print(f"{a.id} min level {max_level} a.level {a.level}")
             if max_level <= a.height:
                 max_level = a.height
             print(f"{a.id} now min level {max_level} a.level {a.level}")
+            # this needs to go down layer by layer not via a list
+            # so it can skip descendants of descendants
             for d in a.descendants:
                 logger.info(f"a {a.id} has desc {d.id}, is in edit_areas? {edit_areas}")
                 if str(d.id) in edit_areas:
                     logger.info(f"yep {d.id} is in {edit_areas}")
                     continue
                 else:
+                    d.rel_level = (d.level - a.level) + 1
                     desc_list.append(d)
             area_list.append({
                 'id': a.id,
@@ -344,96 +365,46 @@ def bulkarea_edit(request, area_id):
                 'height': a.height
             })
         tmpl_data['area_list'] = area_list
-        newform = BulkAreaForm()
+        same_structure = True if len(uniq_structures) == 1 else False
+        tmpl_data['same_structure'] = same_structure
+        uniq_parent = uniq_structures.pop().parent
+
+        #same_struct_form = BulkAreaForm()
+        #all_struct_form = BulkAreaForm()
         all_areas = Area.objects.filter(country=area.country)
         print(f"have {len(all_areas)} areas in country")
         # Potential parents must have a structure with at least [max_level] descendants
-        possible_parents = list(filter(lambda p: p.structure.height > max_level, all_areas))
-        print(f"have {len(possible_parents)} possible parents with nld >= {max_level}")
-        newform.fields['new_parent'].choices = [ (p.id, f"({p.structure}) {p.name}") for p in possible_parents ]
-        new_parent_data = [{
+        possible_parents_same_struct = list(filter(lambda p: p.structure.id == uniq_parent.id, all_areas))
+        possible_parents_all_structs = list(filter(lambda p: p.structure.height > max_level, all_areas))
+        print(f"have {len(possible_parents_same_struct)} possible parents with structure >= {uniq_parent}")
+        print(f"have {len(possible_parents_all_structs)} possible parents with height >= {max_level}")
+        #newform.fields['new_parent'].choices = [ (p.id, f"({p.structure}) {p.name}") for p in possible_parents_all_structs ]
+        new_parent_data_same_struct = [{
             'id': p.id,
             'name': p.name,
             'structure_id': p.structure.id,
             'structure_name': p.structure.name,
-            } for p in possible_parents]
-        tmpl_data['form'] = newform
+            } for p in possible_parents_same_struct]
+        new_parent_data_all_structs = [{
+            'id': p.id,
+            'name': p.name,
+            'structure_id': p.structure.id,
+            'structure_name': p.structure.name,
+            } for p in possible_parents_all_structs]
+        #tmpl_data['form'] = newform
         tmpl_data['child_levels'] = (max_level + 1)
-        tmpl_data['new_parent_data'] = json.dumps(new_parent_data)
+        tmpl_data['new_parent_data_same_struct'] = json.dumps(new_parent_data_same_struct)
+        tmpl_data['new_parent_data_all_structs'] = json.dumps(new_parent_data_all_structs)
 
         # So we know now the areas that could be the new parent of the moving areas
         # and the structures of those new parents
         # We need to figure out which of those target structures has multiple children
         # and limit to only those with one child structure at each level
         # or else allow the user to select a structure
-        potential_parent_structures = set([p.structure for p in possible_parents])
-        print(potential_parent_structures)
-        #tmpl_data['parent_structures'] = [
-        #    {'id': s.id, 'name': s.name} for s in potential_parent_structures
-        #    ]
+        #potential_parent_structures = set([p.structure for p in possible_parents])
+        #print(potential_parent_structures)
 
 
-        # XXX would it be best to have this in a single big tree structure?
-        # if so how best to get it there?
-#        structure_data = []
-#        level_count = max_level
-#        for struct in potential_parent_structures:
-#            struct_data = {
-#                'id': struct.id,
-#                'name': struct.name,
-#                'height': struct.height,
-#                'children': []
-#            }
-#            for child in children:
-#                if child.height > (level_count-1):
-#                    struct_data['children'].append({
-#                        'id': struct.id,
-#                        'name': struct.name,
-#                        'height': struct.height,
-#                    })
-#            structure_data.append(struct_data)
-
-        # what structure data do we actually need
-
-        # first they choose the new parent, so we need to be able to
-        # find the structure associated with that parent
-
-        # so all potential parent structures need to be searchable by id
-        # and they may not all be at the same level
-
-        # we don't need kids at this point
-        # we probably don't need to even prepopulate any structure data
-        # if we can call an API for the selected one
-
-        # then they choose a parent so we know the chosen parent structure
-
-        # look at the chosen structure
-        # * check that it has as many desc_levels as max_level (it should because that was a limit on potential parents)
-
-        # Then, for each level in max_level:
-        # * does the chosen structure at top level have multiple kids
-        # * if not, assume that one, go to next level down
-        # * if so, user must choose one
-
-        # so for top level struct we need to find it by ID then know its kids by ID
-        # and if there are multiple kids, have name for them as well
-        # plus how many kids the kids have because need maxlevel
-    
-
-        # So find top level structure and kids
-        # then for each kid record its subtree height
-
-        # let's try not prepopulating all structure data
-        # and instead fetching them as needed from an API
-
-        # So, in template:
-        # display dropdown containing potential parents (calculated in python)
-        # empty div for display of structure components
-
-        # When a new parent is selected:
-
-
-        # what we do about about moving areas that have supplementary rships? just keep those rships?
 
         
 

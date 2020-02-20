@@ -12,6 +12,7 @@ urlpatterns = [
     path('structure/child/<int:parent_id>/', views.structure_child, name='structure_child'),
     path('bulkarea/edit/<int:area_id>/', views.bulkarea_edit, name='bulkarea_edit'),
     path('bulkarea/save/<int:area_id>/', views.bulkarea_save, name='bulkarea_save'),
+    path('bulkarea/move/<int:area_id>/', views.bulkarea_move, name='bulkarea_move'),
     path('area/edit/<int:area_id>/', views.area_edit, name='area_edit'),
     path('declaration/<int:declaration_id>/', views.declaration, name='declaration'),
     path('declaration/add/<int:area_id>/', views.declaration_add, name='declaration_add'),
