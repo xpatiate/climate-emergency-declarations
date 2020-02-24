@@ -221,9 +221,11 @@ def add_multi_areas(request, parent_id, structure_id):
         for line in lines:
             row = line.split('|')
             newarea_name = row.pop(0)
-            newarea_pop = 0
-            if row:
-                newarea_pop = row.pop(0)
+            try:
+                newarea_pop = int(row.pop(0))
+            except:
+                newarea_pop = 0
+            logger.info(f"Adding {newarea_name} with pop {newarea_pop}")
             form = AreaForm({
                 'country': parent.country_id,
                 'location': parent.location,
@@ -231,7 +233,7 @@ def add_multi_areas(request, parent_id, structure_id):
                 'structure': structure_id,
                 'name': newarea_name,
                 'sort_name': newarea_name,
-                'population': newarea_pop or 0,
+                'population': newarea_pop
             })
             if form.is_valid():
                 newarea = form.save()
@@ -252,6 +254,8 @@ def add_multi_areas(request, parent_id, structure_id):
                         logger.info('Created new link %s' % newlink)
                     except ValidationError as ex:
                         logger.error('couldn\'t save new link: %s' % ex)
+            else:
+                logger.error(f"Errors in add_multi_areas: {form.errors}")
     return redirect('area', area_id=parent_id)
 
 # Inbox methods
