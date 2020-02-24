@@ -227,7 +227,7 @@ function pasteInbox(ev) {
     }
 }
 
-function tableToCSV(input, separator, split_links=false) {
+function tableToCSV(input, separator, split_links=false, min_text_cells=0) {
     let pastedElement = document.createElement('html');
     pastedElement.innerHTML = input;
 
@@ -261,6 +261,11 @@ function tableToCSV(input, separator, split_links=false) {
                     values[row].push(thisCell.textContent);
                 }
             }
+            // make sure the expected number of cells are populated
+            // before we start adding the links at the end
+            while (values[row].length < min_text_cells) {
+                values[row].push('')
+            }
             rowLinks.forEach(function(link){
               values[row].push(link);
             });
@@ -289,7 +294,7 @@ User clicks 'create' button, form submits - no JS nivolved
 function getPastedHTML(ev) {
     let html = ev.originalEvent.clipboardData.getData('text/html');
     
-    let data = tableToCSV(html, '|', true);
+    let data = tableToCSV(html, '|', true, 2);
     
     if (data) {
         ev.preventDefault();
