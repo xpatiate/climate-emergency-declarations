@@ -222,7 +222,7 @@ def add_multi_areas(request, parent_id, structure_id):
             row = line.split('|')
             newarea_name = row.pop(0)
             try:
-                newarea_pop = int(row.pop(0))
+                newarea_pop = int(row.pop(0).replace(',',''))
             except:
                 newarea_pop = 0
             logger.info(f"Adding {newarea_name} with pop {newarea_pop}")
