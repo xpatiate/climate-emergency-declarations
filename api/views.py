@@ -222,20 +222,28 @@ def add_multi_areas(request, parent_id, structure_id):
         lines = request.POST.get('area_csv_data').split('\n')
         for line in lines:
             row = line.split('|')
-            newarea_name = row[0]
+            newarea_name = row.pop(0)
+            try:
+                newarea_pop = int(row.pop(0).replace(',',''))
+            except:
+                newarea_pop = 0
+            logger.info(f"Adding {newarea_name} with pop {newarea_pop}")
             form = AreaForm({
                 'country': parent.country_id,
                 'location': parent.location,
                 'parent': parent_id,
                 'structure': structure_id,
                 'name': newarea_name,
-                'sort_name': newarea_name
+                'sort_name': newarea_name,
+                'population': newarea_pop
             })
             if form.is_valid():
                 newarea = form.save()
-                logger.info('Created new area %s' % newarea)
-                if len(row) == 2:
-                    newurl = row[1]
+                logger.info(f"Created new area {newarea} population {newarea.population}")
+                for newurl in row:
+                    logger.info(f"newurl {newurl}")
+                    if not newurl:
+                        continue
                     link_data = {
                         'content_type_id': Area.content_type_id(),
                         'object_id': newarea.id,
@@ -248,6 +256,8 @@ def add_multi_areas(request, parent_id, structure_id):
                         logger.info('Created new link %s' % newlink)
                     except ValidationError as ex:
                         logger.error('couldn\'t save new link: %s' % ex)
+            else:
+                logger.error(f"Errors in add_multi_areas: {form.errors}")
     return redirect('area', area_id=parent_id)
 
 # Inbox methods
