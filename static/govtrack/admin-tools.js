@@ -106,7 +106,6 @@ function collectBulkEditAreas() {
     checkBoxes.each(function(count, box) {
       idlist.push(box.value)
     });
-    console.log(idlist)
     $('#bulk_area_id_str').val(idlist.join(':'))
     return idlist.length
 }
@@ -228,7 +227,7 @@ function pasteInbox(ev) {
     }
 }
 
-function tableToCSV(input, separator, split_links=false) {
+function tableToCSV(input, separator, split_links=false, min_text_cells=0) {
     let pastedElement = document.createElement('html');
     pastedElement.innerHTML = input;
 
@@ -243,20 +242,33 @@ function tableToCSV(input, separator, split_links=false) {
     if (table != null) {
         for (let row = 0; row < table.children.length; row++) {
             values[row] = [];
+            let rowLinks = [];
             for (let cell = 0; cell < table.children[row].children.length; cell++) {
+                let thisCell = table.children[row].children[cell];
                 if (split_links) {
-                    let link = table.children[row].children[cell].querySelector('a');
-                    
+                    let link = thisCell.querySelector('a');
                     if (link) {
-                        values[row].push(link.textContent);
-                        values[row].push(link.getAttribute('href'));
+                        let linkText = link.textContent;
+                        let linkTarget = link.getAttribute('href');
+                        if (linkText != linkTarget) {
+                            values[row].push(link.textContent);
+                        }
+                        rowLinks.push(linkTarget);
                     } else {
-                        values[row].push(table.children[row].children[cell].textContent);
+                        values[row].push(thisCell.textContent);
                     }
                 } else {
-                    values[row].push(table.children[row].children[cell].textContent);
+                    values[row].push(thisCell.textContent);
                 }
             }
+            // make sure the expected number of cells are populated
+            // before we start adding the links at the end
+            while (values[row].length < min_text_cells) {
+                values[row].push('')
+            }
+            rowLinks.forEach(function(link){
+              values[row].push(link);
+            });
         }
         return values.map((row) => row.join(separator)).join('\n');
     } else {
@@ -282,7 +294,7 @@ User clicks 'create' button, form submits - no JS nivolved
 function getPastedHTML(ev) {
     let html = ev.originalEvent.clipboardData.getData('text/html');
     
-    let data = tableToCSV(html, '|', true);
+    let data = tableToCSV(html, '|', true, 2);
     
     if (data) {
         ev.preventDefault();
