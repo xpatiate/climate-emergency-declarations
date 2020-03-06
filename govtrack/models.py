@@ -250,7 +250,6 @@ class Country(models.Model):
     def popcount_update_needed(self, since=None):
         logger.info(f"Need an update for {self.country_code}?")
         if self.num_declarations > 0:
-            logger.info("yep")
             self.popcount_ready = 0
             self.popcount_needed_since(since)
             self.save()
@@ -813,10 +812,11 @@ class Declaration(models.Model):
     def content_type_id(cls):
         return ContentType.objects.get_for_model(cls).pk
     
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__event_date = self.event_date
-        self.__status = self.status
+    @classmethod
+    def from_db(cls, db, field_names, values):
+        instance = super().from_db(db, field_names, values)
+        instance._loaded_values = dict(zip(field_names, values))
+        return instance
 
     def save(self, *args, **kwargs):
         new = False
@@ -824,11 +824,12 @@ class Declaration(models.Model):
             new = True
 
         changed = False
-        if self.event_date != self.__event_date or self.status != self.__status:
+        if self.event_date != self._loaded_values['event_date'] or self.status != self._loaded_values['status']:
             changed = True
 
         super().save(*args, **kwargs)
-        self.__event_date = self.event_date
+        self._loaded_values['event_date'] = self.event_date
+        self._loaded_values['status'] = self.status
 
         if changed:
             self.area.country.popcount_update_needed(self.event_date)

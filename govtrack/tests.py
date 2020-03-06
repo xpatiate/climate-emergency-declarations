@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from govtrack.models import Country, Structure, Area
+from govtrack.models import Country, Structure, Area, Declaration
 
 class StructureTests(TestCase):
 
@@ -68,3 +68,35 @@ class StructureTests(TestCase):
     def test_area_properties(self):
         assert self.area_national.num_children == 2
 
+
+class DeclarationTests(TestCase):
+
+    fixtures = ['testdata']
+
+    def setUp(self):
+        pass
+
+    def test_declaration_changed(self):
+        dec = Declaration.objects.get(pk=1)
+        assert dec.area.country.is_popcount_needed is False
+        dec.event_date = '2020-01-15'
+        dec.save()
+        assert dec.area.country.is_popcount_needed is True
+
+    def test_delete_declaration(self):
+        dec = Declaration.objects.get(pk=1)
+        dec.delete()
+        try:
+            dec2 = Declaration.objects.get(pk=1)
+        except:
+            dec2 = None
+        assert dec2 is None
+
+    def test_delete_declared_area(self):
+        area_nw = Area.objects.get(pk=5)
+        area_nw.delete()
+        try:
+            nw = Area.objects.get(pk=5)
+        except:
+            nw = None
+        assert nw is None
