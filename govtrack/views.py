@@ -221,15 +221,22 @@ def bulkarea_move(request, area_id):
     logger.info(f"moving bulk area data for {area}")
     if request.method == 'POST' and request.POST.get('move'):
         logger.info(request.POST)
+        # get area ids to be moved
         idlist = request.POST.get('area_id_str').split(':')
         for aid in idlist:
-            logger.info(aid)
-        # get area ids to be moved
+            logger.info(f"moving area {aid}")
         # get parent to move them to
+        new_parent_vals = request.POST.getlist('new_parent_id')
+        # for some reason we get a list of two elements
+        # where the second is unset and the first is the value we want
+        new_parent = new_parent_vals[0]
+        logger.info(f"moving to parent {new_parent} from {new_parent_vals}")
+        if new_parent:
+            for aid in idlist:
+                area = Area.objects.get(pk=aid)
+                area.parent = Area.objects.get(pk=new_parent)
+                area.save()
         # get ids of structures for child levels
-        idlist = request.POST.get('area_id_str','').split(':')
-        for aid in idlist:
-            logger.info(aid)
     return redirect('area', area_id=area_id)
 
 def bulkarea_save(request, area_id):
@@ -360,7 +367,7 @@ def bulkarea_edit(request, area_id):
                 'id': a.id,
                 'name': a.name,
                 'structure': a.structure,
-                'parent_name': a.parent.name,
+                'parent_name': f"({a.parent.structure.name}) {a.parent.fullname}",
                 'descendants': desc_list,
                 'height': a.height
             })

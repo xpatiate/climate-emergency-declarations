@@ -41,11 +41,8 @@ const MoveAreas = () => {
   const updateParent = (event) => {
     const selectedOpt = event.target.querySelector('option:checked')
     console.log(selectedOpt)
-    const hiddenInput = e('input',{
-        type: 'hidden',
-        name: 'new_parent_id',
-        value: selectedOpt.id
-      })
+    const hiddenInput = document.querySelector('#single_area_new_parent_id');
+    hiddenInput.value = selectedOpt.id
     const structureId = selectedOpt.dataset.structid
     console.log(structureId)
     const structureName = selectedOpt.innerHTML
@@ -75,6 +72,12 @@ const MoveAreas = () => {
       },
       options);
     itemsToRender.push(select)
+    const hiddenInput = e('input',{
+        type: 'hidden',
+        id: 'single_area_new_parent_id',
+        name: 'new_parent_id'
+      })
+    itemsToRender.push(hiddenInput)
   }
 
   if (itemsToRender.length == 0) {

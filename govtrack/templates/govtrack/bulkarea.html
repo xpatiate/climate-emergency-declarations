@@ -56,7 +56,7 @@
         {% endif %}
       </div>
       <div class='col-sm'>
-        <div id='move-structure-form' style='visibility: visible' class='panel
+        <div id='move-structure-form' style='visibility: hidden' class='panel
             {% if same_structure %}move-form-inactive{% else %}move-form-active{% endif %}'</div>
 	    Move areas to a new parent with different structures: <br/>
       <div id='move_structure_controls' style='display: block; background-color: pink;'>
@@ -76,7 +76,7 @@
          <th>From parent</th>
          <th>From structure</th>
          <th>Area</th>
-         <th>Destination</th>
+         <th>To parent</th>
        </tr>
      <tbody>
   {% for a in area_list %}
