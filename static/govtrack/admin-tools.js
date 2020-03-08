@@ -27,6 +27,7 @@ $(document).ready(() => {
     $('#button_remove_supplements').click(removeSupplements)
     $('#bulk_delete_button').click(confirmBulkDelete)
     $('#bulk_edit_button').click(submitBulkEdit)
+    $('#bulk_move_button').click(submitBulkMove)
     window.supplementNames = {}
     parseSuppNames()
 
@@ -41,7 +42,40 @@ $(document).ready(() => {
     }
     
     $('.inbox-paste textarea').bind('paste', pasteInbox);
+    //setupBulkMove()
 });
+
+function setupStructure(target) {
+  console.log(target)
+  $(target).children().each(function(c) {
+    const cp = $(c)
+    console.log(cp.id)
+    console.log(cp.prop('selected'))
+    console.log(cp.selected)
+  });
+}
+function setupBulkMove() {
+  const moveHolder = $('#move_areas')
+  const options = moveParentData.map( function(item) {
+    const optName = '(' + item.structure_name + ') ' + item.name
+    return $(document.createElement('option')).
+      attr('id', item.id).
+      attr('data-struct-id', item.structure_id).
+      text(optName)
+  });
+  console.log(options)
+  const parentSelect = $(document.createElement('select')).
+    attr('name', 'new_parent').
+    attr('id', 'id_new_parent').
+    attr('onChange', 'setupStructure(this)');
+  options.forEach( function(opt) {
+    parentSelect.append(opt);
+  });
+  moveHolder.append(
+    //$(document.createElement("select")).attr('id','vname')
+    parentSelect
+    );
+}
 
 function setupClone(ev) {
     var cloneSrc = ev.target
@@ -95,6 +129,16 @@ function submitBulkEdit(ev) {
     var numChecked = collectBulkEditAreas()
     if (numChecked > 0) {
           $('#bulk_edit_action').val('edit')
+          $('#bulk_edit_form').submit()
+    }
+    return false
+}
+
+function submitBulkMove(ev) {
+  // get all checked checkboxes, add to a hidden field
+    var numChecked = collectBulkEditAreas()
+    if (numChecked > 0) {
+          $('#bulk_edit_action').val('move')
           $('#bulk_edit_form').submit()
     }
     return false
