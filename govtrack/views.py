@@ -375,9 +375,8 @@ def bulkarea_edit(request, area_id):
         same_structure = True if len(uniq_structures) == 1 else False
         tmpl_data['same_structure'] = same_structure
         uniq_parent = uniq_structures.pop().parent
+        tmpl_data['enable_multi_move'] = False
 
-        #same_struct_form = BulkAreaForm()
-        #all_struct_form = BulkAreaForm()
         all_areas = Area.objects.filter(country=area.country)
         print(f"have {len(all_areas)} areas in country")
         # Potential parents must have a structure with at least [max_level] descendants
@@ -385,7 +384,6 @@ def bulkarea_edit(request, area_id):
         possible_parents_all_structs = list(filter(lambda p: p.structure.height > max_level, all_areas))
         print(f"have {len(possible_parents_same_struct)} possible parents with structure >= {uniq_parent}")
         print(f"have {len(possible_parents_all_structs)} possible parents with height >= {max_level}")
-        #newform.fields['new_parent'].choices = [ (p.id, f"({p.structure}) {p.name}") for p in possible_parents_all_structs ]
         new_parent_data_same_struct = [{
             'id': p.id,
             'name': p.name,
@@ -398,23 +396,9 @@ def bulkarea_edit(request, area_id):
             'structure_id': p.structure.id,
             'structure_name': p.structure.name,
             } for p in possible_parents_all_structs]
-        #tmpl_data['form'] = newform
         tmpl_data['child_levels'] = (max_level + 1)
         tmpl_data['new_parent_data_same_struct'] = json.dumps(new_parent_data_same_struct)
         tmpl_data['new_parent_data_all_structs'] = json.dumps(new_parent_data_all_structs)
-
-        # So we know now the areas that could be the new parent of the moving areas
-        # and the structures of those new parents
-        # We need to figure out which of those target structures has multiple children
-        # and limit to only those with one child structure at each level
-        # or else allow the user to select a structure
-        #potential_parent_structures = set([p.structure for p in possible_parents])
-        #print(potential_parent_structures)
-
-
-
-        
-
 
     else:
         area_initial = [

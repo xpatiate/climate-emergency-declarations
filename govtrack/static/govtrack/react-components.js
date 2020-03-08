@@ -47,6 +47,10 @@ const MoveAreas = () => {
     console.log(structureId)
     const structureName = selectedOpt.innerHTML
     console.log(structureName)
+    const fillAllDivs = document.querySelectorAll("div[class^='show-destination-']");
+    fillAllDivs.forEach(function(el) {
+      el.innerHTML = 'unchanged'
+    })
     const fillDivs = document.querySelectorAll('.show-destination-1');
     fillDivs.forEach(function(el) {
       el.innerHTML = selectedOpt.innerHTML
@@ -84,7 +88,7 @@ const MoveAreas = () => {
     makeParentDropdown()
   }
   return e(
-    'div', {id: 'my-structure'}, itemsToRender
+    'div', {id: 'select-structure'}, itemsToRender
   )
 }
 
@@ -249,6 +253,6 @@ const MoveStructures = () => {
     makeParentDropdown()
   }
   return e(
-    'div', {id: 'my-structure'}, itemsToRender
+    'div', {id: 'select-structure'}, itemsToRender
   )
 }

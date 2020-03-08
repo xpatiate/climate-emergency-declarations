@@ -42,10 +42,10 @@
         {% if same_structure %}
         <div id='move-area-form' class='panel move-form-active'>
       <div>
-	    Move areas to a new parent, keeping all structures: <br/>
+	    Move areas to a new parent, keeping all structures the same: <br/>
       </div>
       <br/>
-      <div id='move_area_controls' style='display: block; background-color: pink;'>
+      <div id='move_area_controls'>
       <hr />
       </div>
       <script>
@@ -53,10 +53,13 @@
         ReactDOM.render(e(MoveAreas), moveAreaContainer);
       </script>
         </div>
+        {% else %}
+        <div class='bulk-move-warning'>Because the areas to be moved are of different structure types, it is not possible to move them under a single new parent.</div>
         {% endif %}
       </div>
       <div class='col-sm'>
-        <div id='move-structure-form' style='visibility: hidden' class='panel
+        {% if enable_multi_move %}
+        <div id='move-structure-form' style='visibility: visible' class='panel
             {% if same_structure %}move-form-inactive{% else %}move-form-active{% endif %}'</div>
 	    Move areas to a new parent with different structures: <br/>
       <div id='move_structure_controls' style='display: block; background-color: pink;'>
@@ -67,6 +70,7 @@
         ReactDOM.render(e(MoveStructures), moveStructureContainer);
       </script>
         </div>
+        {% endif %}
       </div>
     </div>
     <div class='panel'>
@@ -105,7 +109,9 @@
      </tbody>
   </table>
   <br>
+    {% if same_structure or enable_multi_move %}
     <input type='submit' name='move' value='move' class='button-save'>
+    {% endif %}
     <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
 </div>
 {% elif action == 'edit' %}
