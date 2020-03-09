@@ -232,10 +232,13 @@ def bulkarea_move(request, area_id):
         new_parent = new_parent_vals[0]
         logger.info(f"moving to parent {new_parent} from {new_parent_vals}")
         if new_parent:
-            for aid in idlist:
-                area = Area.objects.get(pk=aid)
-                area.parent = Area.objects.get(pk=new_parent)
-                area.save()
+            if request.POST.get('movetype') == 'area':
+                for aid in idlist:
+                    area = Area.objects.get(pk=aid)
+                    area.parent = Area.objects.get(pk=new_parent)
+                    area.save()
+            elif request.POST.get('movetype') == 'structure':
+                logger.info("doing a complex move")
         # get ids of structures for child levels
     return redirect('area', area_id=area_id)
 
@@ -337,6 +340,9 @@ def bulkarea_edit(request, area_id):
         'area_id_str': area_id_str
     }
     if action == 'move':
+        # TODO somehow remove root area from list, as has no parent to change?
+        # or just leave as there are no possible parents for it
+
         tmpl_data['structure_list'] = area.country.get_root_structure().build_hierarchy()
         # for each area, get a list of all descendants
         # if any of its descendants are in edit_areas, do not list as descendants
@@ -354,7 +360,7 @@ def bulkarea_edit(request, area_id):
                 max_level = a.height
             print(f"{a.id} now min level {max_level} a.level {a.level}")
             # this needs to go down layer by layer not via a list
-            # so it can skip descendants of descendants
+            # so it can skip descendants of selected descendants
             for d in a.descendants:
                 logger.info(f"a {a.id} has desc {d.id}, is in edit_areas? {edit_areas}")
                 if str(d.id) in edit_areas:
@@ -375,7 +381,7 @@ def bulkarea_edit(request, area_id):
         same_structure = True if len(uniq_structures) == 1 else False
         tmpl_data['same_structure'] = same_structure
         uniq_parent = uniq_structures.pop().parent
-        tmpl_data['enable_multi_move'] = False
+        tmpl_data['enable_multi_move'] = True # may be limited by user in future
 
         all_areas = Area.objects.filter(country=area.country)
         print(f"have {len(all_areas)} areas in country")

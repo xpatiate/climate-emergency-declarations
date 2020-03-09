@@ -47,11 +47,11 @@ const MoveAreas = () => {
     console.log(structureId)
     const structureName = selectedOpt.innerHTML
     console.log(structureName)
-    const fillAllDivs = document.querySelectorAll("div[class^='show-destination-']");
+    const fillAllDivs = document.querySelectorAll("div[class^='show-dest-structure-']");
     fillAllDivs.forEach(function(el) {
       el.innerHTML = 'unchanged'
     })
-    const fillDivs = document.querySelectorAll('.show-destination-1');
+    const fillDivs = document.querySelectorAll('.show-dest-parent-1');
     fillDivs.forEach(function(el) {
       el.innerHTML = selectedOpt.innerHTML
     })
@@ -109,6 +109,10 @@ const MoveStructures = () => {
     console.log(structureName)
     structureChain = []
     itemsToRender = []
+    const childDivs = document.querySelectorAll('.child-from-structure');
+    childDivs.forEach(function(c) {
+      c.innerHTML = ''
+    });
     makeParentDropdown()
     addStructure(structureId)
   }
@@ -157,9 +161,16 @@ const MoveStructures = () => {
               itemsToRender.push(showStruct, hiddenInput)
               structureChain.push(structureId)
 
-              const fillDivs = document.querySelectorAll('.show-destination-' + currentLevel);
+              const fillDivs = document.querySelectorAll('.show-dest-structure-' + currentLevel);
               fillDivs.forEach(function(el) {
                 el.innerHTML = structureData['name']
+                el.dataset.id = structureData['id']
+                const tableRow = el.parentNode.parentNode;
+                const rowChild = tableRow.querySelector('.child-from-structure')
+                if (rowChild && (rowChild.dataset.id != el.dataset.id)) {
+                  //el.className += ' changing-class'
+                  rowChild.innerHTML = '*'
+                }
               })
 
 

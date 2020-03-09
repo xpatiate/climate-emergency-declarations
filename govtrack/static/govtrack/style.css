@@ -129,12 +129,19 @@ tr.country-total {
     font-weight: bold;
     padding: 10px;
 }
-.move-form-active {
-    border: 1px solid blue;
-}
-.move-form-inactive {
+.move-form {
     background-color: #eeeeee;
     border: 1px solid grey;
+}
+.move-form-active {
+    background-color: #ffffff;
+    border: 1px solid blue;
+}
+.child-destination {
+    font-style: italic;
+}
+.child-from-structure {
+    color: red;
 }
 
 .areas {

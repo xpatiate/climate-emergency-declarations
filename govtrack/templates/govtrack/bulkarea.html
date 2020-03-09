@@ -40,8 +40,9 @@
     <div class='row'>
       <div class='col-sm'>
         {% if same_structure %}
-        <div id='move-area-form' class='panel move-form-active'>
+        <div id='move-area-form' class='panel move-form move-form-active'>
       <div>
+	    <input type='radio' name='movetype' value='area' id='do-move-area'>
 	    Move areas to a new parent, keeping all structures the same: <br/>
       </div>
       <br/>
@@ -54,15 +55,18 @@
       </script>
         </div>
         {% else %}
-        <div class='bulk-move-warning'>Because the areas to be moved are of different structure types, it is not possible to move them under a single new parent.</div>
+        <div class='bulk-move-warning'>Because the areas to be moved are of different structure types, it is not possible to move them under a single new parent and keep child structures the same.</div>
         {% endif %}
       </div>
       <div class='col-sm'>
         {% if enable_multi_move %}
-        <div id='move-structure-form' style='visibility: visible' class='panel
-            {% if same_structure %}move-form-inactive{% else %}move-form-active{% endif %}'</div>
-	    Move areas to a new parent with different structures: <br/>
-      <div id='move_structure_controls' style='display: block; background-color: pink;'>
+        <div id='move-structure-form' class='panel move-form
+            {% if same_structure %}move-form-inactive{% else %}move-form-active{% endif %}'><div>
+	    <input type='radio' name='movetype' value='structure' id='do-move-struct'>
+        Move areas to a new parent with different structures: <br/>
+      </div>
+      <br/>
+      <div id='move_structure_controls'>
       <hr />
       </div>
       <script>
@@ -74,21 +78,23 @@
       </div>
     </div>
     <div class='panel'>
-    <table>
+    <table id='move-table'>
       <thead>
        <tr>
          <th>From parent</th>
          <th>From structure</th>
          <th>Area</th>
          <th>To parent</th>
+         <th>To structure</th>
        </tr>
      <tbody>
   {% for a in area_list %}
   <tr>
       <td>{{ a.parent_name }}</td>
-      <td>{{ a.structure.name }}</td>
+      <td><div class='from-dest-structure-1' data-id='{{ a.structure.id }}'>{{ a.structure.name }}</div></td>
       <td><a class='link-area' href='{% url 'area' a.id %}'>{{ a.name }}</a></td>
-      <td><div class='show-destination-1'></div></td>
+      <td><div class='show-dest-parent-1'></div></td>
+      <td><div data-id='' class='show-dest-structure-1'></div></td>
   </tr>
       {% for d in a.descendants %}
   <tr>
@@ -102,7 +108,9 @@
             {% endwith %}
         <i>({{ d.structure.name }}) {{ d.name }}</i>
       </td>
-      <td><i><div class='show-destination-{{ d.rel_level }}'></div></i></td>
+      <td><div class='child-destination show-dest-parent-{{ d.rel_level }}'></div></td>
+      <td><div data-id='' class='show-dest-structure-{{ d.rel_level }} child-destination'></div></td>
+      <td><div class='child-from-structure from-dest-structure-{{ d.rel_level }}' data-id='{{ d.structure.id }}'></div></td>
   </tr>
       {% endfor %}
   {% endfor %}
