@@ -807,6 +807,7 @@ class Declaration(models.Model):
     key_contact = models.CharField(max_length=128, blank=True)
     admin_notes = models.TextField(blank=True)
     verified = models.BooleanField(default=False)
+    _loaded_values = {}
 
     @classmethod
     def content_type_id(cls):
@@ -824,7 +825,7 @@ class Declaration(models.Model):
             new = True
 
         changed = False
-        if self.event_date != self._loaded_values['event_date'] or self.status != self._loaded_values['status']:
+        if self.event_date != self._loaded_values.get('event_date','') or self.status != self._loaded_values.get('status',''):
             changed = True
 
         super().save(*args, **kwargs)
