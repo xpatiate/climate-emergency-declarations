@@ -42,7 +42,7 @@
         {% if same_structure %}
         <div id='move-area-form' class='panel move-form move-form-active'>
       <div>
-	    <input type='radio' name='movetype' value='area' id='do-move-area'>
+	    <input type='radio' name='movetype' value='area' id='do-move-area' checked>
 	    Move areas to a new parent, keeping all structures the same: <br/>
       </div>
       <br/>
@@ -62,7 +62,9 @@
         {% if enable_multi_move %}
         <div id='move-structure-form' class='panel move-form
             {% if same_structure %}move-form-inactive{% else %}move-form-active{% endif %}'><div>
-	    <input type='radio' name='movetype' value='structure' id='do-move-struct'>
+	    <input type='radio' name='movetype' value='structure' id='do-move-struct'
+            {% if not same_structure %}checked{% endif %}
+            >
         Move areas to a new parent with different structures: <br/>
       </div>
       <br/>

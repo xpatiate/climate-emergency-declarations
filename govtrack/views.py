@@ -225,21 +225,50 @@ def bulkarea_move(request, area_id):
         idlist = request.POST.get('area_id_str').split(':')
         for aid in idlist:
             logger.info(f"moving area {aid}")
-        # get parent to move them to
-        new_parent_vals = request.POST.getlist('new_parent_id')
-        # for some reason we get a list of two elements
-        # where the second is unset and the first is the value we want
-        new_parent = new_parent_vals[0]
-        logger.info(f"moving to parent {new_parent} from {new_parent_vals}")
-        if new_parent:
-            if request.POST.get('movetype') == 'area':
-                for aid in idlist:
-                    area = Area.objects.get(pk=aid)
-                    area.parent = Area.objects.get(pk=new_parent)
-                    area.save()
-            elif request.POST.get('movetype') == 'structure':
-                logger.info("doing a complex move")
-        # get ids of structures for child levels
+
+        if request.POST.get('movetype') == 'area':
+            # get parent to move them to
+            new_parent_vals = request.POST.getlist('area_new_parent_id')
+            # for some reason we get a list of two elements
+            # where the second is unset and the first is the value we want
+            new_parent = new_parent_vals[0]
+            logger.info(f"moving to parent {new_parent} from {new_parent_vals}")
+            for aid in idlist:
+                area = Area.objects.get(pk=aid)
+                area.parent = Area.objects.get(pk=new_parent)
+                area.save()
+        elif request.POST.get('movetype') == 'structure':
+            logger.info("doing a complex move")
+            # get parent to move them to
+            new_parent_vals = request.POST.getlist('struct_new_parent_id')
+            logger.info(f"new parent vals {new_parent_vals}")
+            # for some reason we get a list of two elements
+            # where the second is unset and the first is the value we want
+            new_parent = new_parent_vals[0]
+            logger.info(f"moving to parent {new_parent} from {new_parent_vals}")
+            target_structures = [s for s in request.POST.keys() if s[0:9] == 'structure']
+            print(target_structures)
+            for aid in idlist:
+                area = Area.objects.get(pk=aid)
+                by_level = area.get_children_by_level()
+                print(f"area [{area}] kids by level [{by_level}]")
+                # set parent to top-level area
+                logger.info(f"setting area {aid} parent to {new_parent}")
+                #area.parent = Area.objects.get(pk=new_parent)
+                #area.save()
+                for struct_key in sorted(target_structures):
+                    rel_level = struct_key.split('_')[1]
+                    struct = Structure.objects.get(pk=request.POST.get(struct_key))
+                    logger.info(f"Setting children at level {rel_level} to structure {struct}")
+                    # find all children of area at level X
+                    # and set their structure
+
+                    # XXX need to translate the relative level from move page
+                    # into the actual level of the area subtree
+                    for kid in by_level.get(rel_level,[]):
+                        kid.structure = struct
+                        print(f"setting kid {kid} structure to {struct}")
+                        #kid.save()
     return redirect('area', area_id=area_id)
 
 def bulkarea_save(request, area_id):
@@ -381,30 +410,37 @@ def bulkarea_edit(request, area_id):
         same_structure = True if len(uniq_structures) == 1 else False
         tmpl_data['same_structure'] = same_structure
         uniq_parent = uniq_structures.pop().parent
-        tmpl_data['enable_multi_move'] = True # may be limited by user in future
+        enable_multi_move = True  # may be limited by user in future
+        tmpl_data['enable_multi_move'] = enable_multi_move
 
         all_areas = Area.objects.filter(country=area.country)
         print(f"have {len(all_areas)} areas in country")
         # Potential parents must have a structure with at least [max_level] descendants
-        possible_parents_same_struct = list(filter(lambda p: p.structure.id == uniq_parent.id, all_areas))
-        possible_parents_all_structs = list(filter(lambda p: p.structure.height > max_level, all_areas))
-        print(f"have {len(possible_parents_same_struct)} possible parents with structure >= {uniq_parent}")
-        print(f"have {len(possible_parents_all_structs)} possible parents with height >= {max_level}")
-        new_parent_data_same_struct = [{
-            'id': p.id,
-            'name': p.name,
-            'structure_id': p.structure.id,
-            'structure_name': p.structure.name,
-            } for p in possible_parents_same_struct]
-        new_parent_data_all_structs = [{
-            'id': p.id,
-            'name': p.name,
-            'structure_id': p.structure.id,
-            'structure_name': p.structure.name,
-            } for p in possible_parents_all_structs]
+        if same_structure:
+            possible_parents_same_struct = list(filter(lambda p: p.structure.id == uniq_parent.id, all_areas))
+            print(f"have {len(possible_parents_same_struct)} possible parents with structure = {uniq_parent.name}")
+            new_parent_data_same_struct = [{
+                'id': p.id,
+                'name': p.name,
+                'structure_id': p.structure.id,
+                'structure_name': p.structure.name,
+                } for p in possible_parents_same_struct]
+            tmpl_data['new_parent_data_same_struct'] = json.dumps(new_parent_data_same_struct)
+        else:
+            tmpl_data['new_parent_data_same_struct'] = json.dumps({})
+        if enable_multi_move:
+            possible_parents_all_structs = list(filter(lambda p: p.structure.height > max_level, all_areas))
+            print(f"have {len(possible_parents_all_structs)} possible parents with height > {max_level}")
+            new_parent_data_all_structs = [{
+                'id': p.id,
+                'name': p.name,
+                'structure_id': p.structure.id,
+                'structure_name': p.structure.name,
+                } for p in possible_parents_all_structs]
+            tmpl_data['new_parent_data_all_structs'] = json.dumps(new_parent_data_all_structs)
+        else:
+            tmpl_data['new_parent_data_all_structs'] = json.dumps({})
         tmpl_data['child_levels'] = (max_level + 1)
-        tmpl_data['new_parent_data_same_struct'] = json.dumps(new_parent_data_same_struct)
-        tmpl_data['new_parent_data_all_structs'] = json.dumps(new_parent_data_all_structs)
 
     else:
         area_initial = [
