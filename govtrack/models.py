@@ -66,6 +66,49 @@ class Hierarchy():
     def num_children(self):
         return self.__class__.objects.filter(parent=self.id).exclude(pk=self.id).count()
 
+    def get_children_by_level(self):
+        if not self.children_by_level:
+            self.build_adjacency_list()
+        return self.children_by_level
+
+    def build_adjacency_list(self):
+        self.graph = {}
+        self.children_by_level = {}
+        self.add_kids_to_adjacency_list(self.graph, self.children_by_level)
+        return self.graph
+
+    def add_kids_to_adjacency_list(self, graph, by_level):
+        graph[ self.id ] = []
+        if self.level in by_level:
+            by_level[ self.level ].append(self)
+        else:
+            by_level[ self.level ] = [self]
+        for kid in self.children:
+            graph[ self.id ].append( kid.id )
+            graph[ kid.id ] = []
+            kid.add_kids_to_adjacency_list(graph, by_level)
+
+    def bfs(self):
+        if not self.graph:
+            self.build_adjacency_list()
+        node = self.id
+        visited = [] # List to keep track of visited nodes.
+        queue = []   # Initialize a queue
+
+        visited.append(node)
+        queue.append(node)
+        bfs_list = []
+
+        while queue:
+            s = queue.pop(0)
+            bfs_list.append(str(s))
+            for neighbour in self.graph[s]:
+                if neighbour not in visited:
+                    visited.append(neighbour)
+                    queue.append(neighbour)
+        return bfs_list
+
+
 class PopulationCounter():
     '''Utility class to perform population counting on tree structures.'''
 
@@ -248,7 +291,6 @@ class Country(models.Model):
         return PopCount.objects.filter(country=self).order_by('date')
 
     def popcount_update_needed(self, since=None):
-        logger.info(f"Need an update for {self.country_code}?")
         if self.num_declarations > 0:
             self.popcount_ready = 0
             self.popcount_needed_since(since)
@@ -384,6 +426,8 @@ class Structure(Hierarchy, models.Model):
         on_delete=models.CASCADE)
     admin_notes = models.TextField(blank=True)
     links = GenericRelation(Link, null=True, blank=True, related_query_name='link')
+    graph = None
+    children_by_level = None
 
     # These two fields currently unused
     count_population = models.BooleanField(default=True)
@@ -468,6 +512,8 @@ class Area(Hierarchy, models.Model):
     links = GenericRelation(Link, null=True, related_query_name='link')
 
     __original_population = None
+    graph = None
+    children_by_level = None
 
     parentlist = []
     descendant_list = set()

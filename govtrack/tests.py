@@ -20,18 +20,18 @@ class StructureTests(TestCase):
         self.area_northwest = Area.objects.get(pk=5)
 
     def test_has_country(self):
-        assert self.country.name == 'Erewhon'
+        self.assertEqual(self.country.name, 'Erewhon')
 
     def test_has_structure(self):
-        assert self.structure_national.name == 'National Government'
+        self.assertEqual(self.structure_national.name, 'National Government')
 
     def test_has_area(self):
-        assert self.area_national.name == 'Erewhon'
+        self.assertEqual(self.area_national.name, 'Erewhon')
 
     def test_level_descendants(self):
-        assert self.area_national.height == 2
-        assert self.area_north.height == 1
-        assert self.area_northwest.height == 0
+        self.assertEqual(self.area_national.height, 2)
+        self.assertEqual(self.area_north.height, 1)
+        self.assertEqual(self.area_northwest.height, 0)
 
         parkside = Area.objects.create(
             name='Parkside Council',
@@ -42,9 +42,9 @@ class StructureTests(TestCase):
 
         # After adding a new child, the number of descendant levels
         # should have gone up by 1
-        assert self.area_national.height == 3
-        assert self.area_north.height == 2
-        assert self.area_northwest.height == 1
+        self.assertEqual(self.area_national.height, 3)
+        self.assertEqual(self.area_north.height, 2)
+        self.assertEqual(self.area_northwest.height, 1)
 
         northeast = Area.objects.create(
             name='North-East Locality',
@@ -60,13 +60,22 @@ class StructureTests(TestCase):
         )
         
         # After adding more siblings, height should not change
-        assert self.area_national.height == 3
-        assert self.area_north.height == 2
-        assert self.area_northwest.height == 1
-        assert northeast.height==0
+        self.assertEqual(self.area_national.height, 3)
+        self.assertEqual(self.area_north.height, 2)
+        self.assertEqual(self.area_northwest.height, 1)
+        self.assertEqual(northeast.height, 0)
 
     def test_area_properties(self):
-        assert self.area_national.num_children == 2
+        self.assertEqual(self.area_national.num_children, 2)
+
+    def test_adjacency_list(self):
+        as_bfs = self.area_national.bfs()
+
+    def test_kids_by_level(self):
+        by_level = self.area_national.get_children_by_level()
+        self.assertEqual(len(by_level[1]), 1)
+        self.assertEqual(len(by_level[2]), 2)
+        self.assertEqual(len(by_level[3]), 2)
 
 
 class DeclarationTests(TestCase):
@@ -78,10 +87,10 @@ class DeclarationTests(TestCase):
 
     def test_declaration_changed(self):
         dec = Declaration.objects.get(pk=1)
-        assert dec.area.country.is_popcount_needed is False
+        self.assertIs(dec.area.country.is_popcount_needed, False)
         dec.event_date = '2020-01-15'
         dec.save()
-        assert dec.area.country.is_popcount_needed is True
+        self.assertIs(dec.area.country.is_popcount_needed, True)
 
     def test_delete_declaration(self):
         dec = Declaration.objects.get(pk=1)
@@ -90,7 +99,7 @@ class DeclarationTests(TestCase):
             dec2 = Declaration.objects.get(pk=1)
         except:
             dec2 = None
-        assert dec2 is None
+        self.assertIs(dec2, None)
 
     def test_delete_declared_area(self):
         area_nw = Area.objects.get(pk=5)
@@ -99,4 +108,4 @@ class DeclarationTests(TestCase):
             nw = Area.objects.get(pk=5)
         except:
             nw = None
-        assert nw is None
+        self.assertIs(nw, None)
