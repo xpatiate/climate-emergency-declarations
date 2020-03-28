@@ -10,7 +10,19 @@ class StructureTests(TestCase):
     def setUp(self):
         self.country = Country.objects.get(pk=1)
         self.structure_national = Structure.objects.get(pk=1)
-        self.structure_region = Structure.objects.get(pk=2)
+
+    def test_has_country(self):
+        self.assertEqual(self.country.name, 'Erewhon')
+
+    def test_has_structure(self):
+        self.assertEqual(self.structure_national.name, 'National Government')
+
+class AreaTests(TestCase):
+
+    fixtures = ['testdata']
+
+    def setUp(self):
+        self.country = Country.objects.get(pk=1)
         self.structure_local = Structure.objects.get(pk=3)
         self.structure_neighbourhood = Structure.objects.get(pk=4)
         self.area_national = Area.objects.get(pk=1)
@@ -18,12 +30,6 @@ class StructureTests(TestCase):
         self.area_south = Area.objects.get(pk=3)
         self.area_southeast = Area.objects.get(pk=4)
         self.area_northwest = Area.objects.get(pk=5)
-
-    def test_has_country(self):
-        self.assertEqual(self.country.name, 'Erewhon')
-
-    def test_has_structure(self):
-        self.assertEqual(self.structure_national.name, 'National Government')
 
     def test_has_area(self):
         self.assertEqual(self.area_national.name, 'Erewhon')
@@ -72,11 +78,15 @@ class StructureTests(TestCase):
         as_bfs = self.area_national.bfs()
 
     def test_kids_by_level(self):
-        by_level = self.area_national.get_children_by_level()
-        self.assertEqual(len(by_level[1]), 1)
-        self.assertEqual(len(by_level[2]), 2)
-        self.assertEqual(len(by_level[3]), 2)
+        area_national = Area.objects.get(pk=1)
+        by_level = area_national.get_children_by_level()
+        self.assertEqual(len(by_level['1']), 1)
+        self.assertEqual(len(by_level['2']), 2)
+        self.assertEqual(len(by_level['3']), 2)
 
+    def test_tree_integrity(self):
+        tree_ok = self.area_national.check_tree_integrity()
+        self.assertIs(tree_ok, True)
 
 class DeclarationTests(TestCase):
 

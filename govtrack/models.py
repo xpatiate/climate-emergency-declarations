@@ -79,7 +79,7 @@ class Hierarchy():
 
     def add_kids_to_adjacency_list(self, graph, by_level):
         graph[ self.id ] = []
-        if self.level in by_level:
+        if str(self.level) in by_level:
             by_level[ str(self.level) ].append(self)
         else:
             by_level[ str(self.level) ] = [self]
@@ -807,6 +807,50 @@ class Area(Hierarchy, models.Model):
         if url not in link_urls:
             self.links.create(url=url)
 
+    def check_tree_integrity(self):
+        graph = self.build_adjacency_list()
+        by_level = self.get_children_by_level()
+        print(f"all y level {by_level}")
+        levels = sorted(by_level.keys())
+        print(f"by level keys {levels}")
+        this_level = self.structure.level
+        all_ok = True
+        num_nodes = sum(len(v) for v in by_level.values())
+        nodes_by_id = {}
+
+        # check nodes by_level
+        l_counter = 0
+        while True:
+            kids = by_level.get(str(this_level),[])
+            print(f"level {this_level} has kids {kids}")
+            if kids:
+                for kid in kids:
+                    nodes_by_id[ kid.id ] = kid
+                    l_counter += 1
+                    if kid.structure.level != this_level:
+                        all_ok = False
+            else:
+                break
+            this_level += 1
+        if num_nodes != l_counter:
+            all_ok = False
+        print(f"nodes by id {nodes_by_id}")
+
+        # check by adjacency list
+        for node_id in graph.keys():
+            node = nodes_by_id[node_id]
+            print(f"nodeid {node_id} node {node}")
+            nodelist = graph[node_id]
+            print(f"list {nodelist}")
+            for kid_id in nodelist:
+                kid = nodes_by_id[kid_id]
+                if kid.level != (node.level+1):
+                    all_ok = False
+                # also check that kid structure is a child of parent structure
+                if kid.structure.parent != node.structure:
+                    all_ok = False
+        return all_ok
+
     def move_parent(self, new_parent, target_structures):
         logger.info(f"moving area {self.id} to parent {new_parent}")
         logger.info(f"STRUCTURES: {target_structures}")
@@ -816,17 +860,20 @@ class Area(Hierarchy, models.Model):
         # set parent to top-level area
         self.parent = new_parent
         self.save()
+        level_diff = self.level - 1
         for rel_level, struct in target_structures.items():
-            # find all children of area at which are at the given level
+            if (str(rel_level) == "0"):
+                continue
+            # find all children of area which are at the corresponding level
             # and set their structure
 
             # translate the relative level from move page
             # into the actual level of the area subtree
-            level_index = str(int(self.level) + int(rel_level) - 1)
+            level_index = str(int(rel_level) + level_diff)
             kids_at_level = by_level.get(level_index,[])
 
             logger.info(f"{rel_level} Setting children at relative level {level_index} to structure at level {rel_level}: {struct}")
-            logger.info(f"At level {level_index} we have {len(kids_at_level)} kids")
+            logger.info(f"At level {level_index} we have {len(kids_at_level)} kids: {kids_at_level}")
             for kid in kids_at_level:
                 if kid.structure.id != struct.id:
                     print(f"Changing '{kid}' ({kid.structure.name}) structure to {struct.name}")
