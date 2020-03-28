@@ -80,9 +80,9 @@ class Hierarchy():
     def add_kids_to_adjacency_list(self, graph, by_level):
         graph[ self.id ] = []
         if self.level in by_level:
-            by_level[ self.level ].append(self)
+            by_level[ str(self.level) ].append(self)
         else:
-            by_level[ self.level ] = [self]
+            by_level[ str(self.level) ] = [self]
         for kid in self.children:
             graph[ self.id ].append( kid.id )
             graph[ kid.id ] = []
@@ -806,6 +806,32 @@ class Area(Hierarchy, models.Model):
         link_urls = self.links.values_list('url', flat=True)
         if url not in link_urls:
             self.links.create(url=url)
+
+    def move_parent(self, new_parent, target_structures):
+        logger.info(f"moving area {self.id} to parent {new_parent}")
+        logger.info(f"STRUCTURES: {target_structures}")
+        by_level = self.get_children_by_level()
+        level_keys = by_level.keys()
+        print(f"KIDS BY LEVEL: [{by_level}]")
+        # set parent to top-level area
+        self.parent = new_parent
+        self.save()
+        for rel_level, struct in target_structures.items():
+            # find all children of area at which are at the given level
+            # and set their structure
+
+            # translate the relative level from move page
+            # into the actual level of the area subtree
+            level_index = str(int(self.level) + int(rel_level) - 1)
+            kids_at_level = by_level.get(level_index,[])
+
+            logger.info(f"{rel_level} Setting children at relative level {level_index} to structure at level {rel_level}: {struct}")
+            logger.info(f"At level {level_index} we have {len(kids_at_level)} kids")
+            for kid in kids_at_level:
+                if kid.structure.id != struct.id:
+                    print(f"Changing '{kid}' ({kid.structure.name}) structure to {struct.name}")
+                    kid.structure = struct
+                    kid.save()
 
     def __str__(self):
         return self.fullname

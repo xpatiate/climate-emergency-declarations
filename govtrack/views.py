@@ -244,31 +244,18 @@ def bulkarea_move(request, area_id):
             logger.info(f"new parent vals {new_parent_vals}")
             # for some reason we get a list of two elements
             # where the second is unset and the first is the value we want
-            new_parent = new_parent_vals[0]
+            new_parent_id = new_parent_vals[0]
+            new_parent = Area.objects.get(pk=new_parent_id)
             logger.info(f"moving to parent {new_parent} from {new_parent_vals}")
-            target_structures = [s for s in request.POST.keys() if s[0:9] == 'structure']
+            target_structure_keys = [s for s in request.POST.keys() if s[0:9] == 'structure']
+            print(target_structure_keys)
+            target_structures = {}
+            for s_key in target_structure_keys:
+                target_structures[ str(s_key.split('_')[1]) ] = Structure.objects.get(pk=request.POST.get(s_key))
             print(target_structures)
             for aid in idlist:
                 area = Area.objects.get(pk=aid)
-                by_level = area.get_children_by_level()
-                print(f"area [{area}] kids by level [{by_level}]")
-                # set parent to top-level area
-                logger.info(f"setting area {aid} parent to {new_parent}")
-                #area.parent = Area.objects.get(pk=new_parent)
-                #area.save()
-                for struct_key in sorted(target_structures):
-                    rel_level = struct_key.split('_')[1]
-                    struct = Structure.objects.get(pk=request.POST.get(struct_key))
-                    logger.info(f"Setting children at level {rel_level} to structure {struct}")
-                    # find all children of area at level X
-                    # and set their structure
-
-                    # XXX need to translate the relative level from move page
-                    # into the actual level of the area subtree
-                    for kid in by_level.get(rel_level,[]):
-                        kid.structure = struct
-                        print(f"setting kid {kid} structure to {struct}")
-                        #kid.save()
+                area.move_parent(new_parent, target_structures)
     return redirect('area', area_id=area_id)
 
 def bulkarea_save(request, area_id):
