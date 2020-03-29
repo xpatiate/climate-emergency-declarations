@@ -28,6 +28,20 @@ $(document).ready(() => {
     $('#bulk_delete_button').click(confirmBulkDelete)
     $('#bulk_edit_button').click(submitBulkEdit)
     $('#bulk_move_button').click(submitBulkMove)
+    $('#do-move-area').click(function(item) {
+      $('#move-area-form').toggleClass('move-form-active', true)
+      $('#move-structure-form').toggleClass('move-form-active', false)
+      $('#move-area-form').find('#id_new_parent').prop('disabled', false);
+      $('#move-structure-form').find('#id_new_parent').prop('disabled', true);
+      clearMoveTable()
+    });
+    $('#do-move-struct').click(function(item) {
+      $('#move-structure-form').toggleClass('move-form-active', true)
+      $('#move-area-form').toggleClass('move-form-active', false)
+      $('#move-structure-form').find('#id_new_parent').prop('disabled', false);
+      $('#move-area-form').find('#id_new_parent').prop('disabled', true);
+      clearMoveTable()
+    });
     window.supplementNames = {}
     parseSuppNames()
 
@@ -44,6 +58,11 @@ $(document).ready(() => {
     $('.inbox-paste textarea').bind('paste', pasteInbox);
     //setupBulkMove()
 });
+
+function clearMoveTable() {
+  $('.child-from-structure').innerHTML = '';
+  $("#move-table").find("div[class^='show-dest']").innerHTML = ''
+}
 
 function setupStructure(target) {
   console.log(target)

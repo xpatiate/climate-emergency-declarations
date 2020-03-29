@@ -31,10 +31,11 @@ const e = React.createElement;
 
 let structureChain = []
 let numChildLevels = 0
-let itemsToRender = []
+let areaItems = []
+let structureItems = []
 
 
-// react component which renders the whole dynamic div
+// react component which renders the div for moving areas and retaining structures
 const MoveAreas = () => {
 
   // called on change from parent dropdown, after first selection
@@ -47,11 +48,11 @@ const MoveAreas = () => {
     console.log(structureId)
     const structureName = selectedOpt.innerHTML
     console.log(structureName)
-    const fillAllDivs = document.querySelectorAll("div[class^='show-destination-']");
+    const fillAllDivs = document.querySelectorAll("div[class^='show-dest-structure-']");
     fillAllDivs.forEach(function(el) {
       el.innerHTML = 'unchanged'
     })
-    const fillDivs = document.querySelectorAll('.show-destination-1');
+    const fillDivs = document.querySelectorAll('.show-dest-parent-1');
     fillDivs.forEach(function(el) {
       el.innerHTML = selectedOpt.innerHTML
     })
@@ -75,40 +76,45 @@ const MoveAreas = () => {
       'onChange': updateParent,
       },
       options);
-    itemsToRender.push(select)
+    areaItems.push(select)
     const hiddenInput = e('input',{
         type: 'hidden',
         id: 'single_area_new_parent_id',
-        name: 'new_parent_id'
+        name: 'area_new_parent_id'
       })
-    itemsToRender.push(hiddenInput)
+    areaItems.push(hiddenInput)
   }
 
-  if (itemsToRender.length == 0) {
+  if (areaItems.length == 0) {
     makeParentDropdown()
   }
   return e(
-    'div', {id: 'select-structure'}, itemsToRender
+    'div', {id: 'select-parent'}, areaItems
   )
 }
 
+// react component which renders the div for moving areas AND structures
 const MoveStructures = () => {
 
   // called on change from parent dropdown, after first selection
   const updateParent = (event) => {
     const selectedOpt = event.target.querySelector('option:checked')
-    console.log(selectedOpt)
+    console.log("selectedOpt is " + selectedOpt)
     const hiddenInput = e('input',{
         type: 'hidden',
-        name: 'new_parent_id',
+        name: 'struct_new_parent_id',
         value: selectedOpt.id
       })
     const structureId = selectedOpt.dataset.structid
     console.log(structureId)
     const structureName = selectedOpt.innerHTML
-    console.log(structureName)
+    console.log("structureName is " + structureName)
     structureChain = []
-    itemsToRender = []
+    structureItems = [hiddenInput]
+    const childDivs = document.querySelectorAll('.child-from-structure');
+    childDivs.forEach(function(c) {
+      c.innerHTML = ''
+    });
     makeParentDropdown()
     addStructure(structureId)
   }
@@ -120,6 +126,7 @@ const MoveStructures = () => {
     const structureId = selectedOpt.id
     console.log(structureId)
     addStructure(structureId)
+    // TODO don't unset the parent dropdown
   }
 
   // when a structure has been chosen, this shows it in the page
@@ -154,12 +161,19 @@ const MoveStructures = () => {
                   name: 'structure_' + structureChain.length,
                   value: structureId
                 })
-              itemsToRender.push(showStruct, hiddenInput)
+              structureItems.push(showStruct, hiddenInput)
               structureChain.push(structureId)
 
-              const fillDivs = document.querySelectorAll('.show-destination-' + currentLevel);
+              const fillDivs = document.querySelectorAll('.show-dest-structure-' + currentLevel);
               fillDivs.forEach(function(el) {
                 el.innerHTML = structureData['name']
+                el.dataset.id = structureData['id']
+                const tableRow = el.parentNode.parentNode;
+                const rowChild = tableRow.querySelector('.child-from-structure')
+                if (rowChild && (rowChild.dataset.id != el.dataset.id)) {
+                  //el.className += ' changing-class'
+                  rowChild.innerHTML = '*'
+                }
               })
 
 
@@ -202,8 +216,8 @@ const MoveStructures = () => {
         });
 
     }
-    console.log("itemsToRender:")
-    console.log(itemsToRender)
+    console.log("structureItems:")
+    console.log(structureItems)
 
     // what if areas are moving to a parent of the same structure?
     // then don't need to define child structures
@@ -221,17 +235,18 @@ const MoveStructures = () => {
       e('option', {id: 0 }, 'Select...')
     )
     const select = e('select', {
-      'name': 'structure_level_' + level,
-      'id': 'structure_level_' + level,
+      'name': 'structure_' + level,
+      'id': 'structure_' + level,
       'onChange': updateStructure,
       },
       options);
-    itemsToRender.push(select)
+    structureItems.push(select)
   }
 
   // make dropdown of parent areas + structures for first selection
   const makeParentDropdown = () => {
     console.log("Rendering parent dropdown of all possible structures")
+    console.log(moveParentDataAllStructs)
     const options = moveParentDataAllStructs.map( function(item) {
       return e('option', {id: item.id, 'data-structid': item.structure_id}, 
         '(' + item.structure_name + ') ' + item.name
@@ -246,13 +261,13 @@ const MoveStructures = () => {
       'onChange': updateParent,
       },
       options);
-    itemsToRender.push(select)
+    structureItems.push(select)
   }
 
-  if (itemsToRender.length == 0) {
+  if (structureItems.length == 0) {
     makeParentDropdown()
   }
   return e(
-    'div', {id: 'select-structure'}, itemsToRender
+    'div', {id: 'select-structure'}, structureItems
   )
 }
