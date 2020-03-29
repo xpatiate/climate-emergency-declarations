@@ -35,7 +35,7 @@ let areaItems = []
 let structureItems = []
 
 
-// react component which renders the whole dynamic div
+// react component which renders the div for moving areas and retaining structures
 const MoveAreas = () => {
 
   // called on change from parent dropdown, after first selection
@@ -93,12 +93,13 @@ const MoveAreas = () => {
   )
 }
 
+// react component which renders the div for moving areas AND structures
 const MoveStructures = () => {
 
   // called on change from parent dropdown, after first selection
   const updateParent = (event) => {
     const selectedOpt = event.target.querySelector('option:checked')
-    console.log(selectedOpt)
+    console.log("selectedOpt is " + selectedOpt)
     const hiddenInput = e('input',{
         type: 'hidden',
         name: 'struct_new_parent_id',
@@ -107,7 +108,7 @@ const MoveStructures = () => {
     const structureId = selectedOpt.dataset.structid
     console.log(structureId)
     const structureName = selectedOpt.innerHTML
-    console.log(structureName)
+    console.log("structureName is " + structureName)
     structureChain = []
     structureItems = [hiddenInput]
     const childDivs = document.querySelectorAll('.child-from-structure');
