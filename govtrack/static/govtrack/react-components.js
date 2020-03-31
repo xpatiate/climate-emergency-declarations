@@ -14,10 +14,6 @@ if multiple, show widget for user to choose one
 
 TODO
 
-python: 
-- calc descendants as subtree so skip desc of desc
-- actually do the moving
-
 react:
 - force choose between two types of move, only render dropdown after choosing
 - reset if they swap between the two
@@ -127,6 +123,8 @@ const MoveStructures = () => {
     console.log(structureId)
     addStructure(structureId)
     // TODO don't unset the parent dropdown
+
+    // TODO seems to add another level when lowest dropdown is changed
   }
 
   // when a structure has been chosen, this shows it in the page
@@ -147,10 +145,10 @@ const MoveStructures = () => {
             function(structureData) {
               let structLabel = ''
               if (structureChain.length == 0) {
-                structLabel = 'New parent: ' + structureData['name']
+                structLabel = 'New parent structure: ' + structureData['name']
               }
               else {
-                structLabel = 'Level ' + structureChain.length + ': ' + structureData['name']
+                structLabel = 'Structure at level ' + structureChain.length + ': ' + structureData['name']
               }
               const showStruct = e('div',
                 { class: 'move-structure' },

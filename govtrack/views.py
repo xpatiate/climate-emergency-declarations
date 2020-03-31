@@ -372,27 +372,49 @@ def bulkarea_edit(request, area_id):
             uniq_structures.add(a.structure)
             desc_list = []
             print(f"{a.id} min level {max_level} a.level {a.level}")
-            if max_level <= a.height:
-                max_level = a.height
-            print(f"{a.id} now min level {max_level} a.level {a.level}")
-            # this needs to go down layer by layer not via a list
-            # so it can skip descendants of selected descendants
-            for d in a.descendants:
-                logger.info(f"a {a.id} has desc {d.id}, is in edit_areas? {edit_areas}")
-                if str(d.id) in edit_areas:
-                    logger.info(f"yep {d.id} is in {edit_areas}")
-                    continue
-                else:
-                    d.rel_level = (d.level - a.level) + 1
-                    desc_list.append(d)
+            area_height = 0
+            skip_descendants = set()
+            kids_by_level = a.get_children_by_level()
+            logger.info(kids_by_level)
+            current_level = a.level + 1
+            end_level = a.level + a.height
+            logger.info(f"{a.id} will start at level {current_level} end at {end_level}")
+            # ok we want to skip descendants for areas *except* the one they should appear in
+            # the lower-level descs might appear before their parents in the list
+            logger.info(f"{a.id} all descendants: {a.descendants}")
+            #for d in a.descendants:
+            while current_level <= end_level:
+                if len(kids_by_level[str(current_level)]):
+                    area_height += 1
+                    logger.info(f"at level {current_level} area height is {area_height}")
+                for d in kids_by_level[str(current_level)]:
+                    logger.info(f"a {a.id} has desc {d.id}, is in edit_areas? {edit_areas} or desc {skip_descendants}")
+                    if str(d.id) in edit_areas:
+                        logger.info(f"{a.id} yep {d.id} is in {edit_areas}")
+                        kid_ids = [k.id for k in d.descendants]
+                        skip_descendants.update(kid_ids)
+                        logger.info(f"{a.id} adding kids {kid_ids} to skip_desc {skip_descendants}")
+                        # XXX set area_height
+                        #continue
+                    elif d.id in skip_descendants:
+                        logger.info(f"{a.id} skipping {d.id} because it's a descendant")
+                        #continue
+                    else:
+                        d.rel_level = (d.level - a.level) + 1
+                        desc_list.append(d)
+                current_level += 1
+            logger.info(f"{a.id} adding area {area_height} with descendants {desc_list}")
             area_list.append({
                 'id': a.id,
                 'name': a.name,
                 'structure': a.structure,
                 'parent_name': f"({a.parent.structure.name}) {a.parent.fullname}",
                 'descendants': desc_list,
-                'height': a.height
+                'height': area_height
             })
+            if max_level <= area_height:
+                max_level = area_height
+            print(f"{a.id} now min level {max_level} a.level {a.level}")
         tmpl_data['area_list'] = area_list
         same_structure = True if len(uniq_structures) == 1 else False
         tmpl_data['same_structure'] = same_structure
@@ -427,7 +449,7 @@ def bulkarea_edit(request, area_id):
             tmpl_data['new_parent_data_all_structs'] = json.dumps(new_parent_data_all_structs)
         else:
             tmpl_data['new_parent_data_all_structs'] = json.dumps({})
-        tmpl_data['child_levels'] = (max_level + 1)
+        tmpl_data['child_levels'] = max_level
 
     else:
         area_initial = [
