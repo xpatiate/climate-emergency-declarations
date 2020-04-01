@@ -52,6 +52,8 @@ const MoveAreas = () => {
     fillDivs.forEach(function(el) {
       el.innerHTML = selectedOpt.innerHTML
     })
+    document.getElementById('do-move-area').checked = true;
+
   }
 
 
@@ -113,6 +115,11 @@ const MoveStructures = () => {
     });
     makeParentDropdown()
     addStructure(structureId)
+    const fillDivs = document.querySelectorAll('.show-dest-parent-1');
+    fillDivs.forEach(function(el) {
+      el.innerHTML = selectedOpt.innerHTML
+    })
+    document.getElementById('do-move-struct').checked = true;
   }
 
   // called on change from structure dropdown

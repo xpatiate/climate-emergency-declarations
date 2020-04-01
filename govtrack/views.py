@@ -378,7 +378,7 @@ def bulkarea_edit(request, area_id):
             logger.info(kids_by_level)
             current_level = a.level + 1
             end_level = a.level + a.height
-            logger.info(f"{a.id} will start at level {current_level} end at {end_level}")
+            logger.info(f"{a.id} will start at level {current_level} end at {end_level} ({a.level} + {a.height})")
             # ok we want to skip descendants for areas *except* the one they should appear in
             # the lower-level descs might appear before their parents in the list
             logger.info(f"{a.id} all descendants: {a.descendants}")
