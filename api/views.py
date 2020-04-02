@@ -1,6 +1,8 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from api.serializers import AreaSerializer, StructureSerializer
+from rest_framework import generics, mixins, viewsets, permissions
 
 from govtrack.models import Declaration, Country, Area, Structure, Link, PopCount, ImportDeclaration
 from govtrack.forms import AreaForm
@@ -366,3 +368,34 @@ def declaration_from_import(request, area_id, import_declaration_id):
 
         return redirect('area', area_id=area_id)
     return HttpResponse(status=403)    
+
+
+class AreaList(generics.ListCreateAPIView):
+    queryset = Area.objects.all()
+    serializer_class = AreaSerializer
+
+
+class AreaDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Area.objects.all()
+    serializer_class = AreaSerializer
+
+
+class AreaChildren(mixins.ListModelMixin,
+                  generics.GenericAPIView):
+    serializer_class = AreaSerializer
+
+    def get_queryset(self):
+        return Area.objects.get(pk=self.kwargs['pk']).children
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+
+class StructureViewSet(viewsets.ModelViewSet):
+    """
+    This viewset automatically provides `list`, `create`, `retrieve`,
+    `update` and `destroy` actions.
+    """
+
+    queryset = Structure.objects.all()
+    serializer_class = StructureSerializer

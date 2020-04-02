@@ -28,7 +28,7 @@
                     {% endif %}
                 {% endif %}
             </td>
-            <td align='right'>{% if area.is_declared %}Yes{% endif %}</td>
+            <td align='right'>{% if area.is_declared %}Yes{% endif %} {{ area.num_level_descendants}} </td>
             <td align='right'>
                 {{ area.population | intcomma }}
             </td>

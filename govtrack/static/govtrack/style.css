@@ -121,6 +121,28 @@ tr.country-total {
     display: inline-block;
     width: 20px;
 }
+.level_indent_micro {
+    display: inline-block;
+    width: 4px;
+}
+.move-structure {
+    font-weight: bold;
+    padding: 10px;
+}
+.move-form {
+    background-color: #eeeeee;
+    border: 1px solid grey;
+}
+.move-form-active {
+    background-color: #ffffff;
+    border: 1px solid blue;
+}
+.child-destination {
+    font-style: italic;
+}
+.child-from-structure {
+    color: red;
+}
 
 .areas {
     background: white;
@@ -267,6 +289,11 @@ td.bulk_area_text div {
     overflow: hidden;
     text-overflow: ellipsis;
     font-size: small;
+}
+.bulk-move-warning {
+    border: 1px solid red;
+    font-weight: bold;
+    padding: 20px;
 }
 
 .clone-action {
