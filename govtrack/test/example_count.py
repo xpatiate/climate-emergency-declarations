@@ -4,9 +4,9 @@ import logging
 import sys
 
 # any cmd-line argument turns loglevel up to debug
-loglevel=logging.INFO
+loglevel = logging.INFO
 if len(sys.argv) > 1:
-    loglevel=logging.DEBUG
+    loglevel = logging.DEBUG
 logging.basicConfig(level=loglevel)
 
 
@@ -22,6 +22,7 @@ class Node:
     should in theory be the sum of all its child node populations, but is
     not guaranteed to be so. 
     """
+
     def __init__(self, name, population, parent):
         self.name = name
         self.population = population
@@ -93,7 +94,10 @@ class Node:
             # First check if any descendants of this node have already been counted
             current_desc = self.descendants()
             overlap = current_desc.intersection(counted)
-            logging.debug('%s: current descendants [%s], counted [%s], overlap [%s]' % (self.name, len(current_desc), len(counted), len(overlap)))
+            logging.debug(
+                "%s: current descendants [%s], counted [%s], overlap [%s]"
+                % (self.name, len(current_desc), len(counted), len(overlap))
+            )
 
             if not overlap:
                 # No descendants of this node have been counted yet,
@@ -104,7 +108,7 @@ class Node:
                 counted.update(self.descendants())
 
             else:
-                # Some descendants have already been counted, so we need to 
+                # Some descendants have already been counted, so we need to
                 # subtract their population from the total population for this node.
                 subtotal = self.population
                 for node in overlap:
@@ -114,11 +118,16 @@ class Node:
                     # XXX seems like this could be incorrect if overlapping happens
                     # at a lower level in the tree
                     if node in self.children:
-                        logging.debug("subtracting %s from %s for %s" % (node.population, subtotal, node.name))
+                        logging.debug(
+                            "subtracting %s from %s for %s"
+                            % (node.population, subtotal, node.name)
+                        )
                         subtotal -= node.population
                     else:
-                        logging.debug("NOT subtracting %s from %s for %s because not a direct child" % (node.population, subtotal, node.name))
-
+                        logging.debug(
+                            "NOT subtracting %s from %s for %s because not a direct child"
+                            % (node.population, subtotal, node.name)
+                        )
 
                 # The total we're adding for this node is now
                 # [ this node's population ] minus [ any immediate children already counted ]
@@ -144,37 +153,42 @@ class Node:
         for node in self.descendants():
             node_contrib = node.contribution()
             total += node_contrib
-            logging.debug("node %s, population %s, contribution %s, total %s" % (node.name, node.population, node.contribution(), total))
+            logging.debug(
+                "node %s, population %s, contribution %s, total %s"
+                % (node.name, node.population, node.contribution(), total)
+            )
         return total
-
 
     def contribution(self):
         node_total = 0
-        if (self.is_declared and self.num_declared_ancestors() == 0):
+        if self.is_declared and self.num_declared_ancestors() == 0:
             node_total = self.population
-        elif (self.num_declared_ancestors() > 1):
+        elif self.num_declared_ancestors() > 1:
             node_total = -1 * (self.num_declared_ancestors() - 1) * self.population
         return node_total
 
     def print_tree(self, level=1):
         if level == 1:
-            Node.print_row('','Name','D','Popn','Contrib', 'Ancestors','Descendants')
+            Node.print_row(
+                "", "Name", "D", "Popn", "Contrib", "Ancestors", "Descendants"
+            )
         Node.print_node(self, level)
         level += 1
         for child in self.children:
             Node.print_tree(child, level)
 
-    NAME_COL=24
-    POP_COL=4
-    POP_CON=7
-    ANC_COL=10
-    DEC_COL=12
+    NAME_COL = 24
+    POP_COL = 4
+    POP_CON = 7
+    ANC_COL = 10
+    DEC_COL = 12
+
     @staticmethod
     def print_node(node, level):
-        dashes = '-' * level
-        decl = ' '
+        dashes = "-" * level
+        decl = " "
         if node.is_declared:
-            decl = '*'
+            decl = "*"
         Node.print_row(
             dashes,
             node.name,
@@ -182,35 +196,45 @@ class Node:
             node.population,
             node.contribution(),
             len(node.ancestors()),
-            len(node.descendants())
-            )
+            len(node.descendants()),
+        )
 
     @staticmethod
     def print_row(dashes, name, declared, popn, contrib, anc, dec):
         name_len = Node.NAME_COL - len(dashes)
-        format_name = ('{: <%d}' % name_len).format(name)
-        format_pop = ('{: >%d}' % Node.POP_COL).format(popn)
-        format_con = ('{: >%d}' % Node.POP_CON).format(contrib)
-        format_anc = ('{: >%d}' % Node.ANC_COL).format(anc)
-        format_dec = ('{: >%d}' % Node.DEC_COL).format(dec)
-        print("%s %s%s %s\t%s\t%s %s" % (dashes, format_name, declared, format_pop, format_con, format_anc, format_dec))
-
+        format_name = ("{: <%d}" % name_len).format(name)
+        format_pop = ("{: >%d}" % Node.POP_COL).format(popn)
+        format_con = ("{: >%d}" % Node.POP_CON).format(contrib)
+        format_anc = ("{: >%d}" % Node.ANC_COL).format(anc)
+        format_dec = ("{: >%d}" % Node.DEC_COL).format(dec)
+        print(
+            "%s %s%s %s\t%s\t%s %s"
+            % (
+                dashes,
+                format_name,
+                declared,
+                format_pop,
+                format_con,
+                format_anc,
+                format_dec,
+            )
+        )
 
 
 def simple_tree():
     """ Create a simple tree with three levels, and no multi-parent relationships."""
-    root = Node('L1', 60, None)
+    root = Node("L1", 60, None)
 
-    l2a = root.add_child('L2A', 30)
-    l2b = root.add_child('L2B', 20)
-    l2c = root.add_child('L2C', 10)
+    l2a = root.add_child("L2A", 30)
+    l2b = root.add_child("L2B", 20)
+    l2c = root.add_child("L2C", 10)
 
-    l3a1 = l2a.add_child('L3A1', 15)
-    l3a2 = l2a.add_child('L3A2', 10)
-    l3a3 = l2a.add_child('L3A3', 5)
-    l3b1 = l2b.add_child('L3B1', 20)
-    l3b1a = l3b1.add_child('L3B1A', 10)
-    l3b1b = l3b1.add_child('L3B1B', 10)
+    l3a1 = l2a.add_child("L3A1", 15)
+    l3a2 = l2a.add_child("L3A2", 10)
+    l3a3 = l2a.add_child("L3A3", 5)
+    l3b1 = l2b.add_child("L3B1", 20)
+    l3b1a = l3b1.add_child("L3B1A", 10)
+    l3b1b = l3b1.add_child("L3B1B", 10)
 
     l2a.declare()
     l3b1.declare()
@@ -221,22 +245,25 @@ def simple_tree():
 
     (total, counted) = root.declared_population()
     print("Declared population: %s" % total)
-    print("""    Nodes L2A (30) and L3B1 (20) have declared, so total population is 
+    print(
+        """    Nodes L2A (30) and L3B1 (20) have declared, so total population is
     the sum of the population of those two nodes. Node L3B1A has also declared, 
-    but is not counted because it is covered by L3B1.""")
+    but is not counted because it is covered by L3B1."""
+    )
     print("Via individual nodes: %s" % root.total_node_contributions())
     print()
 
+
 def multi_parents_two():
-    root = Node('L1', 40, None)
+    root = Node("L1", 40, None)
 
-    l2a = root.add_child('L2A', 40)
-    l2b = root.add_child('L2B', 20)
+    l2a = root.add_child("L2A", 40)
+    l2b = root.add_child("L2B", 20)
 
-    l3a1 = l2a.add_child('L3A1', 10)
-    l3a2 = l2a.add_child('L3A2', 10)
-    l3a3 = l2a.add_child('L3A3', 10)
-    l3a4 = l2a.add_child('L3A4', 10)
+    l3a1 = l2a.add_child("L3A1", 10)
+    l3a2 = l2a.add_child("L3A2", 10)
+    l3a3 = l2a.add_child("L3A3", 10)
+    l3a4 = l2a.add_child("L3A4", 10)
 
     l3a3.add_parent(l2b)
     l3a4.add_parent(l2b)
@@ -249,25 +276,28 @@ def multi_parents_two():
 
     (total, counted) = root.declared_population()
     print("Declared population: %s" % total)
-    print("""    Both top-level nodes have declared, but two nodes (L3A3 and L3A4) are
+    print(
+        """    Both top-level nodes have declared, but two nodes (L3A3 and L3A4) are
     linked to both parents, so must not be counted twice. Their population
-    counts are subtracted from the count to give a total of 40.""")
+    counts are subtracted from the count to give a total of 40."""
+    )
     print("Via individual nodes: %s" % root.total_node_contributions())
     print()
 
+
 def multi_parents_three():
-    root = Node('L1', 40, None)
+    root = Node("L1", 40, None)
 
-    l2a = root.add_child('L2A', 40)
-    l2b = root.add_child('L2B', 20)
+    l2a = root.add_child("L2A", 40)
+    l2b = root.add_child("L2B", 20)
 
-    l3a1 = l2a.add_child('L3A1', 10)
-    l3a2 = l2a.add_child('L3A2', 10)
-    l3a3 = l2a.add_child('L3A3', 10)
-    l3a4 = l2a.add_child('L3A4', 10)
+    l3a1 = l2a.add_child("L3A1", 10)
+    l3a2 = l2a.add_child("L3A2", 10)
+    l3a3 = l2a.add_child("L3A3", 10)
+    l3a4 = l2a.add_child("L3A4", 10)
 
-    l3a41 = l3a4.add_child('L3A41', 5)
-    l3a42 = l3a4.add_child('L3A42', 5)
+    l3a41 = l3a4.add_child("L3A41", 5)
+    l3a42 = l3a4.add_child("L3A42", 5)
 
     l3a3.add_parent(l2b)
     l3a4.add_parent(l2b)
@@ -280,24 +310,27 @@ def multi_parents_three():
 
     (total, counted) = root.declared_population()
     print("Declared population: %s" % total)
-    print("""    Both top-level nodes have declared, but two nodes (L3A3 and L3A4) are
+    print(
+        """    Both top-level nodes have declared, but two nodes (L3A3 and L3A4) are
     linked to both parents, so must not be counted twice. Their population
     counts are subtracted from the count to give a total of 40. The nodes at the 
     next level down (L3A41 and L3A42) are not also subtracted because they are not
-    immediate children of the declared node.""")
+    immediate children of the declared node."""
+    )
     print("Via individual nodes: %s" % root.total_node_contributions())
     print()
 
+
 def uzbekistan():
-    root = Node('UZB', 4, None)
+    root = Node("UZB", 4, None)
 
-    t1a = root.add_child('1_T1A', 2)
-    t1r = root.add_child('1_T1R', 4)
+    t1a = root.add_child("1_T1A", 2)
+    t1r = root.add_child("1_T1R", 4)
 
-    t2r1 = t1r.add_child('1_T2R', 1)
-    t2r2 = t1r.add_child('2_T2R', 1)
-    t2r3 = t1r.add_child('3_T2R (overlap)', 1)
-    t2r4 = t1r.add_child('4_T2R (overlap)', 1)
+    t2r1 = t1r.add_child("1_T2R", 1)
+    t2r2 = t1r.add_child("2_T2R", 1)
+    t2r3 = t1r.add_child("3_T2R (overlap)", 1)
+    t2r4 = t1r.add_child("4_T2R (overlap)", 1)
 
     t2r3.add_parent(t1a)
     t2r4.add_parent(t1a)
@@ -313,11 +346,12 @@ def uzbekistan():
     print("Via individual nodes: %s" % root.total_node_contributions())
     print()
 
-if __name__ == '__main__':
-   simple_tree()
-   print()
-   multi_parents_two()
-   print()
-   multi_parents_three()
-   print()
-   uzbekistan()
+
+if __name__ == "__main__":
+    simple_tree()
+    print()
+    multi_parents_two()
+    print()
+    multi_parents_three()
+    print()
+    uzbekistan()
