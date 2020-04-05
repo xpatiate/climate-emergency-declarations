@@ -156,7 +156,13 @@ function submitBulkEdit(ev) {
 
 function submitFinalBulkMove(ev) {
     var canSubmit = true;
-    if ($('#do-move-struct').prop('checked') == true) {
+    if ($('#do-move-area').prop('checked') == true) {
+      const hiddenInput = $('#single_area_new_parent_id');
+      if (!hiddenInput[0].value) {
+        canSubmit = false;
+      }
+    }
+    else if ($('#do-move-struct').prop('checked') == true) {
       // when doing a structure move, check that all hidden inputs are populated
       // i.e. no structure levels still need to be selected
       const allInputs = document.querySelectorAll("input[name^='area-target-struct-']");
@@ -165,9 +171,9 @@ function submitFinalBulkMove(ev) {
           canSubmit = false;
         }
       });
-      if (!canSubmit) {
-        window.alert("Please complete selections")
-      }
+    }
+    if (!canSubmit) {
+      window.alert("Please complete selections")
     }
     return canSubmit;
 }
