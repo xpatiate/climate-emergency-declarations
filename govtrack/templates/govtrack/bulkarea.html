@@ -97,6 +97,8 @@
       <td><a class='link-area' href='{% url 'area' a.id %}'>{{ a.name }}</a></td>
       <td><div class='show-dest-parent-1'></div></td>
       <td><div data-id='' class='show-dest-structure-1'></div></td>
+      <td><div class='child-from-structure from-dest-structure-1' data-id='{{ a.structure.id }}'></div></td>
+      <td class='hidden-struct-id'><input type='hidden' name='area-target-struct-{{ a.id }}' value=''></td>
   </tr>
       {% for d in a.descendants %}
   <tr>
@@ -113,6 +115,7 @@
       <td><div class='child-destination show-dest-parent-{{ d.rel_level }}'></div></td>
       <td><div data-id='' class='show-dest-structure-{{ d.rel_level }} child-destination'></div></td>
       <td><div class='child-from-structure from-dest-structure-{{ d.rel_level }}' data-id='{{ d.structure.id }}'></div></td>
+      <td class='hidden-struct-id'><input type='hidden' name='area-target-struct-{{ d.id }}' value=''></td>
   </tr>
       {% endfor %}
   {% endfor %}
@@ -120,7 +123,7 @@
   </table>
   <br>
     {% if same_structure or enable_multi_move %}
-    <input type='submit' name='move' value='move' class='button-save'>
+    <input type='submit' name='move' value='move' class='button-save' id='final_move_button'>
     {% endif %}
     <input type='submit' name='cancel' value='cancel' class='button-cancel' formnovalidate>
 </div>

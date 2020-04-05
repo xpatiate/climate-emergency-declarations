@@ -893,40 +893,6 @@ class Area(Hierarchy, models.Model):
                     all_ok = False
         return all_ok
 
-    def move_parent(self, new_parent, target_structures):
-        logger.info(f"moving area {self.id} to parent {new_parent}")
-        logger.info(f"STRUCTURES: {target_structures}")
-        by_level = self.get_children_by_level()
-        level_keys = by_level.keys()
-        print(f"KIDS BY LEVEL: [{by_level}]")
-        # set parent to top-level area
-        self.parent = new_parent
-        self.save()
-        level_diff = self.level - 1
-        for rel_level, struct in target_structures.items():
-            if str(rel_level) == "0":
-                continue
-            # find all children of area which are at the corresponding level
-            # and set their structure
-
-            # translate the relative level from move page
-            # into the actual level of the area subtree
-            level_index = str(int(rel_level) + level_diff)
-            kids_at_level = by_level.get(level_index, [])
-
-            logger.info(
-                f"{rel_level} Setting children at relative level {level_index} to structure at level {rel_level}: {struct}"
-            )
-            logger.info(
-                f"At level {level_index} we have {len(kids_at_level)} kids: {kids_at_level}"
-            )
-            for kid in kids_at_level:
-                if kid.structure.id != struct.id:
-                    print(
-                        f"Changing '{kid}' ({kid.structure.name}) structure to {struct.name}"
-                    )
-                    kid.structure = struct
-                    kid.save()
 
     def __str__(self):
         return self.fullname

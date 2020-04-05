@@ -290,24 +290,27 @@ def bulkarea_move(request, area_id):
             # get parent to move them to
             new_parent_vals = request.POST.getlist("struct_new_parent_id")
             logger.info(f"new parent vals {new_parent_vals}")
-            # for some reason we get a list of two elements
+            # sometimes we get a list of two elements
             # where the second is unset and the first is the value we want
             new_parent_id = new_parent_vals[0]
             new_parent = Area.objects.get(pk=new_parent_id)
-            logger.info(f"moving to parent {new_parent} from {new_parent_vals}")
-            target_structure_keys = [
-                s for s in request.POST.keys() if s[0:9] == "structure"
-            ]
-            print(target_structure_keys)
-            target_structures = {}
-            for s_key in target_structure_keys:
-                target_structures[str(s_key.split("_")[1])] = Structure.objects.get(
-                    pk=request.POST.get(s_key)
-                )
-            print(target_structures)
+            logger.info(f"moving to parent {new_parent.id} from {new_parent_vals}")
             for aid in idlist:
                 area = Area.objects.get(pk=aid)
-                area.move_parent(new_parent, target_structures)
+                area.parent = new_parent
+                area.save()
+            target_structure_keys = [
+                s for s in request.POST.keys() if s[0:19] == "area-target-struct-"
+            ]
+            for key in target_structure_keys:
+                area_id = key[19:]
+                structure_id = request.POST.get(key)
+                logger.info(f"moving area {area_id} to structure {structure_id}")
+                area = Area.objects.get(pk=area_id)
+                area.structure = Structure.objects.get(pk=structure_id)
+                area.save()
+
+
     return redirect("area", area_id=area_id)
 
 
@@ -447,16 +450,20 @@ def bulkarea_edit(request, area_id):
             logger.info(
                 f"{a.id} will start at level {current_level} end at {end_level} ({a.level} + {a.height})"
             )
-            # ok we want to skip descendants for areas *except* the one they should appear in
-            # the lower-level descs might appear before their parents in the list
             logger.info(f"{a.id} all descendants: {a.descendants}")
-            # for d in a.descendants:
+            # Look at all descendants by level
+            # For each level, identify any descendants who are being directly selected to move
+            # (in a nested move, when an area and >1 of its descendants are specifically selected)
+            # Remove any selected descendants *and their descendants* from the descendants list
+            keep_checking=True
             while current_level <= end_level:
+                logger.info(f"LEVEL {current_level}")
                 if len(kids_by_level[str(current_level)]):
                     area_height += 1
                     logger.info(
                         f"at level {current_level} area height is {area_height}"
                     )
+                num_kids_this_level = 0
                 for d in kids_by_level[str(current_level)]:
                     logger.info(
                         f"a {a.id} has desc {d.id}, is in edit_areas? {edit_areas} or desc {skip_descendants}"
@@ -468,17 +475,19 @@ def bulkarea_edit(request, area_id):
                         logger.info(
                             f"{a.id} adding kids {kid_ids} to skip_desc {skip_descendants}"
                         )
-                        # XXX set area_height
-                        # continue
                     elif d.id in skip_descendants:
                         logger.info(f"{a.id} skipping {d.id} because it's a descendant")
-                        # continue
                     else:
                         d.rel_level = (d.level - a.level) + 1
                         desc_list.append(d)
+                        num_kids_this_level += 1
+                    logger.info(f"{a.id} kids at level {current_level}: {num_kids_this_level}")
+                if num_kids_this_level == 0:
+                    logger.info(f"{a.id} no kids at level {current_level}")
+                    area_height -= 1
                 current_level += 1
             logger.info(
-                f"{a.id} adding area {area_height} with descendants {desc_list}"
+                f"{a.id} adding area height {area_height} with descendants {desc_list}"
             )
             area_list.append(
                 {
@@ -520,7 +529,7 @@ def bulkarea_edit(request, area_id):
                 for p in possible_parents_same_struct
             ]
             tmpl_data["new_parent_data_same_struct"] = json.dumps(
-                new_parent_data_same_struct
+                sorted(new_parent_data_same_struct, key=lambda s: s["name"]) 
             )
         else:
             tmpl_data["new_parent_data_same_struct"] = json.dumps({})
@@ -541,7 +550,7 @@ def bulkarea_edit(request, area_id):
                 for p in possible_parents_all_structs
             ]
             tmpl_data["new_parent_data_all_structs"] = json.dumps(
-                new_parent_data_all_structs
+                sorted(new_parent_data_all_structs, key=lambda s: s["name"]) 
             )
         else:
             tmpl_data["new_parent_data_all_structs"] = json.dumps({})
