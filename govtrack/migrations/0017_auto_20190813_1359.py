@@ -7,13 +7,15 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0016_auto_20190813_1357'),
+        ("govtrack", "0016_auto_20190813_1357"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='declaration',
-            name='node',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='govtrack.Area'),
+            model_name="declaration",
+            name="node",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="govtrack.Area"
+            ),
         ),
     ]

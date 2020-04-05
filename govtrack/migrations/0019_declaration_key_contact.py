@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0018_auto_20190813_1405'),
+        ("govtrack", "0018_auto_20190813_1405"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='declaration',
-            name='key_contact',
+            model_name="declaration",
+            name="key_contact",
             field=models.CharField(blank=True, max_length=128),
         ),
     ]

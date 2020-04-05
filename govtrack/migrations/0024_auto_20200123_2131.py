@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0023_area_agglomeration'),
+        ("govtrack", "0023_area_agglomeration"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='country',
-            name='popcount_ready',
+            model_name="country",
+            name="popcount_ready",
             field=models.PositiveSmallIntegerField(default=0),
         ),
         migrations.AddField(
-            model_name='country',
-            name='popcount_since',
+            model_name="country",
+            name="popcount_since",
             field=models.DateField(blank=True, null=True),
         ),
     ]

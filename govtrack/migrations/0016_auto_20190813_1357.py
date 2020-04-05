@@ -6,17 +6,12 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0015_auto_20190813_1342'),
+        ("govtrack", "0015_auto_20190813_1342"),
     ]
 
     operations = [
-        migrations.RenameModel(
-            old_name='Node',
-            new_name='Area',
-        ),
+        migrations.RenameModel(old_name="Node", new_name="Area",),
         migrations.AlterField(
-            model_name='declaration',
-            name='node',
-            field=models.IntegerField(),
+            model_name="declaration", name="node", field=models.IntegerField(),
         ),
     ]

@@ -6,13 +6,11 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0017_auto_20190813_1359'),
+        ("govtrack", "0017_auto_20190813_1359"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='declaration',
-            old_name='node',
-            new_name='area',
+            model_name="declaration", old_name="node", new_name="area",
         ),
     ]

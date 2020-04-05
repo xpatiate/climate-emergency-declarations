@@ -7,22 +7,49 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0001_initial'),
+        ("govtrack", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Declaration',
+            name="Declaration",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('status', models.CharField(choices=[('D', 'Declared'), ('N', 'Non-declared'), ('P', 'Provisional')], default='N', max_length=1)),
-                ('date_declared', models.DateField(blank=True, null=True, verbose_name='date declared')),
-                ('declaration_links', models.TextField(blank=True, null=True)),
-                ('declaration_type', models.TextField(blank=True, null=True)),
-                ('node', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='govtrack.Node')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("D", "Declared"),
+                            ("N", "Non-declared"),
+                            ("P", "Provisional"),
+                        ],
+                        default="N",
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "date_declared",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="date declared"
+                    ),
+                ),
+                ("declaration_links", models.TextField(blank=True, null=True)),
+                ("declaration_type", models.TextField(blank=True, null=True)),
+                (
+                    "node",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, to="govtrack.Node"
+                    ),
+                ),
             ],
         ),
-        migrations.DeleteModel(
-            name='Government',
-        ),
+        migrations.DeleteModel(name="Government",),
     ]

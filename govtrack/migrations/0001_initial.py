@@ -8,65 +8,139 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Country',
+            name="Country",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=36)),
-                ('region', models.CharField(max_length=36)),
-                ('population', models.PositiveIntegerField(default=0)),
-                ('country_code', models.CharField(max_length=3)),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=36)),
+                ("region", models.CharField(max_length=36)),
+                ("population", models.PositiveIntegerField(default=0)),
+                ("country_code", models.CharField(max_length=3)),
             ],
         ),
         migrations.CreateModel(
-            name='Node',
+            name="Node",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=64)),
-                ('area', models.CharField(blank=True, max_length=36, null=True)),
-                ('population', models.PositiveIntegerField(blank=True, default=0, null=True)),
-                ('reference_links', models.TextField(blank=True, null=True)),
-                ('comment_public', models.TextField(blank=True, null=True)),
-                ('comment_private', models.TextField(blank=True, null=True)),
-                ('is_governing', models.BooleanField(default=True)),
-                ('sort_name', models.CharField(blank=True, max_length=64, null=True)),
-                ('count_population', models.SmallIntegerField(default=0)),
-                ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='govtrack.Country')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=64)),
+                ("area", models.CharField(blank=True, max_length=36, null=True)),
+                (
+                    "population",
+                    models.PositiveIntegerField(blank=True, default=0, null=True),
+                ),
+                ("reference_links", models.TextField(blank=True, null=True)),
+                ("comment_public", models.TextField(blank=True, null=True)),
+                ("comment_private", models.TextField(blank=True, null=True)),
+                ("is_governing", models.BooleanField(default=True)),
+                ("sort_name", models.CharField(blank=True, max_length=64, null=True)),
+                ("count_population", models.SmallIntegerField(default=0)),
+                (
+                    "country",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="govtrack.Country",
+                    ),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Government',
+            name="Government",
             fields=[
-                ('node_ptr', models.OneToOneField(auto_created=True, on_delete=django.db.models.deletion.CASCADE, parent_link=True, primary_key=True, serialize=False, to='govtrack.Node')),
-                ('status', models.CharField(choices=[('D', 'Declared'), ('N', 'Non-declared'), ('P', 'In Progress')], default='N', max_length=1)),
-                ('date_declared', models.DateField(blank=True, null=True, verbose_name='date declared')),
-                ('declaration_links', models.TextField(blank=True, null=True)),
+                (
+                    "node_ptr",
+                    models.OneToOneField(
+                        auto_created=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        parent_link=True,
+                        primary_key=True,
+                        serialize=False,
+                        to="govtrack.Node",
+                    ),
+                ),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("D", "Declared"),
+                            ("N", "Non-declared"),
+                            ("P", "In Progress"),
+                        ],
+                        default="N",
+                        max_length=1,
+                    ),
+                ),
+                (
+                    "date_declared",
+                    models.DateField(
+                        blank=True, null=True, verbose_name="date declared"
+                    ),
+                ),
+                ("declaration_links", models.TextField(blank=True, null=True)),
             ],
-            bases=('govtrack.node',),
+            bases=("govtrack.node",),
         ),
         migrations.CreateModel(
-            name='NodeType',
+            name="NodeType",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=64)),
-                ('level', models.PositiveSmallIntegerField()),
-                ('count_population', models.BooleanField(default=True)),
-                ('country', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='govtrack.Country')),
-                ('parent', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='govtrack.NodeType')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=64)),
+                ("level", models.PositiveSmallIntegerField()),
+                ("count_population", models.BooleanField(default=True)),
+                (
+                    "country",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="govtrack.Country",
+                    ),
+                ),
+                (
+                    "parent",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="govtrack.NodeType",
+                    ),
+                ),
             ],
         ),
         migrations.AddField(
-            model_name='node',
-            name='nodetype',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='govtrack.NodeType'),
+            model_name="node",
+            name="nodetype",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="govtrack.NodeType"
+            ),
         ),
         migrations.AddField(
-            model_name='node',
-            name='parent',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='govtrack.Node'),
+            model_name="node",
+            name="parent",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to="govtrack.Node"
+            ),
         ),
     ]

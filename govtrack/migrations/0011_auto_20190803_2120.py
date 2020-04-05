@@ -6,18 +6,18 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0010_auto_20190803_2041'),
+        ("govtrack", "0010_auto_20190803_2041"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='country',
-            name='admin_notes',
+            model_name="country",
+            name="admin_notes",
             field=models.TextField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='country',
-            name='description',
+            model_name="country",
+            name="description",
             field=models.TextField(blank=True, null=True),
         ),
     ]

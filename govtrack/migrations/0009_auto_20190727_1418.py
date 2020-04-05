@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0008_auto_20190725_1024'),
+        ("govtrack", "0008_auto_20190725_1024"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='node',
-            name='supplements',
-            field=models.ManyToManyField(blank=True, related_name='supplement', to='govtrack.Node'),
+            model_name="node",
+            name="supplements",
+            field=models.ManyToManyField(
+                blank=True, related_name="supplement", to="govtrack.Node"
+            ),
         ),
     ]

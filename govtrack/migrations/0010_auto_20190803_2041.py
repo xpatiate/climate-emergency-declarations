@@ -6,62 +6,63 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0009_auto_20190727_1418'),
+        ("govtrack", "0009_auto_20190727_1418"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='node',
-            old_name='comment_private',
-            new_name='admin_notes',
+            model_name="node", old_name="comment_private", new_name="admin_notes",
         ),
         migrations.RenameField(
-            model_name='node',
-            old_name='comment_public',
-            new_name='description',
+            model_name="node", old_name="comment_public", new_name="description",
         ),
         migrations.RenameField(
-            model_name='node',
-            old_name='area',
-            new_name='location',
+            model_name="node", old_name="area", new_name="location",
         ),
-        migrations.RemoveField(
-            model_name='node',
-            name='count_population',
-        ),
+        migrations.RemoveField(model_name="node", name="count_population",),
         migrations.AddField(
-            model_name='declaration',
-            name='admin_notes',
+            model_name="declaration",
+            name="admin_notes",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='declaration',
-            name='description_long',
+            model_name="declaration",
+            name="description_long",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='declaration',
-            name='description_short',
+            model_name="declaration",
+            name="description_short",
             field=models.CharField(blank=True, max_length=256),
         ),
         migrations.AddField(
-            model_name='declaration',
-            name='verified',
+            model_name="declaration",
+            name="verified",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='nodetype',
-            name='admin_notes',
+            model_name="nodetype",
+            name="admin_notes",
             field=models.TextField(blank=True),
         ),
         migrations.AlterField(
-            model_name='declaration',
-            name='declaration_type',
+            model_name="declaration",
+            name="declaration_type",
             field=models.CharField(blank=True, max_length=256),
         ),
         migrations.AlterField(
-            model_name='declaration',
-            name='status',
-            field=models.CharField(choices=[('D', 'Declared'), ('N', 'Inactive'), ('R', 'Rejected'), ('V', 'Revoked'), ('P', 'In Progress')], default='D', max_length=1),
+            model_name="declaration",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("D", "Declared"),
+                    ("N", "Inactive"),
+                    ("R", "Rejected"),
+                    ("V", "Revoked"),
+                    ("P", "In Progress"),
+                ],
+                default="D",
+                max_length=1,
+            ),
         ),
     ]

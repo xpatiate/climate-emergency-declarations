@@ -6,13 +6,22 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0004_auto_20190719_1408'),
+        ("govtrack", "0004_auto_20190719_1408"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='declaration',
-            name='status',
-            field=models.CharField(choices=[('D', 'Declared'), ('N', 'Non-declared'), ('R', 'Rejected'), ('P', 'Provisional')], default='D', max_length=1),
+            model_name="declaration",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("D", "Declared"),
+                    ("N", "Non-declared"),
+                    ("R", "Rejected"),
+                    ("P", "Provisional"),
+                ],
+                default="D",
+                max_length=1,
+            ),
         ),
     ]

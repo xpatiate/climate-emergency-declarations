@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0024_auto_20200123_2131'),
+        ("govtrack", "0024_auto_20200123_2131"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='country',
-            name='current_popcount',
+            model_name="country",
+            name="current_popcount",
             field=models.PositiveIntegerField(default=0),
         ),
     ]

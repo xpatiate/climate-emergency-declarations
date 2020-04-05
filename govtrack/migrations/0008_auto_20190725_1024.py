@@ -8,48 +8,68 @@ import django.utils.timezone
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('contenttypes', '0002_remove_content_type_name'),
-        ('govtrack', '0007_auto_20190722_1122'),
+        ("contenttypes", "0002_remove_content_type_name"),
+        ("govtrack", "0007_auto_20190722_1122"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='declaration',
-            name='declaration_links',
-        ),
-        migrations.RemoveField(
-            model_name='node',
-            name='reference_links',
-        ),
+        migrations.RemoveField(model_name="declaration", name="declaration_links",),
+        migrations.RemoveField(model_name="node", name="reference_links",),
         migrations.AlterField(
-            model_name='declaration',
-            name='date_declared',
-            field=models.DateField(default=django.utils.timezone.now, verbose_name='date declared'),
+            model_name="declaration",
+            name="date_declared",
+            field=models.DateField(
+                default=django.utils.timezone.now, verbose_name="date declared"
+            ),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='declaration',
-            name='declaration_type',
-            field=models.TextField(blank=True, default=''),
+            model_name="declaration",
+            name="declaration_type",
+            field=models.TextField(blank=True, default=""),
             preserve_default=False,
         ),
         migrations.AlterField(
-            model_name='declaration',
-            name='status',
-            field=models.CharField(choices=[('D', 'Declared'), ('N', 'Non-declared'), ('R', 'Rejected'), ('V', 'Revoked'), ('P', 'Provisional')], default='D', max_length=1),
+            model_name="declaration",
+            name="status",
+            field=models.CharField(
+                choices=[
+                    ("D", "Declared"),
+                    ("N", "Non-declared"),
+                    ("R", "Rejected"),
+                    ("V", "Revoked"),
+                    ("P", "Provisional"),
+                ],
+                default="D",
+                max_length=1,
+            ),
         ),
         migrations.AlterField(
-            model_name='node',
-            name='supplements',
-            field=models.ManyToManyField(related_name='supplement', to='govtrack.Node'),
+            model_name="node",
+            name="supplements",
+            field=models.ManyToManyField(related_name="supplement", to="govtrack.Node"),
         ),
         migrations.CreateModel(
-            name='Link',
+            name="Link",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('url', models.CharField(max_length=1024)),
-                ('object_id', models.PositiveIntegerField()),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("url", models.CharField(max_length=1024)),
+                ("object_id", models.PositiveIntegerField()),
+                (
+                    "content_type",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="contenttypes.ContentType",
+                    ),
+                ),
             ],
         ),
     ]

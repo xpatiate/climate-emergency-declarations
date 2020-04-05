@@ -6,17 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('govtrack', '0002_auto_20190717_1548'),
+        ("govtrack", "0002_auto_20190717_1548"),
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='node',
-            name='is_governing',
-        ),
+        migrations.RemoveField(model_name="node", name="is_governing",),
         migrations.AddField(
-            model_name='nodetype',
-            name='is_governing',
+            model_name="nodetype",
+            name="is_governing",
             field=models.BooleanField(default=True),
         ),
     ]
