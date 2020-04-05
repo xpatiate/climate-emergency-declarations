@@ -310,7 +310,6 @@ def bulkarea_move(request, area_id):
                 area.structure = Structure.objects.get(pk=structure_id)
                 area.save()
 
-
     return redirect("area", area_id=area_id)
 
 
@@ -455,7 +454,6 @@ def bulkarea_edit(request, area_id):
             # For each level, identify any descendants who are being directly selected to move
             # (in a nested move, when an area and >1 of its descendants are specifically selected)
             # Remove any selected descendants *and their descendants* from the descendants list
-            keep_checking=True
             while current_level <= end_level:
                 logger.info(f"LEVEL {current_level}")
                 if len(kids_by_level[str(current_level)]):
@@ -481,7 +479,9 @@ def bulkarea_edit(request, area_id):
                         d.rel_level = (d.level - a.level) + 1
                         desc_list.append(d)
                         num_kids_this_level += 1
-                    logger.info(f"{a.id} kids at level {current_level}: {num_kids_this_level}")
+                    logger.info(
+                        f"{a.id} kids at level {current_level}: {num_kids_this_level}"
+                    )
                 if num_kids_this_level == 0:
                     logger.info(f"{a.id} no kids at level {current_level}")
                     area_height -= 1
@@ -529,7 +529,7 @@ def bulkarea_edit(request, area_id):
                 for p in possible_parents_same_struct
             ]
             tmpl_data["new_parent_data_same_struct"] = json.dumps(
-                sorted(new_parent_data_same_struct, key=lambda s: s["name"]) 
+                sorted(new_parent_data_same_struct, key=lambda s: s["name"])
             )
         else:
             tmpl_data["new_parent_data_same_struct"] = json.dumps({})
@@ -550,7 +550,7 @@ def bulkarea_edit(request, area_id):
                 for p in possible_parents_all_structs
             ]
             tmpl_data["new_parent_data_all_structs"] = json.dumps(
-                sorted(new_parent_data_all_structs, key=lambda s: s["name"]) 
+                sorted(new_parent_data_all_structs, key=lambda s: s["name"])
             )
         else:
             tmpl_data["new_parent_data_all_structs"] = json.dumps({})

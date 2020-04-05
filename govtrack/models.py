@@ -893,7 +893,6 @@ class Area(Hierarchy, models.Model):
                     all_ok = False
         return all_ok
 
-
     def __str__(self):
         return self.fullname
 
