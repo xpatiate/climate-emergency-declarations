@@ -6,30 +6,35 @@ class AreaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Area
         fields = [
-            'id',
-            'name',
-            'location',
-            'population',
-            'structure',
-            'parent',
-            'supplements',
-            'agglomeration',
-            'num_children'
-            ]
+            "id",
+            "name",
+            "location",
+            "population",
+            "structure",
+            "parent",
+            "supplements",
+            "agglomeration",
+            "num_children",
+        ]
 
 
 class StructureChildSerializer(serializers.ModelSerializer):
     class Meta:
         model = Structure
-        fields = [
-            'id', 'country', 'name', 'parent', 'height', 'num_children'
-            ]
+        fields = ["id", "country", "name", "parent", "height", "num_children"]
+
 
 class StructureSerializer(serializers.ModelSerializer):
     children = StructureChildSerializer(many=True)
+
     class Meta:
         model = Structure
         fields = [
-            'id', 'country', 'name', 'parent', 'height', 'num_children', 'children'
+            "id",
+            "country",
+            "name",
+            "parent",
+            "height",
+            "num_children",
+            "children",
         ]
-
