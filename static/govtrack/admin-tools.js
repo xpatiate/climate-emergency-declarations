@@ -28,6 +28,7 @@ $(document).ready(() => {
     $('#bulk_delete_button').click(confirmBulkDelete)
     $('#bulk_edit_button').click(submitBulkEdit)
     $('#bulk_move_button').click(submitBulkMove)
+    $('#final_move_button').click(submitFinalBulkMove)
     $('#do-move-area').click(function(item) {
       $('#move-area-form').toggleClass('move-form-active', true)
       $('#move-structure-form').toggleClass('move-form-active', false)
@@ -151,6 +152,30 @@ function submitBulkEdit(ev) {
           $('#bulk_edit_form').submit()
     }
     return false
+}
+
+function submitFinalBulkMove(ev) {
+    var canSubmit = true;
+    if ($('#do-move-area').prop('checked') == true) {
+      const hiddenInput = $('#single_area_new_parent_id');
+      if (!hiddenInput[0].value) {
+        canSubmit = false;
+      }
+    }
+    else if ($('#do-move-struct').prop('checked') == true) {
+      // when doing a structure move, check that all hidden inputs are populated
+      // i.e. no structure levels still need to be selected
+      const allInputs = document.querySelectorAll("input[name^='area-target-struct-']");
+      allInputs.forEach(function(input) {
+        if (input.value.length == 0) {
+          canSubmit = false;
+        }
+      });
+    }
+    if (!canSubmit) {
+      window.alert("Please complete selections")
+    }
+    return canSubmit;
 }
 
 function submitBulkMove(ev) {
