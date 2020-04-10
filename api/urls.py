@@ -35,6 +35,11 @@ urlpatterns = [
         name="api_area_multi_add",
     ),
     path(
+        "structure/<int:structure_id>/add_subtree",
+        views.structure_add_subtree,
+        name="api_structure_add_subtree",
+    ),
+    path(
         "country/<str:country_code>/population",
         views.country_population,
         name="api_country_population",
