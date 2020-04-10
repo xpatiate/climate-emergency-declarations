@@ -466,8 +466,15 @@ def structure_add_subtree(request, structure_id):
     if request.user.is_authenticated:
         logger.info(f"adding subtree to structure {structure_id}")
         struct = Structure.objects.get(pk=structure_id)
-        prev_struct = struct
-        for l in range(1, 10):
+        new_struct = Structure(
+            country=struct.country,
+            parent=struct,
+            name="Temporary holding area",
+            level=(struct.level + 1),
+        )
+        new_struct.save()
+        prev_struct = new_struct
+        for l in range(1, 9):
             logger.info(f"Adding a new struct at level {l}")
             new_struct = Structure(
                 country=struct.country,
@@ -475,7 +482,7 @@ def structure_add_subtree(request, structure_id):
                 name=f"Level {l}",
                 level=(prev_struct.level + 1),
             )
-            new_struct.save()
+            new_id = new_struct.save()
             logger.info(f"Added new structure id {new_struct.id}")
             prev_struct = new_struct
         return HttpResponse(status=200)
