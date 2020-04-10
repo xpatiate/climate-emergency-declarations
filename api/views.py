@@ -467,20 +467,21 @@ def structure_add_subtree(request, structure_id):
         logger.info(f"adding subtree to structure {structure_id}")
         struct = Structure.objects.get(pk=structure_id)
         prev_struct = struct
-        for l in range(1,10):
+        for l in range(1, 10):
             logger.info(f"Adding a new struct at level {l}")
             new_struct = Structure(
                 country=struct.country,
                 parent=prev_struct,
                 name=f"Level {l}",
-                level=(prev_struct.level + 1)
-                )
+                level=(prev_struct.level + 1),
+            )
             new_struct.save()
             logger.info(f"Added new structure id {new_struct.id}")
             prev_struct = new_struct
         return HttpResponse(status=200)
 
     return HttpResponse(status=403)
+
 
 class AreaList(generics.ListCreateAPIView):
     queryset = Area.objects.all()
