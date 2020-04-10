@@ -14,6 +14,7 @@ $(document).ready(() => {
     $('.bulk-edit-item').click(selectRow);
     $('a#bulk-edit-select-all').click(selectAll);
     $('a#bulk-edit-select-none').click(selectNone);
+    $('a.create-subtree').click(createSubtree);
     $('a.setup-clone').click(setupClone);
     $('#cancel-clone').click(cancelClone);
     $('.clone-parent-item').hover(highlightRow);
@@ -97,6 +98,27 @@ function setupBulkMove() {
     );
 }
 
+function createSubtree(ev) {
+    var parentStruct = ev.target
+    var parentId = parentStruct.dataset.id
+    var apiUrl = parentStruct.dataset.url;
+    //TODO make this a POST with CSRF
+    var oReq = new XMLHttpRequest();
+    oReq.onreadystatechange = () => {
+        if (oReq.readyState === 4) {
+            console.log(oReq);
+            if (oReq.status == '200') {
+                console.log("redirecing to " + window.location.href.replace('#',''));
+                window.location.href = window.location.href.replace('#','');
+            } else {
+                alert("operation failed");
+            }
+        }
+    }
+    oReq.open("GET", apiUrl);
+    oReq.send();
+}
+
 function setupClone(ev) {
     var cloneSrc = ev.target
     cancelClone()
@@ -114,6 +136,7 @@ function setupClone(ev) {
     $('#clone-src-id').val(cloneId)
     return false;
 }
+
 function cancelClone(ev) {
     $('.structure-row').removeClass('clone-src')
     $('.clone-action').css('display','none')

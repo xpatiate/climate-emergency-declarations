@@ -74,6 +74,8 @@
             <a href='{% url 'structure_child' struct.id %}'>add child</a>
             |
             <a href='#' class='setup-clone' data-name='{{ struct.name }}' data-id='{{ struct.id }}'>clone</a>
+            |
+            <a href='#' class='create-subtree' data-url='{% url 'api_structure_add_subtree' struct.id%}' data-id='{{ struct.id }}'>add subtree</a>
         </div>
         {% endif %}
     </td>
