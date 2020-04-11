@@ -223,7 +223,7 @@ def country_declarations(request, country_code):
 
 def structure_del(request, structure_id):
     status = 403
-    if request.user.is_authenticated and request.method == POST:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         structure = get_object_or_404(Structure, pk=structure_id)
         structure.delete()
@@ -232,7 +232,7 @@ def structure_del(request, structure_id):
 
 def area_del(request, area_id):
     status = 403
-    if request.user.is_authenticated and request.method == POST:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         area = get_object_or_404(Area, pk=area_id)
         area.delete()
@@ -243,7 +243,7 @@ def area_del(request, area_id):
 
 def declaration_del(request, declaration_id):
     status = 403
-    if request.user.is_authenticated and request.method == POST:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         declaration = get_object_or_404(Declaration, pk=declaration_id)
         declaration.delete()
@@ -253,7 +253,7 @@ def declaration_del(request, declaration_id):
 
 def link_del(request, link_id):
     status = 403
-    if request.user.is_authenticated and request.method == POST:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         link = get_object_or_404(Link, pk=link_id)
         link.delete()
@@ -262,7 +262,7 @@ def link_del(request, link_id):
 
 def import_declaration_del(request, import_declaration_id):
     status = 403
-    if request.user.is_authenticated and request.method == POST:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         import_declaration = get_object_or_404(
             ImportDeclaration, pk=import_declaration_id
@@ -323,9 +323,7 @@ def add_multi_areas(request, parent_id, structure_id):
 
 # Inbox methods
 def add_multi_import_declarations(request, country_id):
-    if request.user.is_authenticated:
-        # TODO only enter here if POST - even a GET request
-        # results in popcounts being regenerated
+    if request.user.is_authenticated and request.method == "POST":
         try:
             lines = request.POST.get("paste_data").split("\n")
             data = []
