@@ -61,6 +61,23 @@ $(document).ready(() => {
     //setupBulkMove()
 });
 
+/* the following method from https://docs.djangoproject.com/en/3.0/ref/csrf/#setting-the-token-on-the-ajax-request */
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function clearMoveTable() {
   $('.child-from-structure').innerHTML = '';
   $("#move-table").find("div[class^='show-dest']").innerHTML = ''
@@ -100,22 +117,22 @@ function setupBulkMove() {
 
 function createSubtree(ev) {
     var parentStruct = ev.target
-    var parentId = parentStruct.dataset.id
     var apiUrl = parentStruct.dataset.url;
-    //TODO make this a POST with CSRF
+    var csrfToken = getCookie('csrftoken');
     var oReq = new XMLHttpRequest();
     oReq.onreadystatechange = () => {
         if (oReq.readyState === 4) {
             console.log(oReq);
             if (oReq.status == '200') {
-                console.log("redirecing to " + window.location.href.replace('#',''));
+                console.log("redirecting to " + window.location.href.replace('#',''));
                 window.location.href = window.location.href.replace('#','');
             } else {
                 alert("operation failed");
             }
         }
     }
-    oReq.open("GET", apiUrl);
+    oReq.open("POST", apiUrl);
+    oReq.setRequestHeader("X-CSRFToken", csrfToken);
     oReq.send();
 }
 
@@ -230,7 +247,7 @@ function deleteThis(ev) {
     const response = confirm('Are you sure you want to delete this ' + objType + '?');
     if (response) {
         console.log('making API call to ' + apiUrl);
-        //TODO make this a POST with CSRF
+        var csrfToken = getCookie('csrftoken');
         var oReq = new XMLHttpRequest();
         oReq.onreadystatechange = () => {
             if (oReq.readyState === 4) {
@@ -242,7 +259,8 @@ function deleteThis(ev) {
                 }
             }
         }
-        oReq.open("GET", apiUrl);
+        oReq.open("POST", apiUrl);
+        oReq.setRequestHeader("X-CSRFToken", csrfToken);
         oReq.send();
     }
 }

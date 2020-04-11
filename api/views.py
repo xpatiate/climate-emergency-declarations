@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404, render, redirect, Http404, HttpResponse
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_protect
 from api.serializers import AreaSerializer, StructureSerializer
 from rest_framework import generics, mixins, viewsets, permissions
 
@@ -223,7 +223,7 @@ def country_declarations(request, country_code):
 
 def structure_del(request, structure_id):
     status = 403
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         structure = get_object_or_404(Structure, pk=structure_id)
         structure.delete()
@@ -232,7 +232,7 @@ def structure_del(request, structure_id):
 
 def area_del(request, area_id):
     status = 403
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         area = get_object_or_404(Area, pk=area_id)
         area.delete()
@@ -243,7 +243,7 @@ def area_del(request, area_id):
 
 def declaration_del(request, declaration_id):
     status = 403
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         declaration = get_object_or_404(Declaration, pk=declaration_id)
         declaration.delete()
@@ -253,7 +253,7 @@ def declaration_del(request, declaration_id):
 
 def link_del(request, link_id):
     status = 403
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         link = get_object_or_404(Link, pk=link_id)
         link.delete()
@@ -262,7 +262,7 @@ def link_del(request, link_id):
 
 def import_declaration_del(request, import_declaration_id):
     status = 403
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and request.method == "POST":
         status = 200
         import_declaration = get_object_or_404(
             ImportDeclaration, pk=import_declaration_id
@@ -323,9 +323,7 @@ def add_multi_areas(request, parent_id, structure_id):
 
 # Inbox methods
 def add_multi_import_declarations(request, country_id):
-    if request.user.is_authenticated:
-        # TODO only enter here if POST - even a GET request
-        # results in popcounts being regenerated
+    if request.user.is_authenticated and request.method == "POST":
         try:
             lines = request.POST.get("paste_data").split("\n")
             data = []
@@ -462,8 +460,10 @@ def declaration_from_import(request, area_id, import_declaration_id):
     return HttpResponse(status=403)
 
 
+@csrf_protect
 def structure_add_subtree(request, structure_id):
-    if request.user.is_authenticated:
+    logger.info(f"authenticated? {request.user.is_authenticated} method? {request.method}")
+    if request.user.is_authenticated and request.method == "POST":
         logger.info(f"adding subtree to structure {structure_id}")
         struct = Structure.objects.get(pk=structure_id)
         new_struct = Structure(
