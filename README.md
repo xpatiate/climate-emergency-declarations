@@ -1,17 +1,9 @@
 # climate-emergency-declarations
 
-This repository is a work in progress, building a site that is intended to augment the current [ICEF spreadsheet](https://docs.google.com/spreadsheets/d/1tb-LklFWLujYnjmCSvCWRcLUJCCWAL27dKPzVcFq9CQ)
+This project is no longer under active development. It was built for a site intended to augment the [ICEF spreadsheet](https://docs.google.com/spreadsheets/d/1tb-LklFWLujYnjmCSvCWRcLUJCCWAL27dKPzVcFq9CQ) tracking governments around the world which have recognised or declared a climate emergency.
 
-It's using Django with PostgreSQL to maintain a database tracking governments around the world which have recognised or declared a climate emergency.
+It used Django with PostgreSQL to build a database that was manually edited and maintained by volunteers.
 
-It's currently under active development and will include:
-
-* a public-facing front page which lists all government declarations of climate emergency
-* a JQuery frontend component on the front page, to allow filter/sort of declaration data
-* admin tools to add and edit declarations
-* logic to calculate overall population figures, incorporating special handling for governments at different hierarchical levels to avoid double-counting
-* an API making declaration data accessible to other services
-* generation of charts and other resources
 
 ## Using the inbox
 
